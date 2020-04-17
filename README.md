@@ -5,17 +5,23 @@ Converts to and from various cases.
 ```
 $ ccase -t title super_mario_64
 Super Mario 64
+
 $ ccase -f snake -t title 2020-04-15_my_cat_cali
 2020-04-16 My Cat Cali
+
 $ ccase -t camel "convert to case"
 convertToCase
 ```
 
 Convert case will determine word boundaries automatically for any input.  You can also supply a parsing method by supplying a case with the `--from -f` option for more accuracy.
 
+## Rust Library
+
+Convert case was written in Rust and is ready to be used inline with your rust code as a library.
+
 ## Cases
 
-You can also view the list of cases use the `--list -l` option.
+You can also view the list of cases using the `--list -l` option.  Some cases are simply aliases of others.
 
 | Case | Example |
 | ---- | ------- |
@@ -34,3 +40,7 @@ You can also view the list of cases use the `--list -l` option.
 | Train | My-Variable-Name |
 | Flat | myvariablename |
 | UpperFlat | MYVARIABLENAME |
+
+## Even more cases?
+
+If you want more cases, they are easy to implement.  Contact me with a suggestion!

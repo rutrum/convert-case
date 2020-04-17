@@ -43,7 +43,7 @@
 //! assert_eq!("Mymany Casevariable", "myMany-caseVariable".to_case(Case::Title));
 //! ```
 //! 
-//! If your string has a variety of cases, try splitting across some delimiter before using
+//! If your string emulates a variety of cases, try splitting across some delimiter before using
 //! the `from_case` and `to_case` methods.
 
 mod case;
