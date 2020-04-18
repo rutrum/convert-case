@@ -1,7 +1,7 @@
-use strum_macros::EnumIter;
-use strum::IntoEnumIterator;
-use std::convert::TryFrom;
 use crate::Casing;
+use std::convert::TryFrom;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 /// Defines the type of casing a string can be.
 ///
@@ -24,7 +24,7 @@ use crate::Casing;
 #[derive(Eq, PartialEq, Clone, Copy, Debug, EnumIter)]
 pub enum Case {
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("MY VARIABLE NAME", "My variable NAME".to_case(Case::Upper))
@@ -32,7 +32,7 @@ pub enum Case {
     Upper,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("my variable name", "My variable NAME".to_case(Case::Lower))
@@ -40,8 +40,9 @@ pub enum Case {
     Lower,
 
     /// Title case strings are delimited by spaces. Only the leading character of
-    /// each word is uppercase.
-    /// 
+    /// each word is uppercase.  No inferences are made about language, so words
+    /// like "as", "to", and "for" will still be capitalized.
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("My Variable Name", "My variable NAME".to_case(Case::Title))
@@ -50,26 +51,25 @@ pub enum Case {
 
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("mY vARIABLE nAME", "My variable NAME".to_case(Case::Toggle))
     /// ```
     Toggle,
 
-    /// Camel case strings are lowercase, but for every word _except the first_ the 
+    /// Camel case strings are lowercase, but for every word _except the first_ the
     /// first letter is capitalized.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("myVariableName", "My variable NAME".to_case(Case::Camel))
     /// ```
     Camel,
 
-  
-    /// Pascal case strings are lowercase, but for every word the 
+    /// Pascal case strings are lowercase, but for every word the
     /// first letter is capitalized.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("MyVariableName", "My variable NAME".to_case(Case::Pascal))
@@ -79,7 +79,7 @@ pub enum Case {
     UpperCamel,
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("my_variable_name", "My variable NAME".to_case(Case::Snake))
@@ -87,7 +87,7 @@ pub enum Case {
     Snake,
 
     /// Upper snake case strings are delimited by underscores `_` and are all uppercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::UpperSnake))
@@ -97,7 +97,7 @@ pub enum Case {
     ScreamingSnake,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("my-variable-name", "My variable NAME".to_case(Case::Kebab))
@@ -105,7 +105,7 @@ pub enum Case {
     Kebab,
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("MY-VARIABLE-NAME", "My variable NAME".to_case(Case::Cobol))
@@ -114,7 +114,7 @@ pub enum Case {
 
     /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
     /// except for the leading character of each word.
-    /// 
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("My-Variable-Name", "My variable NAME".to_case(Case::Train))
@@ -122,22 +122,45 @@ pub enum Case {
     Train,
 
     /// Flat case strings are all lowercase, with no delimiter.  Converting to
-    /// this case is **lossy**.
-    /// 
+    /// this case is **lossy**.  That is, word boundaries are lost.
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("myvariablename", "My variable NAME".to_case(Case::Flat))
     /// ```
     Flat,
-    
+
     /// Upper flat case strings are all uppercase, with no delimiter.  Converting to
-    /// this case is **lossy**.
-    /// 
+    /// this case is **lossy**.  That is, word boundaries are lost.
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("MYVARIABLENAME", "My variable NAME".to_case(Case::UpperFlat))
     /// ```
     UpperFlat,
+
+    /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
+    /// and lowercase.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// assert_eq!("mY vArIaBlE nAmE", "My variable NAME".to_case(Case::Alternating));
+    /// ```
+    Alternating,
+}
+
+impl Case {
+    /// Prints the name of the case in that case.
+    /// ```
+    /// use convert_case::Case;
+    ///
+    /// assert_eq!("UpperCamelCase", Case::UpperCamel.name_in_case());
+    /// assert_eq!("snake_case", Case::Snake.name_in_case());
+    /// assert_eq!("Title Case", Case::Title.name_in_case());
+    /// ```
+    pub fn name_in_case(self) -> String {
+        let case_str = format!("{:?}Case", self);
+        case_str.to_case(self)
+    }
 }
 
 impl TryFrom<&str> for Case {

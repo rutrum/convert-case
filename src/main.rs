@@ -1,13 +1,15 @@
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
+//use std::io::{self, BufRead};
 use convert_case::{Case, Casing};
-use strum::IntoEnumIterator;
 use std::convert::TryFrom;
+use strum::IntoEnumIterator;
 
 fn main() {
     let matches = App::new("Convert Case")
         .version("0.1")
         .author("Dave Purdum <purdum41@gmail.com>")
         .about("Converts to and from various cases.")
+        .setting(AppSettings::ArgRequiredElseHelp)
         .arg(
             Arg::with_name("list-cases")
                 .short("l")
@@ -21,6 +23,7 @@ fn main() {
                 .value_name("CASE")
                 .help("The case to convert into.")
                 .takes_value(true)
+                .required_unless("list-cases")
                 .validator(is_valid_case),
         )
         .arg(
@@ -59,7 +62,38 @@ fn main() {
             println!("{}", to_convert.from_case(from_case).to_case(to_case));
         }
     }
+    /*
+    match matches.value_of("from-case") {
+        Some(from_case_str) => {
+            let from_case = Case::try_from(from_case_str).unwrap();
+            run_conversion(matches, |s: &str| {
+                s.from_case(from_case).to_case(to_case)
+            });
+        },
+        None => {
+            run_conversion(matches, |s: &str| s.to_case(to_case));
+        },
+    };
+    */
 }
+/*
+// Either reads input from argument or stdin
+fn run_conversion<F>(matches: ArgMatches, convert: F)
+    where F: Fn(&str) -> String
+{
+    match matches.value_of("INPUT") {
+        Some(to_convert) => {
+            println!("{}", convert(to_convert));
+        },
+        None => {
+            let stdin = io::stdin();
+            for line in stdin.lock().lines() {
+                println!("{}", convert(&line.expect("Unable to read from stdin")));
+            }
+        }
+    }
+}
+*/
 
 fn is_valid_case(s: String) -> Result<(), String> {
     match Case::try_from(s.as_str()) {
@@ -71,32 +105,6 @@ fn is_valid_case(s: String) -> Result<(), String> {
 fn list_cases() {
     println!("Valid cases:");
     for case in Case::iter() {
-        println!("{:>15}  {}", format!("{:?}", case), case.example());
-    }
-}
-
-trait Example {
-    fn example(&self) -> String;
-}
-
-impl Example for Case {
-    fn example(&self) -> String {
-        use Case::*;
-        match self {
-            Title => "My Variable Name",
-            Camel => "myVariableName",
-            Pascal | UpperCamel => "MyVariableName",
-            Snake => "my_variable_name",
-            Kebab => "my-variable-name",
-            UpperSnake | ScreamingSnake => "MY_VARIABLE_NAME",
-            Upper => "MY VARIABLE NAME",
-            Lower => "my variable name",
-            Cobol => "MY-VARIABLE-NAME",
-            Flat => "myvariablename",
-            Toggle => "mY vARIABLE nAME",
-            Train => "My-Variable-Name",
-            UpperFlat => "MYVARIABLENAME",
-        }
-        .to_string()
+        println!("    {:<16} {}", format!("{:?}", case), case.name_in_case());
     }
 }
