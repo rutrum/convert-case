@@ -18,7 +18,7 @@ convertToCamel
 
 By default `convert_case` will determine word boundaries based on all hyphens, spaces, underscores, and changes in capitalization.  You can also supply a parsing method by supplying a case with the `--from -f` option for more accuracy.
 ```
-$ ccase -t upper "-t upper grimaldi-2003_discrete_pdf"
+$ ccase -t upper "grimaldi-2003_discrete_pdf"
 GRIMALDI 2003 DISCRETE PDF
 
 $ ccase -f kebab -t upper "grimaldi-2003_discrete_pdf"
