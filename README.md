@@ -2,11 +2,11 @@
 
 Converts to and from various cases.
 
-# Rust Library
+## Rust Library
 
 Convert case was written in Rust and is ready to be used inline with your rust code as a library.  You can read the API documentation on [docs.rs](https://docs.rs/convert_case/).
 
-# Command Line Interface `ccase`
+## Command Line Interface `ccase`
 
 A command line utility `ccase` was made to leverage the tools in this library.  You can read about it at the [github repository](https://github.com/rutrum/ccase).
 
