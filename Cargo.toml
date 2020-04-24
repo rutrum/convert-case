@@ -1,28 +1,17 @@
 [package]
 name = "convert_case"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["David Purdum <purdum41@gmail.com>"]
 edition = "2018"
 description = "Convert strings into any case"
 license = "MIT"
 keywords = [ "casing", "case", "string" ]
-categories = [ "text-processing", "command-line-utilities" ]
+categories = [ "text-processing" ]
 readme = "README.md"
 repository = "https://github.com/rutrum/convert-case"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[bin]]
-bench = false
-path = "src/main.rs"
-name = "ccase"
-
-[profile.release]
-codegen-units = 1
-lto = true
-panic = 'abort'
-
 [dependencies]
-clap = "2.33.0"
 strum = "0.18.0"
 strum_macros = "0.18.0"

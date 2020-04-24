@@ -2,8 +2,9 @@
 //!
 //! # Command Line Utility `ccase`
 //!
-//! This crate also comes with an executable, so you can convert cases at the command line.
-//! You can read about its usage at the [github repository](https://github.com/rutrum/convert-case).
+//! Since version "0.3.0" this crate is just a case conversion _library_.  The command line utility
+//! that uses the tools in this library has been moved to the `ccase` crate.  You can read about it
+//! at the [github repository](https://github.com/rutrum/ccase).
 //!
 //! # Rust Library
 //!
