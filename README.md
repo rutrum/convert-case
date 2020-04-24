@@ -8,7 +8,7 @@ Convert case was written in Rust and is ready to be used inline with your rust c
 
 # Command Line Interface `ccase`
 
-A command line utility `ccase` was made to leverage the tools in this library.  You can read about it at the [repository](https://github.com/rutrum/ccase).
+A command line utility `ccase` was made to leverage the tools in this library.  You can read about it at the [github repository](https://github.com/rutrum/ccase).
 
 ## Cases
 
