@@ -1,6 +1,7 @@
 use crate::Casing;
 use std::convert::TryFrom;
-use strum::IntoEnumIterator;
+
+#[cfg(test)]
 use strum_macros::EnumIter;
 
 /// Defines the type of casing a string can be.
@@ -21,7 +22,8 @@ use strum_macros::EnumIter;
 /// assert_eq!(Case::Snake, snake_case);
 /// ```
 ///
-#[derive(Eq, PartialEq, Clone, Copy, Debug, EnumIter)]
+#[cfg_attr(test, derive(EnumIter))]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Case {
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
     ///
@@ -161,6 +163,30 @@ impl Case {
         let case_str = format!("{:?}Case", self);
         case_str.to_case(self)
     }
+
+    // Created to avoid using the EnumIter trait from strum in
+    // final library.  A test confirms that all cases are listed here.
+    fn all_cases() -> Vec<Case> {
+        use Case::*;
+        vec![
+            Upper,
+            Lower,
+            Title,
+            Toggle,
+            Camel,
+            Pascal,
+            UpperCamel,
+            Snake,
+            UpperSnake,
+            ScreamingSnake,
+            Kebab,
+            Cobol,
+            Train,
+            Flat,
+            UpperFlat,
+            Alternating,
+        ]
+    }
 }
 
 impl TryFrom<&str> for Case {
@@ -168,11 +194,26 @@ impl TryFrom<&str> for Case {
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         let case_str = s.to_case(Case::Flat);
-        for case in Case::iter() {
+        for case in Case::all_cases() {
             if case_str == format!("{:?}", case).to_case(Case::Flat) {
                 return Ok(case);
             }
         }
         Err(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn all_cases_in_iter() {
+        let all = Case::all_cases();
+        for case in Case::iter() {
+            assert!(all.contains(&case));
+        }
     }
 }

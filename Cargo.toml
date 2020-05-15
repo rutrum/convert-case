@@ -1,6 +1,6 @@
 [package]
 name = "convert_case"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["David Purdum <purdum41@gmail.com>"]
 edition = "2018"
 description = "Convert strings into any case"
@@ -12,6 +12,6 @@ repository = "https://github.com/rutrum/convert-case"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[dev-dependencies]
 strum = "0.18.0"
 strum_macros = "0.18.0"

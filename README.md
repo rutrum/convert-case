@@ -4,7 +4,7 @@ Converts to and from various cases.
 
 ## Rust Library
 
-Convert case was written in Rust and is ready to be used inline with your rust code as a library.  You can read the API documentation on [docs.rs](https://docs.rs/convert_case/).
+Convert case was written in Rust and is ready to be used inline with your rust code as a library.  You can read the API documentation on [docs.rs](https://docs.rs/convert_case/).  Bonus: this crate has 0 dependencies!
 
 ## Command Line Interface `ccase`
 
