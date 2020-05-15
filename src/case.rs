@@ -166,7 +166,9 @@ impl Case {
 
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
-    fn all_cases() -> Vec<Case> {
+    /// Returns a vector with all case enum variants.  This was
+    /// created for use in the `ccase` binary.
+    pub fn all_cases() -> Vec<Case> {
         use Case::*;
         vec![
             Upper,
