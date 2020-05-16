@@ -1,5 +1,8 @@
 use crate::Case;
 
+#[cfg(feature = "random")]
+use rand::prelude::*;
+
 pub(super) struct Words {
     words: Vec<String>,
 }
@@ -33,6 +36,13 @@ impl Words {
                 .collect(),
             Pascal | Camel | UpperCamel => Self::split_camel(name),
             Flat | UpperFlat => vec![name.to_string()],
+
+            // Same behavior as title, upper, etc.
+            #[cfg(feature = "random")]
+            Random | PseudoRandom => name
+                .split_ascii_whitespace()
+                .map(ToString::to_string)
+                .collect(),
         };
         Self { words }
     }
@@ -97,7 +107,10 @@ impl Words {
     pub fn into_case(mut self, case: Case) -> String {
         use Case::*;
         match case {
-            Camel => self.into_camel_case(),
+            Camel => {
+                self.make_camel_case();
+                self.join("")
+            }
             Title => {
                 self.capitalize_first_letter();
                 self.join(" ")
@@ -150,10 +163,82 @@ impl Words {
                 self.make_alternating();
                 self.join(" ")
             }
+            #[cfg(feature = "random")]
+            Random => {
+                self.randomize();
+                self.join(" ")
+            }
+            #[cfg(feature = "random")]
+            PseudoRandom => {
+                self.pseudo_randomize();
+                self.join(" ")
+            }
         }
     }
 
-    fn into_camel_case(mut self) -> String {
+    // Randomly picks whether to be upper case or lower case
+    #[cfg(feature = "random")]
+    fn randomize(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.words = self
+            .words
+            .iter()
+            .map(|word| {
+                word.chars()
+                    .map(|letter| {
+                        if rng.gen::<f32>() > 0.5 {
+                            letter.to_uppercase().to_string()
+                        } else {
+                            letter.to_lowercase().to_string()
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+    }
+
+    // Randomly selects patterns: [upper, lower] or [lower, upper]
+    // for a more random feeling pattern.
+    #[cfg(feature = "random")]
+    fn pseudo_randomize(&mut self) {
+        let mut rng = rand::thread_rng();
+
+        // Keeps track of when to alternate
+        let mut alt: Option<bool> = None;
+        self.words = self
+            .words
+            .iter()
+            .map(|word| {
+                word.chars()
+                    .map(|letter| {
+                        match alt {
+                            // No existing pattern, start one
+                            None => {
+                                if rng.gen::<f32>() > 0.5 {
+                                    alt = Some(false); // Make the next char lower
+                                    letter.to_uppercase().to_string()
+                                } else {
+                                    alt = Some(true); // Make the next char upper
+                                    letter.to_lowercase().to_string()
+                                }
+                            }
+                            // Existing pattern, do what it says
+                            Some(upper) => {
+                                alt = None;
+                                if upper {
+                                    letter.to_uppercase().to_string()
+                                } else {
+                                    letter.to_lowercase().to_string()
+                                }
+                            }
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+    }
+
+    fn make_camel_case(&mut self) {
         self.words = self
             .words
             .iter()
@@ -173,7 +258,6 @@ impl Words {
                 }
             })
             .collect();
-        self.join("")
     }
 
     fn make_alternating(&mut self) {

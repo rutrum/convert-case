@@ -1,0 +1,18 @@
+[package]
+name = "ccase"
+version = "0.1.1"
+authors = ["David Purdum <purdum41@gmail.com>"]
+edition = "2018"
+description = "Command line interface to convert strings into any case"
+license = "MIT"
+keywords = [ "casing", "case", "string" ]
+categories = [ "text-processing", "command-line-utilities" ]
+readme = "README.md"
+repository = "https://github.com/rutrum/ccase"
+documentation = "https://github.com/rutrum/ccase"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+convert_case = { version = "^0.3", path = "../", features = ["random"] }
+clap = "2.33.0"

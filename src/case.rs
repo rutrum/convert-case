@@ -25,6 +25,16 @@ use strum_macros::EnumIter;
 #[cfg_attr(test, derive(EnumIter))]
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Case {
+
+    /// Random case strings are delimited by spaces and characters are
+    /// randomly upper case or lower case.  This is only available with the
+    /// "random_case" feature.
+    #[cfg(feature = "random")]
+    Random,
+
+    #[cfg(feature = "random")]
+    PseudoRandom,
+
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
     ///
     /// ```
@@ -187,6 +197,11 @@ impl Case {
             Flat,
             UpperFlat,
             Alternating,
+
+            #[cfg(feature = "random")]
+            Random,
+            #[cfg(feature = "random")]
+            PseudoRandom,
         ]
     }
 }
