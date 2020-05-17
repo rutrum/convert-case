@@ -178,7 +178,7 @@ impl Case {
     // final library.  A test confirms that all cases are listed here.
     /// Returns a vector with all case enum variants.  This was
     /// created for use in the `ccase` binary.
-    pub fn all_cases() -> Vec<Case> {
+    fn all_cases() -> Vec<Case> {
         use Case::*;
         vec![
             Upper,

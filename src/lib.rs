@@ -203,6 +203,14 @@ mod test {
     }
 
     #[test]
+    fn multiline_strings() {
+        assert_eq!(
+            "One\ntwo\nthree",
+            "one\ntwo\nthree".to_case(Case::Title)
+        );
+    }
+
+    #[test]
     fn camel_case_acroynms() {
         assert_eq!(
             "xml_http_request",
