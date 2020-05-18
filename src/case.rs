@@ -1,6 +1,3 @@
-use crate::Casing;
-use std::convert::TryFrom;
-
 #[cfg(test)]
 use strum_macros::EnumIter;
 
@@ -12,28 +9,9 @@ use strum_macros::EnumIter;
 /// let super_mario_title: String = "super_mario_64".to_case(Case::Title);
 /// assert_eq!("Super Mario 64", super_mario_title);
 /// ```
-///
-/// You can also create a case from a string slice.
-/// ```
-/// use convert_case::{Case, Casing};
-/// use std::convert::TryFrom;
-///
-/// let snake_case: Case = Case::try_from("snake").unwrap();
-/// assert_eq!(Case::Snake, snake_case);
-/// ```
-///
 #[cfg_attr(test, derive(EnumIter))]
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Case {
-
-    /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.  This is only available with the
-    /// "random_case" feature.
-    #[cfg(feature = "random")]
-    Random,
-
-    #[cfg(feature = "random")]
-    PseudoRandom,
 
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
     ///
@@ -87,6 +65,7 @@ pub enum Case {
     /// assert_eq!("MyVariableName", "My variable NAME".to_case(Case::Pascal))
     /// ```
     Pascal,
+
     /// Upper camel case is an alternative name for Pascal case.
     UpperCamel,
 
@@ -105,6 +84,7 @@ pub enum Case {
     /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::UpperSnake))
     /// ```
     UpperSnake,
+    
     /// Screaming snake case is an alternative name for upper snake case.
     ScreamingSnake,
 
@@ -158,27 +138,37 @@ pub enum Case {
     /// assert_eq!("mY vArIaBlE nAmE", "My variable NAME".to_case(Case::Alternating));
     /// ```
     Alternating,
+
+    /// Random case strings are delimited by spaces and characters are
+    /// randomly upper case or lower case.  This uses the `rand` crate 
+    /// and is only available with the "random" feature.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// let new = "My variable NAME".to_case(Case::Random);
+    /// ```
+    /// `new` could be "My vaRIAbLE nAme" for example.
+    #[cfg(feature = "random")]
+    Random,
+
+    /// Pseudo-random case strings are delimited by spaces and characters are randomly
+    /// upper case or lower case, but there will never more than two consecutive lower
+    /// case or upper case letters in a row.  This uses the `rand` crate and is
+    /// only available with the "random" feature.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// let new = "My variable NAME".to_case(Case::Random);
+    /// ```
+    /// `new` could be "mY vArIAblE NamE" for example.
+    #[cfg(feature = "random")]
+    PseudoRandom,
 }
 
 impl Case {
-    /// Prints the name of the case in that case.
-    /// ```
-    /// use convert_case::Case;
-    ///
-    /// assert_eq!("UpperCamelCase", Case::UpperCamel.name_in_case());
-    /// assert_eq!("snake_case", Case::Snake.name_in_case());
-    /// assert_eq!("Title Case", Case::Title.name_in_case());
-    /// ```
-    pub fn name_in_case(self) -> String {
-        let case_str = format!("{:?}Case", self);
-        case_str.to_case(self)
-    }
-
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
     /// Returns a vector with all case enum variants.  This was
     /// created for use in the `ccase` binary.
-    fn all_cases() -> Vec<Case> {
+    pub fn all_cases() -> Vec<Case> {
         use Case::*;
         vec![
             Upper,
@@ -203,20 +193,6 @@ impl Case {
             #[cfg(feature = "random")]
             PseudoRandom,
         ]
-    }
-}
-
-impl TryFrom<&str> for Case {
-    type Error = ();
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let case_str = s.to_case(Case::Flat);
-        for case in Case::all_cases() {
-            if case_str == format!("{:?}", case).to_case(Case::Flat) {
-                return Ok(case);
-            }
-        }
-        Err(())
     }
 }
 

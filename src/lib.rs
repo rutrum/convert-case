@@ -21,8 +21,12 @@
 //! assert_eq!("Ronnie-James-Dio", "RONNIE_JAMES_DIO".to_case(Case::Train));
 //! ```
 //!
-//! By default, `to_case` will split along every word boundary, that is, spaces ` `,
-//! underscores `_`, hyphens `-`, and changes in capitalization `aA`.
+//! By default, `to_case` will split along all word boundaries, that is
+//! * space characters ` `,
+//! * underscores `_`,
+//! * hyphens `-`,
+//! * and changes in capitalization `aA`.
+//!
 //! For more accuracy, the `from_case` method splits based on the word boundaries
 //! of a particular case.  For example, splitting from snake case will only treat
 //! underscores as word boundaries.
@@ -72,6 +76,7 @@
 //! assert_eq!("e_5150", "E5150".to_case(Case::Snake));
 //! assert_eq!("10,000_days", "10,000Days".to_case(Case::Snake));
 //! assert_eq!("HELLO, WORLD!", "Hello, world!".to_case(Case::Upper));
+//! assert_eq!("One\ntwo\nthree", "ONE\nTWO\nTHREE".to_case(Case::Title));
 //! ```
 //!
 //! # Note on Accuracy
@@ -142,7 +147,7 @@ pub struct FromCasing {
 }
 
 impl FromCasing {
-    fn new(name: String, case: Case) -> Self {
+    const fn new(name: String, case: Case) -> Self {
         Self { name, case }
     }
 }
@@ -311,5 +316,10 @@ mod test {
             "abc_abc_abc_abc_abc_abc",
             "ABC-abc_abcAbc ABCAbc".to_case(Case::Snake)
         );
+    }
+
+    #[test]
+    fn alternating_ignore_symbols() {
+        assert_eq!("tHaT's", "that's".to_case(Case::Alternating));
     }
 }

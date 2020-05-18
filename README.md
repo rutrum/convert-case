@@ -2,17 +2,40 @@
 
 Converts to and from various cases.
 
-## Rust Library
+## Rust Library `convert_case`
 
-Convert case was written in Rust and is ready to be used inline with your rust code as a library.  You can read the API documentation on [docs.rs](https://docs.rs/convert_case/).  Bonus: this crate has 0 dependencies!
+Convert case was written in Rust and is ready to be used inline with your rust code as a library.
+```
+use convert_case::{Case, Casing};
 
-## Command Line Interface `ccase`
+assert_eq!("ronnieJamesDio", "Ronnie_James_dio".to_case(Case::Camel));
+assert_eq!("io_stream", "IOStream".to_case(Case::Snake));
+assert_eq!(
+    "2020-04-16 My Cat Cali",
+    "2020-04-16_my_cat_cali".from_case(Case::Snake).to_case(Case::Title)
+);
+```
+You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.  Bonus: this crate has _0 dependencies!_
 
-A command line utility `ccase` was made to leverage the tools in this library.  You can read about it at the [github repository](https://github.com/rutrum/ccase).
+## Command Line Utility `ccase`
+
+The command line utility `ccase` was made to leverage the tools in the `convert_case` library.
+```
+$ ccase -t title super_mario_64
+Super Mario 64
+
+$ ccase -f snake -t title 2020-04-15_my_cat_cali
+2020-04-16 My Cat Cali
+
+$ ccase -t camel "convert to camel"
+convertToCamel
+```
+
+You can read more about the `ccase` executable in the [`ccase` directory](https://github.com/rutrum/convert-case/tree/master/ccase) within this repository.
 
 ## Cases
 
-This is list of cases that convert\_case supports.  Some cases are simply aliases of others.
+This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature, and are automatically provided in the `ccase` binary.
 
 | Case | Example |
 | ---- | ------- |
@@ -20,6 +43,7 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Lower | my variable name |
 | Title | My Variable Name |
 | Toggle | mY vARIABLE nAME |
+| Alternating | mY vArIaBlE nAmE |
 | Camel | myVariableName |
 | Pascal | MyVariableName |
 | UpperCamel | MyVariableName |
@@ -31,4 +55,13 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Train | My-Variable-Name |
 | Flat | myvariablename |
 | UpperFlat | MYVARIABLENAME |
-| Alternating | mY vArIaBlE nAmE |
+| Random | MY vaRiabLe nAME |
+| PseudoRandom | mY VaRiAblE nAMe |
+
+## Links
+
+| | `convert_case` | `ccase` |
+| --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
+| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | |

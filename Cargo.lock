@@ -70,6 +70,8 @@ dependencies = [
  "atty",
  "clap",
  "convert_case",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]

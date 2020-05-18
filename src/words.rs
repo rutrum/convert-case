@@ -268,12 +268,16 @@ impl Words {
             .map(|word| {
                 word.chars()
                     .map(|letter| {
-                        if upper {
-                            upper = false;
-                            letter.to_uppercase().to_string()
+                        if letter.is_uppercase() || letter.is_lowercase() {
+                            if upper {
+                                upper = false;
+                                letter.to_uppercase().to_string()
+                            } else {
+                                upper = true;
+                                letter.to_lowercase().to_string()
+                            }
                         } else {
-                            upper = true;
-                            letter.to_lowercase().to_string()
+                            letter.to_string()
                         }
                     })
                     .collect()
