@@ -1,4 +1,4 @@
-# ccase
+# `ccase`
 
 A command line utility to convert to and from various cases.  `ccase` is short for "convert case."
 
@@ -23,6 +23,23 @@ GRIMALDI 2003 DISCRETE PDF
 
 $ ccase -f kebab -t upper "grimaldi-2003_discrete_pdf"
 GRIMALDI 2003_DISCRETE_PDF
+```
+
+## Use Case
+
+This binary was written with a very specific use case in mind (so the author could do a cool one-liner.)  Given a list of file names in snake case
+```
+$ ls ~/roms
+donkey_kong_64.z64
+kirby_64_the_crystal_shards.z64
+super_mario_64.z64
+```
+write out a list of nicely formatted title-case game titles.  After removing the file extension using cut, with `ccase` one can do the following.
+```
+$ ls ~/roms | cut -d '.' -f 1 | ccase -f snake -t title
+Donkey Kong 64
+Kirby 64 The Crystal Shards
+Super Mario 64
 ```
 
 ## Edge Cases
@@ -73,6 +90,7 @@ You can also view the list of cases using the `--list -l` option.  Some cases ar
 | Lower | my variable name |
 | Title | My Variable Name |
 | Toggle | mY vARIABLE nAME |
+| Alternating | mY vArIaBlE nAmE |
 | Camel | myVariableName |
 | Pascal | MyVariableName |
 | UpperCamel | MyVariableName |
@@ -84,4 +102,13 @@ You can also view the list of cases using the `--list -l` option.  Some cases ar
 | Train | My-Variable-Name |
 | Flat | myvariablename |
 | UpperFlat | MYVARIABLENAME |
-| Alternating | mY vArIaBlE nAmE |
+| Random | MY vaRiabLe nAME |
+| PseudoRandom | mY VaRiAblE nAMe |
+
+## Links
+
+| | `convert_case` | `ccase` |
+| --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
+| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | |

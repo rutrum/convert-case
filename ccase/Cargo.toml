@@ -13,6 +13,14 @@ documentation = "https://github.com/rutrum/ccase"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "ccase_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ccase"
+path = "src/main.rs"
+
 [dependencies]
 convert_case = { version = "^0.3", path = "../", features = ["random"] }
 clap = "2.33.0"
@@ -20,3 +28,5 @@ atty = "0.2.14"
 
 [dev-dependencies]
 assert_cli = "^0.6"
+strum = "0.18.0"
+strum_macros = "0.18.0"

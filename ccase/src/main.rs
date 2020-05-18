@@ -1,19 +1,21 @@
 use atty::Stream;
 use clap::{crate_version, App, AppSettings, Arg};
 use convert_case::{Case, Casing};
-use std::convert::TryFrom;
 use std::io::{self, BufRead};
 
+use ccase_lib::CaseClassification;
+
 fn main() {
-    let matches = create_app().get_matches();
+    let app = create_app();
+    let matches = app.get_matches();
 
     if matches.is_present("list-cases") {
-        list_cases();
+        Case::list();
         return;
     }
 
     let to_case_str = matches.value_of("to-case").unwrap();
-    let to_case = Case::try_from(to_case_str).unwrap();
+    let to_case = Case::from_str(to_case_str).unwrap();
 
     match matches.value_of("INPUT") {
         Some(to_convert) if !to_convert.is_empty() => {
@@ -24,7 +26,7 @@ fn main() {
                     println!("{}", to_convert.to_case(to_case));
                 }
                 Some(from_case_str) => {
-                    let from_case = Case::try_from(from_case_str).unwrap();
+                    let from_case = Case::from_str(from_case_str).unwrap();
                     println!("{}", to_convert.from_case(from_case).to_case(to_case));
                 }
             }
@@ -43,7 +45,7 @@ fn main() {
                 Some(from_case_str) => {
                     for line in stdin.lock().lines() {
                         let to_convert = line.expect("Unable to read from stdin");
-                        let from_case = Case::try_from(from_case_str).unwrap();
+                        let from_case = Case::from_str(from_case_str).unwrap();
                         println!("{}", to_convert.from_case(from_case).to_case(to_case));
                     }
                 }
@@ -52,7 +54,7 @@ fn main() {
     }
 }
 
-fn create_app<'a, 'b>() -> App<'a, 'b> { 
+fn create_app<'a, 'b>() -> App<'a, 'b> {
     App::new("Convert Case")
         .version(crate_version!())
         .author("Dave Purdum <purdum41@gmail.com>")
@@ -86,9 +88,10 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
         .arg(
             Arg::with_name("INPUT")
                 .help("The string to convert.")
-                .default_value("")
-                .required_unless("list-cases")
+                //.default_value("")
+                //.required_unless("list-cases")
                 .requires("to-case")
+                //.required(true)
                 .validator(pipe_or_inline),
         )
 }
@@ -105,29 +108,23 @@ fn pipe_or_inline(s: String) -> Result<(), String> {
 }
 
 fn is_valid_case(s: String) -> Result<(), String> {
-    match Case::try_from(s.as_str()) {
+    match Case::from_str(s.as_str()) {
         Ok(_) => Ok(()),
         Err(_) => Err(format!("the '{}' case is not implemented", s)),
     }
 }
 
-fn list_cases() {
-    println!("Valid cases:");
-    for case in Case::all_cases() {
-        println!("    {:<16} {}", format!("{:?}", case), case.name_in_case());
-    }
-}
-
 #[cfg(test)]
 mod test {
-    
+
     use assert_cli::Assert;
 
     #[test]
     fn inline_use() {
         Assert::main_binary()
             .with_args(&["-t", "snake", "myVarName"])
-            .stdout().is("my_var_name")
+            .stdout()
+            .is("my_var_name")
             .unwrap();
     }
 
@@ -136,7 +133,28 @@ mod test {
         Assert::main_binary()
             .stdin("myVarName")
             .with_args(&["-t", "snake"])
-            .stdout().is("my_var_name")
+            .stdout()
+            .is("my_var_name")
+            .unwrap();
+    }
+
+    #[test]
+    fn help_by_default() {
+        Assert::main_binary()
+            .fails()
+            .stderr()
+            .contains("FLAGS:")
+            .unwrap();
+    }
+
+    #[test]
+    #[ignore]
+    fn prints_require_input() {
+        Assert::main_binary()
+            .with_args(&["-t", "snake"])
+            .fails()
+            .stderr()
+            .contains("The following required arguments were not provided")
             .unwrap();
     }
 
@@ -145,7 +163,8 @@ mod test {
         Assert::main_binary()
             .stdin("one\ntwo\nthree")
             .with_args(&["-t", "title"])
-            .stdout().is("One\nTwo\nThree")
+            .stdout()
+            .is("One\nTwo\nThree")
             .unwrap();
     }
 
@@ -156,7 +175,7 @@ mod test {
             .fails()
             .unwrap();
         Assert::main_binary()
-            .with_args(&["-t", "title", "-f", "cammel" , "myVarName"])
+            .with_args(&["-t", "title", "-f", "cammel", "myVarName"])
             .fails()
             .unwrap();
     }
