@@ -5,7 +5,7 @@ Converts to and from various cases.
 ## Rust Library `convert_case`
 
 Convert case was written in Rust and is ready to be used inline with your rust code as a library.
-```
+```{rust}
 use convert_case::{Case, Casing};
 
 assert_eq!("ronnieJamesDio", "Ronnie_James_dio".to_case(Case::Camel));
@@ -33,6 +33,14 @@ convertToCamel
 
 You can read more about the `ccase` executable in the [`ccase` directory](https://github.com/rutrum/convert-case/tree/master/ccase) within this repository.
 
+## Links
+
+| | `convert_case` | `ccase` |
+| --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
+| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | |
+
 ## Cases
 
 This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature, and are automatically provided in the `ccase` binary.
@@ -57,11 +65,3 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | UpperFlat | MYVARIABLENAME |
 | Random | MY vaRiabLe nAME |
 | PseudoRandom | mY VaRiAblE nAMe |
-
-## Links
-
-| | `convert_case` | `ccase` |
-| --- | --- | --- |
-| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
-| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
-| Documentation | [docs.rs](https://docs.rs/convert_case) | |

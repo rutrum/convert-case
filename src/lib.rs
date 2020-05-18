@@ -4,7 +4,7 @@
 //!
 //! Since version "0.3.0" this crate is just a case conversion _library_.  The command line utility
 //! that uses the tools in this library has been moved to the `ccase` crate.  You can read about it
-//! at the [github repository](https://github.com/rutrum/ccase).
+//! at the [github repository](https://github.com/rutrum/convert-case/tree/master/ccase).
 //!
 //! # Rust Library
 //!
@@ -93,6 +93,18 @@
 //! // Converts using an unexpected method
 //! assert_eq!("my_kebab_like_variable", "myKebab-like-variable".to_case(Case::Snake));
 //! ```
+//!
+//! # Random Feature
+//!
+//! To ensure this library had zero dependencies, randomness was moved to the _random_ feature,
+//! which requires the `rand` crate. You can enable this feature by including the 
+//! following in your `Cargo.toml`.
+//! ```{toml}
+//! [dependencies]
+//! convert_case = { version = "^0.3, features = ["random"] }
+//! ```
+//! This will add two additional cases: Random and PseudoRandom.  You can read about their
+//! construction in the [Case enum](enum.Case.html).
 
 mod case;
 mod words;
