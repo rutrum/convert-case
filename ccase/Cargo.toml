@@ -8,8 +8,8 @@ license = "MIT"
 keywords = [ "casing", "case", "string" ]
 categories = [ "text-processing", "command-line-utilities" ]
 readme = "README.md"
-repository = "https://github.com/rutrum/ccase"
-documentation = "https://github.com/rutrum/ccase"
+repository = "https://github.com/rutrum/convert-case/tree/master/ccase"
+documentation = "https://github.com/rutrum/convert-case/tree/master/ccase"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
