@@ -65,3 +65,7 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | UpperFlat | MYVARIABLENAME |
 | Random | MY vaRiabLe nAME |
 | PseudoRandom | mY VaRiAblE nAMe |
+
+## License
+
+Licensed under [MIT License](./LICENSE).
