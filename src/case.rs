@@ -147,7 +147,7 @@ pub enum Case {
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
     /// `new` could be "My vaRIAbLE nAme" for example.
-    #[cfg(feature = "random")]
+    #[cfg(any(doc, feature = "random"))]
     Random,
 
     /// Pseudo-random case strings are delimited by spaces and characters are randomly
@@ -159,7 +159,7 @@ pub enum Case {
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
     /// `new` could be "mY vArIAblE NamE" for example.
-    #[cfg(feature = "random")]
+    #[cfg(any(doc, feature = "random"))]
     PseudoRandom,
 }
 
