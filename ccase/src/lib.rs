@@ -1,4 +1,4 @@
-use convert_case::{Casing, Case};
+use convert_case::{Case, Casing};
 
 #[cfg(test)]
 use strum_macros::EnumIter;
@@ -21,7 +21,7 @@ impl CaseKind {
         match c {
             Upper | Lower | Title | Toggle | Alternating => SpaceDelim,
             Snake | UpperSnake | ScreamingSnake => UnderscoreDelim,
-            Kebab | Cobol | Train => HyphenDelim,
+            Kebab | UpperKebab | Cobol | Train => HyphenDelim,
             Flat | UpperFlat => NoDelim,
             Camel | UpperCamel | Pascal => CapitalDelim,
             Case::Random | PseudoRandom => CaseKind::Random,
@@ -75,8 +75,9 @@ impl CaseClassification for Case {
         use Case::*;
         match self {
             UpperCamel => Some(Pascal),
+            UpperKebab => Some(Cobol),
             ScreamingSnake => Some(UpperSnake),
-            _ => None
+            _ => None,
         }
     }
 
@@ -87,7 +88,7 @@ impl CaseClassification for Case {
         match self {
             Upper | Lower | Title | Toggle | Alternating => SpaceDelim,
             Snake | UpperSnake | ScreamingSnake => UnderscoreDelim,
-            Kebab | Cobol | Train => HyphenDelim,
+            Kebab | UpperKebab | Cobol | Train => HyphenDelim,
             Flat | UpperFlat => NoDelim,
             Camel | UpperCamel | Pascal => CapitalDelim,
             Case::Random | PseudoRandom => CaseKind::Random,
@@ -125,10 +126,7 @@ impl CaseClassification for Case {
     fn list() {
         for kind in &CaseKind::all_kinds() {
             println!("{}:", kind.name());
-            for case in Case::all_cases()
-                .iter()
-                .filter(|&x| x.kind() == *kind)
-            {
+            for case in Case::all_cases().iter().filter(|&x| x.kind() == *kind) {
                 println!("  {:<16} {}", format!("{:?}", case), case.name_in_case());
                 if let Some(short) = case.short_name() {
                     println!("   (or {})", short);
@@ -156,5 +154,4 @@ mod test {
     fn short_name_to_case() {
         assert_eq!(Case::from_str("pseudo").unwrap(), Case::PseudoRandom);
     }
-
 }
