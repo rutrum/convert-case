@@ -11,7 +11,7 @@ enum Error {
     Stdin,
     NoToCase,
     InvalidCase(String),
-    FileError(String),
+    //FileError(String),
 }
 
 impl fmt::Display for Error {
@@ -21,7 +21,7 @@ impl fmt::Display for Error {
             Stdin => "Unable to read from stdin".to_string(),
             NoToCase => "No `to-case` provided".to_string(),
             InvalidCase(s) => format!("The `{}` case is not implemented", s),
-            FileError(s) => format!("File `{}` does not exist", s),
+            //FileError(s) => format!("File `{}` does not exist", s),
         };
         write!(f, "{}", s)
     }
@@ -139,7 +139,10 @@ fn main() -> Result<(), Error> {
             for (o, n) in conversion.strings.iter().zip(conversion.converted.iter()) {
                 match std::fs::rename(o, n) {
                     Ok(_) => println!("{} => {}", o, n),
-                    Err(e) => println!("{}", e),
+                    Err(e) => {
+                        println!("{}", e);
+                        return Ok(())
+                    }
                 }
             }
         }
@@ -172,7 +175,6 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
                     Arg::with_name("PATH")
                         .help("The path to the file to rename.")
                         //.default_value("")
-                        //.required_unless("list-cases")
                         .requires("to-case")
                         //.required(true)
                         .validator(pipe_or_inline),
@@ -188,7 +190,6 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
             Arg::with_name("INPUT")
                 .help("The string to convert.")
                 //.default_value("")
-                //.required_unless("list-cases")
                 .requires("to-case")
                 //.required(true)
                 .validator(pipe_or_inline),
@@ -259,6 +260,16 @@ mod test {
     }
 
     #[test]
+    fn list_cases() {
+        Assert::main_binary()
+            .with_args(&["list"])
+            .stdout().contains("kebab-case")
+            .stdout().contains("snake_case")
+            .stdout().contains("UPPER CASE")
+            .unwrap();
+    }
+
+    #[test]
     fn help_by_default() {
         Assert::main_binary()
             .fails()
@@ -298,5 +309,64 @@ mod test {
             .with_args(&["-t", "title", "-f", "cammel", "myVarName"])
             .fails()
             .unwrap();
+    }
+
+    // Rename related tests
+    use std::path::Path;
+    use std::fs;
+    
+    #[test] 
+    fn proper_setup_cleanup() {
+        setup("setup");
+        assert!(Path::new("./test/tmp_setup").exists());
+        cleanup("setup");
+        assert!(!Path::new("./test/tmp_setup").exists());
+    }
+
+    #[test]
+    fn rename_file_with_ext() {
+        setup("ext");
+        Assert::main_binary()
+            .with_args(&["file", "test/tmp_ext/styx.txt", "-t", "pascal"])
+            .succeeds()
+            .unwrap();
+        assert!(Path::new("./test/tmp_ext/Styx.txt").exists());
+        cleanup("ext");
+    }
+
+    #[test]
+    fn rename_single_file() {
+        setup("single");
+        Assert::main_binary()
+            .with_args(&["file", "test/tmp_single/rush", "-t", "upper"])
+            .succeeds()
+            .unwrap();
+        assert!(Path::new("./test/tmp_single/RUSH").exists());
+        cleanup("single");
+    }
+    
+    /// Copies all test data from `test/data` to `test/tmp`
+    fn setup(s: &str) {
+        cleanup(s);
+        fs::create_dir(format!("./test/tmp_{}", s));
+        for entry in fs::read_dir("./test/data").unwrap() {
+            let entry = entry.unwrap();
+            let original = entry.path();
+            let filename = original.file_name().unwrap();
+            let new = Path::new(&format!("./test/tmp_{}/file", s)).with_file_name(filename);
+            fs::copy(original, new).unwrap();
+        }
+    }
+
+    /// Removes all data from `test/tmp`
+    fn cleanup(s: &str) {
+        if Path::new(&format!("./test/tmp_{}", s)).exists() {
+            for entry in fs::read_dir(format!("./test/tmp_{}", s)).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                fs::remove_file(path).unwrap();
+            }
+            fs::remove_dir(format!("./test/tmp_{}", s));
+        }
     }
 }
