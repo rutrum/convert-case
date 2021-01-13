@@ -1,15 +1,17 @@
 use atty::Stream;
-use clap::{crate_version, App, AppSettings, Arg, ArgMatches};
+use clap::{crate_version, SubCommand, App, AppSettings, Arg, ArgMatches};
 use convert_case::{Case, Casing};
-use std::io::{self, BufRead};
 use std::fmt;
+use std::io::{self, BufRead};
 
 use ccase_lib::CaseClassification;
 
+#[derive(Debug)]
 enum Error {
     Stdin,
     NoToCase,
     InvalidCase(String),
+    FileError(String),
 }
 
 impl fmt::Display for Error {
@@ -18,7 +20,8 @@ impl fmt::Display for Error {
         let s = match self {
             Stdin => "Unable to read from stdin".to_string(),
             NoToCase => "No `to-case` provided".to_string(),
-            InvalidCase(s) => format!("The `{}` case is not implemented", s)
+            InvalidCase(s) => format!("The `{}` case is not implemented", s),
+            FileError(s) => format!("File `{}` does not exist", s),
         };
         write!(f, "{}", s)
     }
@@ -27,86 +30,130 @@ impl fmt::Display for Error {
 struct Conversion {
     to: Case,
     from: Option<Case>,
-    s: Option<String>,
+    strings: Vec<String>,
+    converted: Vec<String>,
 }
+
+use std::path::Path;
 
 impl Conversion {
-    pub fn from_matches(matches: ArgMatches) -> Result<Self, Error> {
-        let to_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
-        let to = Case::from_str(to_str).map_err(|_| Error::InvalidCase(to_str.to_string()))?;
-
-        let from = match matches.value_of("from-case") {
-            None => None,
-            Some(from_str) => {
-                Some(Case::from_str(from_str).map_err(|_| Error::InvalidCase(from_str.to_string()))?)
+    pub fn strings(matches: &ArgMatches) -> Result<Self, Error> {
+        let to = Self::to_from_matches(&matches)?;
+        let from = Self::from_from_matches(&matches)?;
+        let strings = Self::input_from_matches_or_stdin(&matches, "INPUT")?;
+        
+        let converted = strings.iter().map(|s| {
+            match from {
+                Some(from) => s.from_case(from).to_case(to),
+                None => s.to_case(to),
             }
-        };
-
-        let s = match matches.value_of("INPUT") {
-            Some(s) if !s.is_empty() => Some(s.to_string()),
-            _ => None
-        };
-
-        Ok(Conversion {to, from, s })
+        }).collect();
+        
+        Ok(Conversion {
+            to, from, strings, converted
+        })
     }
 
-    fn convert(self) -> Result<String, Error> {
-        let new = match (self.from, self.s) {
-            (Some(from), Some(s)) => s.from_case(from).to_case(self.to),
-            (None, Some(s)) => s.to_case(self.to),
-            (Some(from), None) => {
-                let mut lines = vec![];
-                for line in io::stdin().lock().lines() {
-                    let s = line.map_err(|_| Error::Stdin)?.from_case(from).to_case(self.to);
-                    lines.push(s);
+    pub fn paths(matches: &ArgMatches) -> Result<Self, Error> {
+        let to = Self::to_from_matches(&matches)?;
+        let from = Self::from_from_matches(&matches)?;
+        let strings = Self::input_from_matches_or_stdin(&matches, "PATH")?;
+        
+        let converted = strings.iter().map(|s| {
+            let p = Path::new(s);
+            let filename = p
+                .file_stem()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default();
+            let new_filename = match from {
+                Some(from) => filename.from_case(from).to_case(to),
+                None => filename.to_case(to),
+            };
+            match (p.parent(), p.extension()) {
+                (Some(p), Some(e)) => {
+                    let mut p = p.join(new_filename).to_path_buf();
+                    p.set_extension(e);
+                    format!("{}", p.into_os_string().into_string().unwrap())
                 }
-                lines.join("\n")
+                (Some(p), None) => format!(
+                    "{}",
+                    p.join(new_filename).into_os_string().into_string().unwrap()
+                ),
+                (None, Some(e)) => {
+                    let mut p = Path::new(&new_filename).to_path_buf();
+                    p.set_extension(e);
+                    format!("{}", p.into_os_string().into_string().unwrap())
+                }
+                (None, None) => new_filename,
             }
-            (None, None) => {
+        }).collect();
+        
+        Ok(Conversion {
+            to, from, strings, converted
+        })
+    }
+
+    fn to_from_matches(matches: &ArgMatches) -> Result<Case, Error> {
+        let to_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
+        let to = Case::from_str(to_str).map_err(|_| Error::InvalidCase(to_str.to_string()))?;
+        Ok(to)
+    }
+
+    fn from_from_matches(matches: &ArgMatches) -> Result<Option<Case>, Error> {
+        let from = match matches.value_of("from-case") {
+            None => None,
+            Some(from_str) => Some(
+                Case::from_str(from_str).map_err(|_| Error::InvalidCase(from_str.to_string()))?,
+            ),
+        };
+        Ok(from)
+    }
+
+    fn input_from_matches_or_stdin(matches: &ArgMatches, input: &'static str) -> Result<Vec<String>, Error> {
+        let strings = match matches.value_of(input) {
+            Some(s) if !s.is_empty() => vec![s.to_string()],
+            _ => {
                 let mut lines = vec![];
                 for line in io::stdin().lock().lines() {
-                    let s = line.map_err(|_| Error::Stdin)?.to_case(self.to);
-                    lines.push(s);
+                    lines.push(line.map_err(|_| Error::Stdin)?);
                 }
-                lines.join("\n")
+                lines
             }
         };
-        Ok(new)
+        Ok(strings)
     }
 }
 
-fn main() -> Result<(), ()> {
+fn main() -> Result<(), Error> {
     let app = create_app();
     let matches = app.get_matches();
 
-    if matches.is_present("list-cases") {
-        Case::list();
-        return Ok(());
-    }
-
-    match Conversion::from_matches(matches) {
-        Ok(c) => match c.convert() {
-            Ok(s) => println!("{}", s),
-            Err(e) => {
-                eprintln!("{}", e);
-                return Err(());
+    match matches.subcommand() {
+        ("list", _) => { 
+            Case::list(); 
+            return Ok(());
+        }
+        ("file", Some(sub_m)) => {
+            let conversion = Conversion::paths(&sub_m)?;
+            for (o, n) in conversion.strings.iter().zip(conversion.converted.iter()) {
+                match std::fs::rename(o, n) {
+                    Ok(_) => println!("{} => {}", o, n),
+                    Err(e) => println!("{}", e),
+                }
             }
         }
-        Err(e) => {
-            eprintln!("{}", e);
-            return Err(());
+        _ => {
+            // No special command, just convert input
+            let conversion = Conversion::strings(&matches)?;
+            for s in conversion.converted {
+                println!("{}", s);
+            }
         }
     }
-    
+
     Ok(())
 }
-
-fn convert_stdin(matches: ArgMatches) {
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {}
-}
-
-fn convert(matches: ArgMatches) {}
 
 fn create_app<'a, 'b>() -> App<'a, 'b> {
     App::new("Convert Case")
@@ -114,30 +161,28 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
         .author("Dave Purdum <purdum41@gmail.com>")
         .about("Converts to and from various cases.")
         .setting(AppSettings::ArgRequiredElseHelp)
-        .arg(
-            Arg::with_name("list-cases")
-                .short("l")
-                .long("list")
-                .help("Lists available cases"),
+        .subcommand(
+            SubCommand::with_name("file")
+                .about("Rename files in new cases")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .version(crate_version!())
+                .author("Dave Purdum <purdum41@gmail.com>")
+                .about("Renames files into various cases.")
+                .arg(
+                    Arg::with_name("PATH")
+                        .help("The path to the file to rename.")
+                        //.default_value("")
+                        //.required_unless("list-cases")
+                        .requires("to-case")
+                        //.required(true)
+                        .validator(pipe_or_inline),
+                )
+                .args(&case_args())
+
         )
-        .arg(
-            Arg::with_name("to-case")
-                .short("t")
-                .long("to")
-                .value_name("CASE")
-                .help("The case to convert into.")
-                .takes_value(true)
-                .required_unless("list-cases")
-                .validator(is_valid_case),
-        )
-        .arg(
-            Arg::with_name("from-case")
-                .short("f")
-                .long("from")
-                .value_name("CASE")
-                .help("The case to parse input as.")
-                .validator(is_valid_case)
-                .takes_value(true),
+        .subcommand(
+            SubCommand::with_name("list")
+                .about("List available cases")
         )
         .arg(
             Arg::with_name("INPUT")
@@ -148,13 +193,27 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
                 //.required(true)
                 .validator(pipe_or_inline),
         )
-        .arg(
-            Arg::with_name("rename-file")
-                .help("Rename the given file.")
-                .requires("to-case")
-                .short("r")
-                .long("rename"),
-        )
+        .args(&case_args())
+}
+
+fn case_args() -> Vec<Arg<'static, 'static>> {
+    vec![
+        Arg::with_name("to-case")
+            .short("t")
+            .long("to")
+            .value_name("CASE")
+            .help("The case to convert into.")
+            .takes_value(true)
+            //.required_unless("list-cases")
+            .validator(is_valid_case),
+        Arg::with_name("from-case")
+            .short("f")
+            .long("from")
+            .value_name("CASE")
+            .help("The case to parse input as.")
+            .validator(is_valid_case)
+            .takes_value(true),
+    ]
 }
 
 // Returns true if either a string is provided or data
