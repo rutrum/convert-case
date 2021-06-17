@@ -27,6 +27,6 @@ random = ["rand"]
 rand = { version = "^0.7", optional = true }
 
 [dev-dependencies]
-strum = "0.18.0"
-strum_macros = "0.18.0"
+strum = "0.21.0"
+strum_macros = "0.21.0"
 
