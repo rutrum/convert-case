@@ -213,7 +213,10 @@ impl Case {
             #[cfg(feature = "random")]
             Random | PseudoRandom => vec![Space],
 
-            UpperFlat | Flat | Camel | UpperCamel | Pascal => vec![LowerUpper],
+            UpperFlat | Flat => vec![],
+            Camel | UpperCamel | Pascal => vec![
+                LowerUpper, Acronyms, LowerDigit, UpperDigit, DigitLower, DigitUpper
+            ],
         }
     }
 

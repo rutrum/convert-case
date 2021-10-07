@@ -19,6 +19,15 @@ impl Words {
     }
 
     pub fn from_casing(name: &str, case: Case) -> Self {
+        let bs = case.boundaries();
+
+        let words = boundary::split(name, bs);
+
+        Self { words }
+    }
+
+    /*
+    pub fn from_casing(name: &str, case: Case) -> Self {
         use Case::*;
         let words = match case {
             Title | Upper | Lower | Toggle | Alternating => name
@@ -47,6 +56,7 @@ impl Words {
         };
         Self { words }
     }
+    */
 
     fn split_camel(name: &str) -> Vec<String> {
         let left_iter = name.chars();
