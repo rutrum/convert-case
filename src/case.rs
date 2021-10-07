@@ -202,6 +202,21 @@ impl Case {
         }
     }
 
+    pub fn boundaries(&self) -> Vec<Boundary> {
+        use Case::*;
+        use Boundary::*;
+        match self {
+            Upper | Lower | Title | Toggle | Alternating => vec![Space],
+            Snake | UpperSnake | ScreamingSnake => vec![Underscore],
+            Kebab | Cobol | UpperKebab | Train => vec![Hyphen],
+
+            #[cfg(feature = "random")]
+            Random | PseudoRandom => vec![Space],
+
+            UpperFlat | Flat | Camel | UpperCamel | Pascal => vec![LowerUpper],
+        }
+    }
+
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
     /// Returns a vector with all case enum variants.  This was

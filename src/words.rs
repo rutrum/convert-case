@@ -1,4 +1,5 @@
 use crate::Case;
+use crate::boundary;
 
 #[cfg(feature = "random")]
 use rand::prelude::*;
@@ -104,7 +105,7 @@ impl Words {
         words.iter().rev().map(ToString::to_string).collect()
     }
 
-    pub fn into_case(mut self, case: Case) -> String {
+    pub fn into_case(self, case: Case) -> String {
         let words = self.words;
         let pattern = case.pattern();
         let delim = case.delim();
