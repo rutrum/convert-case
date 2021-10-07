@@ -24,7 +24,7 @@ impl Words {
                 .split_ascii_whitespace()
                 .map(ToString::to_string)
                 .collect(),
-            Kebab | Cobol | Train => name
+            Kebab | Cobol | UpperKebab | Train => name
                 .split('-')
                 .map(ToString::to_string)
                 .filter(|s| !s.is_empty())
@@ -127,7 +127,7 @@ impl Words {
                 self.make_lowercase();
                 self.join("_")
             }
-            Cobol => {
+            Cobol | UpperKebab => {
                 self.make_uppercase();
                 self.join("-")
             }

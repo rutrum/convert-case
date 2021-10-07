@@ -1,4 +1,28 @@
 use convert_case::{Case, Casing};
+use std::fmt;
+
+pub mod conversion;
+
+#[derive(Debug)]
+pub enum Error {
+    Stdin,
+    NoToCase,
+    InvalidCase(String),
+    //FileError(String),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use Error::*;
+        let s = match self {
+            Stdin => "Unable to read from stdin".to_string(),
+            NoToCase => "No `to-case` provided".to_string(),
+            InvalidCase(s) => format!("The `{}` case is not implemented", s),
+            //FileError(s) => format!("File `{}` does not exist", s),
+        };
+        write!(f, "{}", s)
+    }
+}
 
 #[cfg(test)]
 use strum_macros::EnumIter;

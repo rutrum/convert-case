@@ -1,137 +1,20 @@
 use atty::Stream;
-use clap::{crate_version, SubCommand, App, AppSettings, Arg, ArgMatches};
-use convert_case::{Case, Casing};
-use std::fmt;
-use std::io::{self, BufRead};
+use clap::{crate_version, App, AppSettings, Arg, SubCommand};
+use convert_case::Case;
 
+use ccase_lib::conversion::Conversion;
 use ccase_lib::CaseClassification;
+use ccase_lib::Error;
 
-#[derive(Debug)]
-enum Error {
-    Stdin,
-    NoToCase,
-    InvalidCase(String),
-    //FileError(String),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use Error::*;
-        let s = match self {
-            Stdin => "Unable to read from stdin".to_string(),
-            NoToCase => "No `to-case` provided".to_string(),
-            InvalidCase(s) => format!("The `{}` case is not implemented", s),
-            //FileError(s) => format!("File `{}` does not exist", s),
-        };
-        write!(f, "{}", s)
-    }
-}
-
-struct Conversion {
-    to: Case,
-    from: Option<Case>,
-    strings: Vec<String>,
-    converted: Vec<String>,
-}
-
-use std::path::Path;
-
-impl Conversion {
-    pub fn strings(matches: &ArgMatches) -> Result<Self, Error> {
-        let to = Self::to_from_matches(&matches)?;
-        let from = Self::from_from_matches(&matches)?;
-        let strings = Self::input_from_matches_or_stdin(&matches, "INPUT")?;
-        
-        let converted = strings.iter().map(|s| {
-            match from {
-                Some(from) => s.from_case(from).to_case(to),
-                None => s.to_case(to),
-            }
-        }).collect();
-        
-        Ok(Conversion {
-            to, from, strings, converted
-        })
-    }
-
-    pub fn paths(matches: &ArgMatches) -> Result<Self, Error> {
-        let to = Self::to_from_matches(&matches)?;
-        let from = Self::from_from_matches(&matches)?;
-        let strings = Self::input_from_matches_or_stdin(&matches, "PATH")?;
-        
-        let converted = strings.iter().map(|s| {
-            let p = Path::new(s);
-            let filename = p
-                .file_stem()
-                .unwrap_or_default()
-                .to_str()
-                .unwrap_or_default();
-            let new_filename = match from {
-                Some(from) => filename.from_case(from).to_case(to),
-                None => filename.to_case(to),
-            };
-            match (p.parent(), p.extension()) {
-                (Some(p), Some(e)) => {
-                    let mut p = p.join(new_filename).to_path_buf();
-                    p.set_extension(e);
-                    format!("{}", p.into_os_string().into_string().unwrap())
-                }
-                (Some(p), None) => format!(
-                    "{}",
-                    p.join(new_filename).into_os_string().into_string().unwrap()
-                ),
-                (None, Some(e)) => {
-                    let mut p = Path::new(&new_filename).to_path_buf();
-                    p.set_extension(e);
-                    format!("{}", p.into_os_string().into_string().unwrap())
-                }
-                (None, None) => new_filename,
-            }
-        }).collect();
-        
-        Ok(Conversion {
-            to, from, strings, converted
-        })
-    }
-
-    fn to_from_matches(matches: &ArgMatches) -> Result<Case, Error> {
-        let to_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
-        let to = Case::from_str(to_str).map_err(|_| Error::InvalidCase(to_str.to_string()))?;
-        Ok(to)
-    }
-
-    fn from_from_matches(matches: &ArgMatches) -> Result<Option<Case>, Error> {
-        let from = match matches.value_of("from-case") {
-            None => None,
-            Some(from_str) => Some(
-                Case::from_str(from_str).map_err(|_| Error::InvalidCase(from_str.to_string()))?,
-            ),
-        };
-        Ok(from)
-    }
-
-    fn input_from_matches_or_stdin(matches: &ArgMatches, input: &'static str) -> Result<Vec<String>, Error> {
-        let strings = match matches.value_of(input) {
-            Some(s) if !s.is_empty() => vec![s.to_string()],
-            _ => {
-                let mut lines = vec![];
-                for line in io::stdin().lock().lines() {
-                    lines.push(line.map_err(|_| Error::Stdin)?);
-                }
-                lines
-            }
-        };
-        Ok(strings)
-    }
-}
+// Idea: add option -d aA0 to split on lower to upper, and upper to digit
 
 fn main() -> Result<(), Error> {
     let app = create_app();
     let matches = app.get_matches();
 
     match matches.subcommand() {
-        ("list", _) => { 
-            Case::list(); 
+        ("list", _) => {
+            Case::list();
             return Ok(());
         }
         ("file", Some(sub_m)) => {
@@ -141,7 +24,7 @@ fn main() -> Result<(), Error> {
                     Ok(_) => println!("{} => {}", o, n),
                     Err(e) => {
                         println!("{}", e);
-                        return Ok(())
+                        return Ok(());
                     }
                 }
             }
@@ -179,19 +62,23 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
                         //.required(true)
                         .validator(pipe_or_inline),
                 )
-                .args(&case_args())
-
+                .arg(
+                    Arg::with_name("ext")
+                        .short("e")
+                        .long("ext")
+                        .help("Use to also convert the file extension.")
+                        .long_help(
+                            "Will convert the file extension as though \
+                                   it were separate identifier, in addition to the filename.",
+                        ),
+                )
+                .args(&case_args()),
         )
-        .subcommand(
-            SubCommand::with_name("list")
-                .about("List available cases")
-        )
+        .subcommand(SubCommand::with_name("list").about("List available cases"))
         .arg(
             Arg::with_name("INPUT")
                 .help("The string to convert.")
-                //.default_value("")
                 .requires("to-case")
-                //.required(true)
                 .validator(pipe_or_inline),
         )
         .args(&case_args())
@@ -205,7 +92,6 @@ fn case_args() -> Vec<Arg<'static, 'static>> {
             .value_name("CASE")
             .help("The case to convert into.")
             .takes_value(true)
-            //.required_unless("list-cases")
             .validator(is_valid_case),
         Arg::with_name("from-case")
             .short("f")
@@ -263,9 +149,12 @@ mod test {
     fn list_cases() {
         Assert::main_binary()
             .with_args(&["list"])
-            .stdout().contains("kebab-case")
-            .stdout().contains("snake_case")
-            .stdout().contains("UPPER CASE")
+            .stdout()
+            .contains("kebab-case")
+            .stdout()
+            .contains("snake_case")
+            .stdout()
+            .contains("UPPER CASE")
             .unwrap();
     }
 
@@ -312,61 +201,91 @@ mod test {
     }
 
     // Rename related tests
-    use std::path::Path;
     use std::fs;
-    
-    #[test] 
+    use std::path::Path;
+
+    #[test]
     fn proper_setup_cleanup() {
         setup("setup");
-        assert!(Path::new("./test/tmp_setup").exists());
+        assert!(Path::new("./test/tmp/setup").exists());
         cleanup("setup");
-        assert!(!Path::new("./test/tmp_setup").exists());
+        assert!(!Path::new("./test/tmp/setup").exists());
     }
 
     #[test]
     fn rename_file_with_ext() {
         setup("ext");
         Assert::main_binary()
-            .with_args(&["file", "test/tmp_ext/styx.txt", "-t", "pascal"])
+            .with_args(&["file", "test/tmp/ext/styx.txt", "-e", "-t", "pascal"])
             .succeeds()
             .unwrap();
-        assert!(Path::new("./test/tmp_ext/Styx.txt").exists());
+        assert!(Path::new("./test/tmp/ext/Styx.Txt").exists());
+        Assert::main_binary()
+            .with_args(&["file", "test/tmp/ext/van_halen.exe", "-e", "-t", "UPPER"])
+            .succeeds()
+            .unwrap();
+        assert!(Path::new("./test/tmp/ext/VAN HALEN.EXE").exists());
         cleanup("ext");
+    }
+
+    #[test]
+    fn rename_file_and_ext() {
+        setup("file_ext");
+        Assert::main_binary()
+            .with_args(&["file", "test/tmp/file_ext/styx.txt", "-t", "pascal"])
+            .succeeds()
+            .unwrap();
+        assert!(Path::new("./test/tmp/file_ext/Styx.txt").exists());
+        cleanup("file_ext");
     }
 
     #[test]
     fn rename_single_file() {
         setup("single");
         Assert::main_binary()
-            .with_args(&["file", "test/tmp_single/rush", "-t", "upper"])
+            .with_args(&["file", "test/tmp/single/rush", "-t", "upper"])
             .succeeds()
             .unwrap();
-        assert!(Path::new("./test/tmp_single/RUSH").exists());
+        assert!(Path::new("./test/tmp/single/RUSH").exists());
         cleanup("single");
     }
-    
+
+    #[test]
+    fn rename_multiple_dots() {
+        setup("dots");
+        Assert::main_binary()
+            .with_args(&["file", "test/tmp/dots/blue-oyster.cult.gdz", "-t", "title"])
+            .succeeds()
+            .unwrap();
+        assert!(Path::new("./test/tmp/dots/Blue Oyster.cult.gdz").exists());
+        cleanup("dots");
+    }
+
     /// Copies all test data from `test/data` to `test/tmp`
     fn setup(s: &str) {
         cleanup(s);
-        fs::create_dir(format!("./test/tmp_{}", s));
+        if !Path::new("./test/tmp").exists() {
+            fs::create_dir("./test/tmp").unwrap();
+        }
+        fs::create_dir(format!("./test/tmp/{}", s)).ok();
         for entry in fs::read_dir("./test/data").unwrap() {
             let entry = entry.unwrap();
             let original = entry.path();
             let filename = original.file_name().unwrap();
-            let new = Path::new(&format!("./test/tmp_{}/file", s)).with_file_name(filename);
+            let new = Path::new(&format!("./test/tmp/{}/file", s)).with_file_name(filename);
             fs::copy(original, new).unwrap();
         }
     }
 
     /// Removes all data from `test/tmp`
     fn cleanup(s: &str) {
-        if Path::new(&format!("./test/tmp_{}", s)).exists() {
-            for entry in fs::read_dir(format!("./test/tmp_{}", s)).unwrap() {
+        if Path::new(&format!("./test/tmp/{}", s)).exists() {
+            for entry in fs::read_dir(format!("./test/tmp/{}", s)).unwrap() {
                 let entry = entry.unwrap();
                 let path = entry.path();
                 fs::remove_file(path).unwrap();
             }
-            fs::remove_dir(format!("./test/tmp_{}", s));
+            fs::remove_dir(format!("./test/tmp/{}", s)).ok();
         }
     }
 }

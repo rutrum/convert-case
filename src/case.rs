@@ -1,6 +1,9 @@
 #[cfg(test)]
 use strum_macros::EnumIter;
 
+use crate::pattern::Pattern;
+use crate::boundary::Boundary;
+
 /// Defines the type of casing a string can be.
 ///
 /// ```
@@ -10,9 +13,8 @@ use strum_macros::EnumIter;
 /// assert_eq!("Super Mario 64", super_mario_title);
 /// ```
 #[cfg_attr(test, derive(EnumIter))]
-#[derive(Eq, PartialEq, Clone, Copy, Debug)]
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
-
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
     ///
     /// ```
@@ -84,7 +86,7 @@ pub enum Case {
     /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::UpperSnake))
     /// ```
     UpperSnake,
-    
+
     /// Screaming snake case is an alternative name for upper snake case.
     ScreamingSnake,
 
@@ -103,6 +105,9 @@ pub enum Case {
     /// assert_eq!("MY-VARIABLE-NAME", "My variable NAME".to_case(Case::Cobol))
     /// ```
     Cobol,
+
+    /// Screaming snake case is an alternative name for upper snake case.
+    UpperKebab,
 
     /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
     /// except for the leading character of each word.
@@ -140,7 +145,7 @@ pub enum Case {
     Alternating,
 
     /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.  This uses the `rand` crate 
+    /// randomly upper case or lower case.  This uses the `rand` crate
     /// and is only available with the "random" feature.
     /// ```
     /// use convert_case::{Case, Casing};
@@ -164,6 +169,39 @@ pub enum Case {
 }
 
 impl Case {
+    pub const fn delim(&self) -> &str {
+        use Case::*;
+        match self {
+            Upper | Lower | Title | Toggle | Alternating => " ",
+            Snake | UpperSnake | ScreamingSnake => "_",
+            Kebab | Cobol | UpperKebab | Train => "-",
+
+            #[cfg(feature = "random")]
+            Random | PseudoRandom => " ",
+
+            UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
+        }
+    }
+
+    pub const fn pattern(&self) -> Pattern {
+        use Case::*;
+        match self {
+            Upper | UpperSnake | ScreamingSnake | UpperFlat | Cobol | UpperKebab => {
+                Pattern::Uppercase
+            }
+            Lower | Snake | Kebab | Flat => Pattern::Lowercase,
+            Title | Pascal | UpperCamel | Train => Pattern::Capital,
+            Camel => Pattern::Camel,
+            Toggle => Pattern::Toggle,
+            Alternating => Pattern::Alternating,
+
+            #[cfg(feature = "random")]
+            Random => Pattern::Random,
+            #[cfg(feature = "random")]
+            PseudoRandom => Pattern::PseudoRandom,
+        }
+    }
+
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
     /// Returns a vector with all case enum variants.  This was
@@ -183,15 +221,38 @@ impl Case {
             ScreamingSnake,
             Kebab,
             Cobol,
+            UpperKebab,
             Train,
             Flat,
             UpperFlat,
             Alternating,
-
             #[cfg(feature = "random")]
             Random,
             #[cfg(feature = "random")]
             PseudoRandom,
+        ]
+    }
+
+    pub fn deterministic_cases() -> Vec<Case> {
+        use Case::*;
+        vec![
+            Upper,
+            Lower,
+            Title,
+            Toggle,
+            Camel,
+            Pascal,
+            UpperCamel,
+            Snake,
+            UpperSnake,
+            ScreamingSnake,
+            Kebab,
+            Cobol,
+            UpperKebab,
+            Train,
+            Flat,
+            UpperFlat,
+            Alternating,
         ]
     }
 }

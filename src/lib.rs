@@ -25,7 +25,8 @@
 //! * space characters ` `,
 //! * underscores `_`,
 //! * hyphens `-`,
-//! * and changes in capitalization `aA`.
+//! * changes in capitalization from lowercase to uppercase `aA`,
+//! * and adjacent digits and letters `a1` and `1a`.
 //!
 //! For more accuracy, the `from_case` method splits based on the word boundaries
 //! of a particular case.  For example, splitting from snake case will only treat
@@ -66,13 +67,13 @@
 //! let odysseus = "ὈΔΥΣΣΕΎΣ";
 //! assert_eq!("ὀδυσσεύς", odysseus.to_case(Case::Lower));
 //! ```
-//! 
-//! For the purposes of case conversion, characters followed by numerics and vice-versa are 
-//! considered word boundaries.  In addition, any special ascii characters (besides `_` and `-`) 
+//!
+//! For the purposes of case conversion, characters followed by numerics and vice-versa are
+//! considered word boundaries.  In addition, any special ascii characters (besides `_` and `-`)
 //! are ignored.
 //! ```
 //! use convert_case::{Case, Casing};
-//! 
+//!
 //! assert_eq!("e_5150", "E5150".to_case(Case::Snake));
 //! assert_eq!("10,000_days", "10,000Days".to_case(Case::Snake));
 //! assert_eq!("HELLO, WORLD!", "Hello, world!".to_case(Case::Upper));
@@ -97,7 +98,7 @@
 //! # Random Feature
 //!
 //! To ensure this library had zero dependencies, randomness was moved to the _random_ feature,
-//! which requires the `rand` crate. You can enable this feature by including the 
+//! which requires the `rand` crate. You can enable this feature by including the
 //! following in your `Cargo.toml`.
 //! ```{toml}
 //! [dependencies]
@@ -108,8 +109,18 @@
 
 mod case;
 mod words;
+mod pattern;
+mod boundary;
+
 pub use case::Case;
 use words::Words;
+
+fn possible_cases(s: &String) -> Vec<Case> {
+    Case::deterministic_cases()
+        .into_iter()
+        .filter(|case| &s.from_case(*case).to_case(*case) == s )
+        .collect()
+}
 
 /// Describes items that can be converted into a case.
 ///
@@ -121,6 +132,9 @@ pub trait Casing {
     /// Creates a `FromCasing` struct, which saves information about
     /// how to parse `self` before converting to a case.
     fn from_case(&self, case: Case) -> FromCasing;
+
+    /// Determines if `self` is of the given case.
+    fn is_case(&self, case: Case) -> bool;
 }
 
 impl Casing for str {
@@ -131,6 +145,10 @@ impl Casing for str {
     fn from_case(&self, case: Case) -> FromCasing {
         FromCasing::new(self.to_string(), case)
     }
+
+    fn is_case(&self, case: Case) -> bool {
+        self.to_case(case) == self
+    }
 }
 
 impl Casing for String {
@@ -140,6 +158,10 @@ impl Casing for String {
 
     fn from_case(&self, case: Case) -> FromCasing {
         FromCasing::new(self.to_string(), case)
+    }
+
+    fn is_case(&self, case: Case) -> bool {
+        &self.to_case(case) == self
     }
 }
 
@@ -172,6 +194,10 @@ impl Casing for FromCasing {
     fn from_case(&self, case: Case) -> Self {
         Self::new(self.name.to_string(), case)
     }
+
+    fn is_case(&self, case: Case) -> bool {
+        self.from_case(self.case).to_case(case) == self.name
+    }
 }
 
 #[cfg(test)]
@@ -188,7 +214,7 @@ mod test {
             (Case::Camel, "myVariable22Name"),
             (Case::Pascal, "MyVariable22Name"),
             (Case::Snake, "my_variable_22_name"),
-            (Case::ScreamingSnake, "MY_VARIABLE_22_NAME"),
+            (Case::UpperSnake, "MY_VARIABLE_22_NAME"),
             (Case::Kebab, "my-variable-22-name"),
             (Case::Cobol, "MY-VARIABLE-22-NAME"),
             (Case::Toggle, "mY vARIABLE 22 nAME"),
@@ -221,10 +247,7 @@ mod test {
 
     #[test]
     fn multiline_strings() {
-        assert_eq!(
-            "One\ntwo\nthree",
-            "one\ntwo\nthree".to_case(Case::Title)
-        );
+        assert_eq!("One\ntwo\nthree", "one\ntwo\nthree".to_case(Case::Title));
     }
 
     #[test]
@@ -333,5 +356,62 @@ mod test {
     #[test]
     fn alternating_ignore_symbols() {
         assert_eq!("tHaT's", "that's".to_case(Case::Alternating));
+    }
+
+    #[test]
+    fn string_is_snake() {
+        assert!("im_snake_case".is_case(Case::Snake));
+        assert!(!"im_NOTsnake_case".is_case(Case::Snake));
+    }
+
+    #[test]
+    fn string_is_kebab() {
+        assert!("im-kebab-case".is_case(Case::Kebab));
+        assert!(!"im_not_kebab".is_case(Case::Kebab));
+    }
+
+    #[test]
+    fn string_is_snake_after_from() {
+        assert!("im-kebab-case".from_case(Case::Upper).is_case(Case::Kebab));
+        assert!(!"im_not_kebab".from_case(Case::Snake).is_case(Case::Kebab));
+        assert!("im_kebab_actually"
+            .from_case(Case::Upper)
+            .is_case(Case::Kebab));
+        assert!(!"im_not kebab_either"
+            .from_case(Case::Snake)
+            .is_case(Case::Kebab));
+    }
+
+    use std::collections::HashSet;
+    use std::iter::FromIterator;
+
+    #[test]
+    fn detect_many_cases() {
+        let lower_cases_vec = possible_cases(&"asdf".to_string());
+        let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
+        let mut actual = HashSet::new();
+        actual.insert(Case::Lower);
+        actual.insert(Case::Camel);
+        actual.insert(Case::Snake);
+        actual.insert(Case::Kebab);
+        actual.insert(Case::Flat);
+        assert_eq!(lower_cases_set, actual);
+
+        let lower_cases_vec = possible_cases(&"asdfCase".to_string());
+        let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
+        let mut actual = HashSet::new();
+        actual.insert(Case::Camel);
+        assert_eq!(lower_cases_set, actual);
+    }
+
+    #[test]
+    fn detect_each_case() {
+        let s = "My String Identifier".to_string();
+        for case in Case::deterministic_cases() {
+            let new_s = s.from_case(case).to_case(case);
+            let possible = possible_cases(&new_s);
+            println!("{} {:?} {:?}", new_s, case, possible);
+            assert!(possible.iter().any(|c| c == &case));
+        }
     }
 }
