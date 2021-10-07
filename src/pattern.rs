@@ -59,7 +59,7 @@ pub enum Pattern {
 }
 
 impl Pattern {
-    fn mutate(&self, words: &Vec<String>) -> Vec<String> {
+    pub fn mutate(&self, words: &Vec<String>) -> Vec<String> {
         use Pattern::*;
         match self {
             Lowercase => words.iter()
