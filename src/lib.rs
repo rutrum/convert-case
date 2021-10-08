@@ -163,6 +163,7 @@ pub struct StateConverter<'a, T: AsRef<str>> {
 }
 
 impl<'a, T: AsRef<str>> StateConverter<'a, T> {
+    /// Only called by Casing function to_case()
     fn new(s: &'a T) -> Self {
         Self {
             s,
@@ -170,6 +171,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    /// Only called by Casing function from_case()
     fn new_from_case(s: &'a T, case: Case) -> Self {
         Self {
             s,
@@ -177,6 +179,15 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    // change name
+    pub fn split_on(self, bs: &[Boundary]) -> Self {
+        Self {
+            s: self.s,
+            conv: self.conv.set_boundaries(bs),
+        }
+    }
+
+    /// Consumes the `StateConverter` and converts the string.
     pub fn convert(self) -> String {
         self.conv.convert(self.s)
     }
