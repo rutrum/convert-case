@@ -71,7 +71,7 @@ impl Boundary {
 // and can be copied.  Also no fear in adding duplicates
 
 // gross
-pub fn split<'a, T>(s: &'a T, boundaries: &Vec<Boundary>) -> Vec<&'a str> where T: AsRef<str> {
+pub fn split<'a, T>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str> where T: AsRef<str> {
     let s = s.as_ref();
 
     let single_splits = s.chars().enumerate()
@@ -100,7 +100,7 @@ pub fn split<'a, T>(s: &'a T, boundaries: &Vec<Boundary>) -> Vec<&'a str> where 
                         .map(|(i, _)| i + 1)
             )
             .collect();
-        splits.sort();
+        splits.sort_unstable();
 
         split_on_indicies(w, splits)
     });

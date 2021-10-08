@@ -108,13 +108,13 @@ impl Converter {
         self
     }
 
-    pub fn add_boundaries(mut self, bs: &Vec<Boundary>) -> Self {
+    pub fn add_boundaries(mut self, bs: &[Boundary]) -> Self {
         self.boundaries.extend(bs);
         self
     }
 
-    pub fn set_boundaries(mut self, bs: &Vec<Boundary>) -> Self {
-        self.boundaries = bs.clone();
+    pub fn set_boundaries(mut self, bs: &[Boundary]) -> Self {
+        self.boundaries = bs.to_vec();
         self
     }
 
