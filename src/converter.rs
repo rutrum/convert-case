@@ -38,7 +38,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
             s,
             boundaries: case.boundaries(),
             delim: String::new(),
-            pattern: None, // doesn't matter
+            pattern: None,
         }
     }
 
@@ -62,8 +62,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     }
 }
 
-
-/// Do something like this
 pub struct Converter {
     boundaries: Vec<Boundary>,
     pattern: Option<Pattern>,
@@ -105,8 +103,8 @@ impl Converter {
         self
     }
 
-    pub fn add_boundary(mut self, b: &Boundary) -> Self {
-        self.boundaries.push(*b);
+    pub fn add_boundary(mut self, b: Boundary) -> Self {
+        self.boundaries.push(b);
         self
     }
 
@@ -117,6 +115,18 @@ impl Converter {
 
     pub fn set_boundaries(mut self, bs: &Vec<Boundary>) -> Self {
         self.boundaries = bs.clone();
+        self
+    }
+
+    pub fn remove_boundary(mut self, b: Boundary) -> Self {
+        self.boundaries.retain(|&x| x != b);
+        self
+    }
+
+    pub fn remove_boundaries(mut self, bs: Vec<Boundary>) -> Self {
+        for b in bs {
+            self.boundaries.retain(|&x| x != b);
+        }
         self
     }
 
@@ -169,5 +179,67 @@ mod test {
             .to_case(Case::Snake)
             .set_pattern(Pattern::Sentence);
         assert_eq!("Bjarne_case", conv.convert("bjarne case"));
+    }
+
+    #[test]
+    fn custom_delim() {
+        let conv = Converter::new()
+            .set_delim("..");
+        assert_eq!("oh..My", conv.convert("ohMy"));
+    }
+
+    #[test]
+    fn no_pattern() {
+        let conv = Converter::new()
+            .from_case(Case::Title)
+            .to_case(Case::Kebab)
+            .remove_pattern();
+        assert_eq!("wIErd-CASing", conv.convert("wIErd CASing"));
+    }
+
+    #[test]
+    fn no_delim() {
+        let conv = Converter::new()
+            .from_case(Case::Title)
+            .to_case(Case::Kebab)
+            .remove_delim();
+        assert_eq!("justflat", conv.convert("Just Flat"));
+    }
+
+    #[test]
+    fn no_digit_boundaries() {
+        let conv = Converter::new()
+            .remove_boundaries(Boundary::digits())
+            .to_case(Case::Snake);
+        assert_eq!("test_08bound", conv.convert("Test 08Bound"));
+        assert_eq!("a8a_a8a", conv.convert("a8aA8A"));
+    }
+    
+    #[test]
+    fn add_boundary() {
+        let conv = Converter::new()
+            .from_case(Case::Snake)
+            .to_case(Case::Kebab)
+            .add_boundary(Boundary::LowerUpper);
+        assert_eq!("word-word-word", conv.convert("word_wordWord"));
+    }
+    
+    #[test]
+    fn reuse_after_change() {
+        let conv = Converter::new()
+            .from_case(Case::Snake)
+            .to_case(Case::Kebab);
+        assert_eq!("word-wordword", conv.convert("word_wordWord"));
+
+        let conv = conv.add_boundary(Boundary::LowerUpper);
+        assert_eq!("word-word-word", conv.convert("word_wordWord"));
+    }
+
+    #[test]
+    fn explicit_boundaries() {
+        let conv = Converter::new()
+            .set_boundaries(&vec![Boundary::DigitLower, Boundary::DigitUpper, Boundary::Acronyms])
+            .to_case(Case::Snake);
+        assert_eq!("section8_lesson2_http_requests", conv.convert("section8lesson2HTTPRequests"));
     }
 }

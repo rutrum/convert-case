@@ -15,6 +15,16 @@ pub enum Boundary {
 }
 
 impl Boundary {
+    pub fn digits() -> Vec<Self> {
+        use Boundary::*;
+        vec![
+            DigitUpper,
+            DigitLower,
+            UpperDigit,
+            LowerDigit,
+        ]
+    }
+
     pub fn defaults() -> Vec<Self> {
         use Boundary::*;
         vec![
@@ -49,9 +59,10 @@ impl Boundary {
 
     fn detect_three(&self, c: char, d: char, e: char) -> bool {
         use Boundary::*;
-        match self {
-            Acronyms => c.is_uppercase() && d.is_uppercase() && e.is_lowercase(),
-            _ => false,
+        if let Acronyms = self {
+            c.is_uppercase() && d.is_uppercase() && e.is_lowercase()
+        } else {
+            false
         }
     }
 }
