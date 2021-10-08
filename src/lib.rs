@@ -108,14 +108,12 @@
 //! construction in the [Case enum](enum.Case.html).
 
 mod case;
-mod words;
 mod pattern;
 mod boundary;
 
 pub use boundary::Boundary;
 pub use pattern::Pattern;
 pub use case::Case;
-use words::Words;
 
 fn possible_cases(s: &String) -> Vec<Case> {
     Case::deterministic_cases()
@@ -134,7 +132,7 @@ pub trait Casing {
 
     /// Creates a `Converter` struct, which saves information about
     /// how to parse `self` before converting to a case.
-    fn from_case(&self, case: Case) -> Converter;
+    fn from_case(&self, case: Case) -> StateConverter;
 
     /// Determines if `self` is of the given case.
     fn is_case(&self, case: Case) -> bool;
@@ -159,11 +157,11 @@ pub trait Casing {
 
 impl<T> Casing for T where T: ToString {
     fn to_case(&self, case: Case) -> String {
-        Converter::new(self.to_string()).to_case(case)
+        StateConverter::new(self.to_string()).to_case(case)
     }
 
-    fn from_case(&self, case: Case) -> Converter {
-        Converter::new_from_case(self.to_string(), case)
+    fn from_case(&self, case: Case) -> StateConverter {
+        StateConverter::new_from_case(self.to_string(), case)
     }
 
     fn is_case(&self, case: Case) -> bool {
@@ -181,14 +179,17 @@ impl<T> Casing for T where T: ToString {
 /// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
 /// assert_eq!("Ninety-nine Problems", title);
 /// ```
-pub struct Converter {
+pub struct StateConverter {
     s: String,
     boundaries: Vec<Boundary>,
     pattern: Option<Pattern>,
     delim: String,
+    // delete the 3 above
+    
+    // conv: Converter
 }
 
-impl Converter {
+impl StateConverter {
     fn new(s: String) -> Self {
         use Boundary::*;
         let default_boundaries = vec![
@@ -231,6 +232,51 @@ impl Converter {
 
     pub fn from_case(&mut self, case: Case) {
         self.boundaries = case.boundaries();
+    }
+}
+
+
+/// Do something like this
+pub struct Converter {
+    boundaries: Vec<Boundary>,
+    pattern: Option<Pattern>,
+    delim: String,
+}
+
+impl Converter {
+    fn convert(&self, s: &String) -> String {
+        // convert the string!
+        String::new()
+    }
+
+    fn add_boundary(&mut self, b: &Boundary) -> &mut Self {
+        self.boundaries.push(*b);
+        self
+    }
+
+    fn add_boundaries(&mut self, bs: &Vec<Boundary>) -> &mut Self {
+        self.boundaries.extend(bs);
+        self
+    }
+
+    fn set_delim(&mut self, d: String) -> &mut Self {
+        self.delim = d;
+        self
+    }
+
+    fn remove_delim(&mut self) -> &mut Self {
+        self.delim = String::new();
+        self
+    }
+
+    fn set_pattern(&mut self, p: Pattern) -> &mut Self {
+        self.pattern = Some(p);
+        self
+    }
+
+    fn remove_pattern(&mut self) -> &mut Self {
+        self.pattern = None;
+        self
     }
 }
 
