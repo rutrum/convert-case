@@ -4,7 +4,7 @@
 //!
 //! Since version "0.3.0" this crate is just a case conversion _library_.  The command line utility
 //! that uses the tools in this library has been moved to the `ccase` crate.  You can read about it
-//! at the [github repository](https://github.com/rutrum/convert-case/tree/master/ccase).
+//! at the [GitHub repository](https://github.com/rutrum/convert-case/tree/master/ccase).
 //!
 //! # Rust Library
 //!
@@ -45,7 +45,7 @@
 //! ```
 //!
 //! By default (and when converting from camel case or similar cases) `convert_case`
-//! will detect acronyms.  It also ignores any leading, trailing, or deplicate delimeters.
+//! will detect acronyms.  It also ignores any leading, trailing, or duplicate delimiters.
 //! ```
 //! use convert_case::{Case, Casing};
 //!
@@ -56,8 +56,8 @@
 //! ```
 //!
 //! It also works non-ascii characters.  However, no inferences on the language itself is made.
-//! For instance, the diagraph `ij` in dutch will not be capitalized, because it is represented
-//! as two distinct unicode characters.  However, `æ` would be capitalized.
+//! For instance, the digraph `ij` in Dutch will not be capitalized, because it is represented
+//! as two distinct Unicode characters.  However, `æ` would be capitalized.
 //! ```
 //! use convert_case::{Case, Casing};
 //!
@@ -68,8 +68,8 @@
 //! assert_eq!("ὀδυσσεύς", odysseus.to_case(Case::Lower));
 //! ```
 //!
-//! For the purposes of case conversion, characters followed by numerics and vice-versa are
-//! considered word boundaries.  In addition, any special ascii characters (besides `_` and `-`)
+//! For the purposes of case conversion, characters followed by digits and vice-versa are
+//! considered word boundaries.  In addition, any special ASCII characters (besides `_` and `-`)
 //! are ignored.
 //! ```
 //! use convert_case::{Case, Casing};
@@ -115,7 +115,7 @@ mod converter;
 pub use boundary::Boundary;
 pub use pattern::Pattern;
 pub use case::Case;
-pub use converter::{Converter, StateConverter};
+pub use converter::Converter;
 
 /// Describes items that can be converted into a case.
 ///
@@ -147,16 +147,64 @@ impl<T: AsRef<str>> Casing<T> for T where String: PartialEq<T> {
     }
 }
 
+/// Holds information about parsing before converting into a case.
+///
+/// This struct is used when invoking the `from_case` method on
+/// `Casing`.
+/// ```
+/// use convert_case::{Case, Casing};
+///
+/// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
+/// assert_eq!("Ninety-nine Problems", title);
+/// ```
+pub struct StateConverter<'a, T: AsRef<str>> {
+    s: &'a T,
+    conv: Converter
+}
+
+impl<'a, T: AsRef<str>> StateConverter<'a, T> {
+    fn new(s: &'a T) -> Self {
+        Self {
+            s,
+            conv: Converter::new(),
+        }
+    }
+
+    fn new_from_case(s: &'a T, case: Case) -> Self {
+        Self {
+            s,
+            conv: Converter::new().from_case(case)
+        }
+    }
+
+    pub fn convert(self) -> String {
+        self.conv.convert(self.s)
+    }
+
+    pub fn to_case(self, case: Case) -> String {
+        self.conv
+            .to_case(case)
+            .convert(self.s)
+    }
+
+    pub fn from_case(self, case: Case) -> Self {
+        Self {
+            conv: self.conv.from_case(case),
+            ..self
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
     use super::*;
     use strum::IntoEnumIterator;
 
-    fn possible_cases(s: &String) -> Vec<Case> {
+    fn possible_cases(s: &str) -> Vec<Case> {
         Case::deterministic_cases()
             .into_iter()
-            .filter(|case| &s.from_case(*case).to_case(*case) == s )
+            .filter(|case| s.from_case(*case).to_case(*case) == s )
             .collect()
     }
 
@@ -331,7 +379,7 @@ mod test {
 
     #[test]
     fn detect_many_cases() {
-        let lower_cases_vec = possible_cases(&"asef".to_string());
+        let lower_cases_vec = possible_cases(&"asef");
         let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
         let mut actual = HashSet::new();
         actual.insert(Case::Lower);
@@ -341,7 +389,7 @@ mod test {
         actual.insert(Case::Flat);
         assert_eq!(lower_cases_set, actual);
 
-        let lower_cases_vec = possible_cases(&"asefCase".to_string());
+        let lower_cases_vec = possible_cases(&"asefCase");
         let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
         let mut actual = HashSet::new();
         actual.insert(Case::Camel);

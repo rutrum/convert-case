@@ -3,65 +3,6 @@ use crate::Boundary;
 use crate::Pattern;
 use crate::Case;
 
-/// Holds information about parsing before converting into a case.
-///
-/// This struct is used when invoking the `from_case` method on
-/// `Casing`.
-/// ```
-/// use convert_case::{Case, Casing};
-///
-/// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
-/// assert_eq!("Ninety-nine Problems", title);
-/// ```
-pub struct StateConverter<'a, T: AsRef<str>> {
-    s: &'a T,
-    boundaries: Vec<Boundary>,
-    pattern: Option<Pattern>,
-    delim: String,
-    // delete the 3 above
-    
-    // conv: Converter
-}
-
-impl<'a, T: AsRef<str>> StateConverter<'a, T> {
-    pub(crate) fn new(s: &'a T) -> Self {
-        Self {
-            s,
-            boundaries: Boundary::defaults(),
-            delim: String::new(),
-            pattern: None,
-        }
-    }
-
-    pub(crate) fn new_from_case(s: &'a T, case: Case) -> Self {
-        Self {
-            s,
-            boundaries: case.boundaries(),
-            delim: String::new(),
-            pattern: None,
-        }
-    }
-
-    pub fn convert(self) -> String {
-        let words = boundary::split(&self.s, &self.boundaries);
-        if let Some(p) = self.pattern {
-            p.mutate(&words).join(&self.delim)
-        } else {
-            words.join(&self.delim)
-        }
-    }
-
-    pub fn to_case(mut self, case: Case) -> String {
-        self.pattern = Some(case.pattern());
-        self.delim = case.delim().to_string();
-        self.convert()
-    }
-
-    pub fn from_case(&mut self, case: Case) {
-        self.boundaries = case.boundaries();
-    }
-}
-
 pub struct Converter {
     boundaries: Vec<Boundary>,
     pattern: Option<Pattern>,
@@ -238,7 +179,7 @@ mod test {
     #[test]
     fn explicit_boundaries() {
         let conv = Converter::new()
-            .set_boundaries(&vec![Boundary::DigitLower, Boundary::DigitUpper, Boundary::Acronyms])
+            .set_boundaries(&[Boundary::DigitLower, Boundary::DigitUpper, Boundary::Acronyms])
             .to_case(Case::Snake);
         assert_eq!("section8_lesson2_http_requests", conv.convert("section8lesson2HTTPRequests"));
     }

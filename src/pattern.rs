@@ -127,7 +127,7 @@ impl Pattern {
 
 /// Randomly picks whether to be upper case or lower case
 #[cfg(feature = "random")]
-fn randomize(words: &Vec<&str>) -> Vec<String> {
+fn randomize(words: &[&str]) -> Vec<String> {
     let mut rng = rand::thread_rng();
     words.iter()
         .map(|word| {
@@ -147,7 +147,7 @@ fn randomize(words: &Vec<&str>) -> Vec<String> {
 /// Randomly selects patterns: [upper, lower] or [lower, upper]
 /// for a more random feeling pattern.
 #[cfg(feature = "random")]
-fn pseudo_randomize(words: &Vec<&str>) -> Vec<String> {
+fn pseudo_randomize(words: &[&str]) -> Vec<String> {
     let mut rng = rand::thread_rng();
 
     // Keeps track of when to alternate
