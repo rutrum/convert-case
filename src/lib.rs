@@ -157,7 +157,7 @@ pub trait Casing {
     */
 }
 
-impl Casing for str {
+impl<T> Casing for T where T: ToString {
     fn to_case(&self, case: Case) -> String {
         Converter::new(self.to_string()).to_case(case)
     }
@@ -167,21 +167,7 @@ impl Casing for str {
     }
 
     fn is_case(&self, case: Case) -> bool {
-        self.to_case(case) == self
-    }
-}
-
-impl Casing for String {
-    fn to_case(&self, case: Case) -> String {
-        Converter::new(self.to_string()).to_case(case)
-    }
-
-    fn from_case(&self, case: Case) -> Converter {
-        Converter::new_from_case(self.to_string(), case)
-    }
-
-    fn is_case(&self, case: Case) -> bool {
-        &self.to_case(case) == self
+        self.to_case(case) == self.to_string()
     }
 }
 
@@ -198,7 +184,7 @@ impl Casing for String {
 pub struct Converter {
     s: String,
     boundaries: Vec<Boundary>,
-    pattern: Pattern,
+    pattern: Option<Pattern>,
     delim: String,
 }
 
@@ -215,7 +201,7 @@ impl Converter {
             s,
             boundaries: default_boundaries,
             delim: String::new(),
-            pattern: Pattern::Lowercase, // doesn't matter
+            pattern: None,
         }
     }
 
@@ -224,17 +210,21 @@ impl Converter {
             s,
             boundaries: case.boundaries(),
             delim: String::new(),
-            pattern: Pattern::Lowercase, // doesn't matter
+            pattern: None, // doesn't matter
         }
     }
 
     pub fn convert(self) -> String {
         let words = boundary::split(&self.s, &self.boundaries);
-        self.pattern.mutate(&words).join(&self.delim)
+        if let Some(p) = self.pattern {
+            p.mutate(&words).join(&self.delim)
+        } else {
+            words.join(&self.delim)
+        }
     }
 
     pub fn to_case(mut self, case: Case) -> String {
-        self.pattern = case.pattern();
+        self.pattern = Some(case.pattern());
         self.delim = case.delim().to_string();
         self.convert()
     }
@@ -242,11 +232,6 @@ impl Converter {
     pub fn from_case(&mut self, case: Case) {
         self.boundaries = case.boundaries();
     }
-
-    pub fn is_case(&self, case: Case) -> bool {
-        Converter::new(self.s.to_string()).to_case(case) == self.s
-    }
-
 }
 
 
@@ -418,18 +403,6 @@ mod test {
     fn string_is_kebab() {
         assert!("im-kebab-case".is_case(Case::Kebab));
         assert!(!"im_not_kebab".is_case(Case::Kebab));
-    }
-
-    #[test]
-    fn string_is_snake_after_from() {
-        assert!("im-kebab-case".from_case(Case::Upper).is_case(Case::Kebab));
-        assert!(!"im_not_kebab".from_case(Case::Snake).is_case(Case::Kebab));
-        assert!("im_kebab_actually"
-            .from_case(Case::Upper)
-            .is_case(Case::Kebab));
-        assert!(!"im_not kebab_either"
-            .from_case(Case::Snake)
-            .is_case(Case::Kebab));
     }
 
     use std::collections::HashSet;
