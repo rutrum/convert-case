@@ -109,174 +109,41 @@
 
 mod case;
 mod pattern;
-mod boundary;
+pub mod boundary;
+mod converter;
 
 pub use boundary::Boundary;
 pub use pattern::Pattern;
 pub use case::Case;
-
-fn possible_cases(s: &String) -> Vec<Case> {
-    Case::deterministic_cases()
-        .into_iter()
-        .filter(|case| &s.from_case(*case).to_case(*case) == s )
-        .collect()
-}
+pub use converter::{Converter, StateConverter};
 
 /// Describes items that can be converted into a case.
 ///
 /// Implemented for string slices `&str` and owned strings `String`.
-pub trait Casing {
+pub trait Casing<T: AsRef<str>> {
 
     /// References `self` and converts to the given case.
     fn to_case(&self, case: Case) -> String;
 
     /// Creates a `Converter` struct, which saves information about
     /// how to parse `self` before converting to a case.
-    fn from_case(&self, case: Case) -> StateConverter;
+    fn from_case(&self, case: Case) -> StateConverter<T>;
 
     /// Determines if `self` is of the given case.
     fn is_case(&self, case: Case) -> bool;
-
-    /*
-    Things to add
-
-    // do like https://doc.rust-lang.org/std/primitive.slice.html#method.join
-    fn join(&self, String) -> String;
-
-    fn split_on(&self, Vec<Boundary>) -> Converter;
-
-    fn mutate(&self, Pattern) -> Converter;
-
-    fn add_boundary(&self, Boundary)
-    fn remove_boundary(&self, Boundary)
-    fn add_boundaries(&self, Boundary)
-    fn remove_boundaries(&self, Boundary)
-
-    */
 }
 
-impl<T> Casing for T where T: ToString {
+impl<T: AsRef<str>> Casing<T> for T where String: PartialEq<T> {
     fn to_case(&self, case: Case) -> String {
-        StateConverter::new(self.to_string()).to_case(case)
+        StateConverter::new(self).to_case(case)
     }
 
-    fn from_case(&self, case: Case) -> StateConverter {
-        StateConverter::new_from_case(self.to_string(), case)
+    fn from_case(&self, case: Case) -> StateConverter<T> {
+        StateConverter::new_from_case(self, case)
     }
 
     fn is_case(&self, case: Case) -> bool {
-        self.to_case(case) == self.to_string()
-    }
-}
-
-/// Holds information about parsing before converting into a case.
-///
-/// This struct is used when invoking the `from_case` method on
-/// `Casing`.
-/// ```
-/// use convert_case::{Case, Casing};
-///
-/// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
-/// assert_eq!("Ninety-nine Problems", title);
-/// ```
-pub struct StateConverter {
-    s: String,
-    boundaries: Vec<Boundary>,
-    pattern: Option<Pattern>,
-    delim: String,
-    // delete the 3 above
-    
-    // conv: Converter
-}
-
-impl StateConverter {
-    fn new(s: String) -> Self {
-        use Boundary::*;
-        let default_boundaries = vec![
-            Underscore, Hyphen, Space,
-            LowerUpper, UpperDigit, DigitUpper,
-            DigitLower, LowerDigit, Acronyms,
-        ];
-
-        Self {
-            s,
-            boundaries: default_boundaries,
-            delim: String::new(),
-            pattern: None,
-        }
-    }
-
-    fn new_from_case(s: String, case: Case) -> Self {
-        Self {
-            s,
-            boundaries: case.boundaries(),
-            delim: String::new(),
-            pattern: None, // doesn't matter
-        }
-    }
-
-    pub fn convert(self) -> String {
-        let words = boundary::split(&self.s, &self.boundaries);
-        if let Some(p) = self.pattern {
-            p.mutate(&words).join(&self.delim)
-        } else {
-            words.join(&self.delim)
-        }
-    }
-
-    pub fn to_case(mut self, case: Case) -> String {
-        self.pattern = Some(case.pattern());
-        self.delim = case.delim().to_string();
-        self.convert()
-    }
-
-    pub fn from_case(&mut self, case: Case) {
-        self.boundaries = case.boundaries();
-    }
-}
-
-
-/// Do something like this
-pub struct Converter {
-    boundaries: Vec<Boundary>,
-    pattern: Option<Pattern>,
-    delim: String,
-}
-
-impl Converter {
-    fn convert(&self, s: &String) -> String {
-        // convert the string!
-        String::new()
-    }
-
-    fn add_boundary(&mut self, b: &Boundary) -> &mut Self {
-        self.boundaries.push(*b);
-        self
-    }
-
-    fn add_boundaries(&mut self, bs: &Vec<Boundary>) -> &mut Self {
-        self.boundaries.extend(bs);
-        self
-    }
-
-    fn set_delim(&mut self, d: String) -> &mut Self {
-        self.delim = d;
-        self
-    }
-
-    fn remove_delim(&mut self) -> &mut Self {
-        self.delim = String::new();
-        self
-    }
-
-    fn set_pattern(&mut self, p: Pattern) -> &mut Self {
-        self.pattern = Some(p);
-        self
-    }
-
-    fn remove_pattern(&mut self) -> &mut Self {
-        self.pattern = None;
-        self
+        &self.to_case(case) == self
     }
 }
 
@@ -285,6 +152,14 @@ impl Converter {
 mod test {
     use super::*;
     use strum::IntoEnumIterator;
+
+    fn possible_cases(s: &String) -> Vec<Case> {
+        Case::deterministic_cases()
+            .into_iter()
+            .filter(|case| &s.from_case(*case).to_case(*case) == s )
+            .collect()
+    }
+
 
     #[test]
     fn lossless_against_lossless() {
@@ -456,7 +331,7 @@ mod test {
 
     #[test]
     fn detect_many_cases() {
-        let lower_cases_vec = possible_cases(&"asdf".to_string());
+        let lower_cases_vec = possible_cases(&"asef".to_string());
         let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
         let mut actual = HashSet::new();
         actual.insert(Case::Lower);
@@ -466,7 +341,7 @@ mod test {
         actual.insert(Case::Flat);
         assert_eq!(lower_cases_set, actual);
 
-        let lower_cases_vec = possible_cases(&"asdfCase".to_string());
+        let lower_cases_vec = possible_cases(&"asefCase".to_string());
         let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
         let mut actual = HashSet::new();
         actual.insert(Case::Camel);

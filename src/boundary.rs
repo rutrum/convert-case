@@ -10,14 +10,20 @@ pub enum Boundary {
     UpperDigit,
     DigitLower,
     LowerDigit,
-    //TwoChar(Box<dyn Fn(char, char) -> bool>),
 
-    //UpperUpperLower, // Acronyms
     Acronyms,
-    //ThreeChar(Box<dyn Fn(char, char, char) -> bool>), // more complex, should include index
 }
 
 impl Boundary {
+    pub fn defaults() -> Vec<Self> {
+        use Boundary::*;
+        vec![
+            Underscore, Hyphen, Space,
+            LowerUpper, UpperDigit, DigitUpper,
+            DigitLower, LowerDigit, Acronyms,
+        ]
+    }
+
     fn detect_one(&self, c: char) -> bool {
         use Boundary::*;
         match self {
@@ -50,8 +56,12 @@ impl Boundary {
     }
 }
 
+// idea: make a bitset for each boundary.  Its fixed size,
+// and can be copied.  Also no fear in adding duplicates
+
 // gross
-pub fn split(s: &str, boundaries: &Vec<Boundary>) -> Vec<String> {
+pub fn split<'a, T>(s: &'a T, boundaries: &Vec<Boundary>) -> Vec<&'a str> where T: AsRef<str> {
+    let s = s.as_ref();
 
     let single_splits = s.chars().enumerate()
         .filter(|(_, c)| boundaries.iter().any(|b| b.detect_one(*c)))
@@ -84,7 +94,7 @@ pub fn split(s: &str, boundaries: &Vec<Boundary>) -> Vec<String> {
         split_on_indicies(w, splits)
     });
 
-    final_words.rev().map(ToString::to_string).filter(|s| !s.is_empty()).collect()
+    final_words.rev().filter(|s| !s.is_empty()).collect()
 }
 
 pub fn replace_at_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {

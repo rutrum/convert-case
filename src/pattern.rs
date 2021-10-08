@@ -12,7 +12,7 @@ enum WordCase {
 }
 
 impl WordCase {
-    fn mutate(&self, word: &String) -> String {
+    fn mutate(&self, word: &str) -> String {
         use WordCase::*;
         match self {
             Lower => word.to_lowercase(),
@@ -60,7 +60,7 @@ pub enum Pattern {
 }
 
 impl Pattern {
-    pub fn mutate(&self, words: &Vec<String>) -> Vec<String> {
+    pub fn mutate(&self, words: &Vec<&str>) -> Vec<String> {
         use Pattern::*;
         match self {
             Lowercase => words.iter()
@@ -127,7 +127,7 @@ impl Pattern {
 
 /// Randomly picks whether to be upper case or lower case
 #[cfg(feature = "random")]
-fn randomize(words: &Vec<String>) -> Vec<String> {
+fn randomize(words: &Vec<&str>) -> Vec<String> {
     let mut rng = rand::thread_rng();
     words.iter()
         .map(|word| {
@@ -147,7 +147,7 @@ fn randomize(words: &Vec<String>) -> Vec<String> {
 /// Randomly selects patterns: [upper, lower] or [lower, upper]
 /// for a more random feeling pattern.
 #[cfg(feature = "random")]
-fn pseudo_randomize(words: &Vec<String>) -> Vec<String> {
+fn pseudo_randomize(words: &Vec<&str>) -> Vec<String> {
     let mut rng = rand::thread_rng();
 
     // Keeps track of when to alternate
