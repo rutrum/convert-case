@@ -215,7 +215,8 @@ impl Case {
 
             UpperFlat | Flat => vec![],
             Camel | UpperCamel | Pascal => vec![
-                LowerUpper, Acronyms, LowerDigit, UpperDigit, DigitLower, DigitUpper
+                LowerUpper, Acronyms, LowerDigit, 
+                UpperDigit, DigitLower, DigitUpper
             ],
         }
     }

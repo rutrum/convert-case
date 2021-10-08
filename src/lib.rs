@@ -112,6 +112,8 @@ mod words;
 mod pattern;
 mod boundary;
 
+pub use boundary::Boundary;
+pub use pattern::Pattern;
 pub use case::Case;
 use words::Words;
 
@@ -126,24 +128,42 @@ fn possible_cases(s: &String) -> Vec<Case> {
 ///
 /// Implemented for string slices `&str` and owned strings `String`.
 pub trait Casing {
+
     /// References `self` and converts to the given case.
     fn to_case(&self, case: Case) -> String;
 
-    /// Creates a `FromCasing` struct, which saves information about
+    /// Creates a `Converter` struct, which saves information about
     /// how to parse `self` before converting to a case.
-    fn from_case(&self, case: Case) -> FromCasing;
+    fn from_case(&self, case: Case) -> Converter;
 
     /// Determines if `self` is of the given case.
     fn is_case(&self, case: Case) -> bool;
+
+    /*
+    Things to add
+
+    // do like https://doc.rust-lang.org/std/primitive.slice.html#method.join
+    fn join(&self, String) -> String;
+
+    fn split_on(&self, Vec<Boundary>) -> Converter;
+
+    fn mutate(&self, Pattern) -> Converter;
+
+    fn add_boundary(&self, Boundary)
+    fn remove_boundary(&self, Boundary)
+    fn add_boundaries(&self, Boundary)
+    fn remove_boundaries(&self, Boundary)
+
+    */
 }
 
 impl Casing for str {
     fn to_case(&self, case: Case) -> String {
-        Words::new(self).into_case(case)
+        Converter::new(self.to_string()).to_case(case)
     }
 
-    fn from_case(&self, case: Case) -> FromCasing {
-        FromCasing::new(self.to_string(), case)
+    fn from_case(&self, case: Case) -> Converter {
+        Converter::new_from_case(self.to_string(), case)
     }
 
     fn is_case(&self, case: Case) -> bool {
@@ -153,11 +173,11 @@ impl Casing for str {
 
 impl Casing for String {
     fn to_case(&self, case: Case) -> String {
-        Words::new(self).into_case(case)
+        Converter::new(self.to_string()).to_case(case)
     }
 
-    fn from_case(&self, case: Case) -> FromCasing {
-        FromCasing::new(self.to_string(), case)
+    fn from_case(&self, case: Case) -> Converter {
+        Converter::new_from_case(self.to_string(), case)
     }
 
     fn is_case(&self, case: Case) -> bool {
@@ -168,37 +188,67 @@ impl Casing for String {
 /// Holds information about parsing before converting into a case.
 ///
 /// This struct is used when invoking the `from_case` method on
-/// `Casing`.  `FromCasing` also implements `Casing`.
+/// `Casing`.
 /// ```
 /// use convert_case::{Case, Casing};
 ///
 /// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
 /// assert_eq!("Ninety-nine Problems", title);
 /// ```
-pub struct FromCasing {
-    name: String,
-    case: Case,
+pub struct Converter {
+    s: String,
+    boundaries: Vec<Boundary>,
+    pattern: Pattern,
+    delim: String,
 }
 
-impl FromCasing {
-    const fn new(name: String, case: Case) -> Self {
-        Self { name, case }
+impl Converter {
+    fn new(s: String) -> Self {
+        use Boundary::*;
+        let default_boundaries = vec![
+            Underscore, Hyphen, Space,
+            LowerUpper, UpperDigit, DigitUpper,
+            DigitLower, LowerDigit, Acronyms,
+        ];
+
+        Self {
+            s,
+            boundaries: default_boundaries,
+            delim: String::new(),
+            pattern: Pattern::Lowercase, // doesn't matter
+        }
     }
+
+    fn new_from_case(s: String, case: Case) -> Self {
+        Self {
+            s,
+            boundaries: case.boundaries(),
+            delim: String::new(),
+            pattern: Pattern::Lowercase, // doesn't matter
+        }
+    }
+
+    pub fn convert(self) -> String {
+        let words = boundary::split(&self.s, &self.boundaries);
+        self.pattern.mutate(&words).join(&self.delim)
+    }
+
+    pub fn to_case(mut self, case: Case) -> String {
+        self.pattern = case.pattern();
+        self.delim = case.delim().to_string();
+        self.convert()
+    }
+
+    pub fn from_case(&mut self, case: Case) {
+        self.boundaries = case.boundaries();
+    }
+
+    pub fn is_case(&self, case: Case) -> bool {
+        Converter::new(self.s.to_string()).to_case(case) == self.s
+    }
+
 }
 
-impl Casing for FromCasing {
-    fn to_case(&self, case: Case) -> String {
-        Words::from_casing(&self.name, self.case).into_case(case)
-    }
-
-    fn from_case(&self, case: Case) -> Self {
-        Self::new(self.name.to_string(), case)
-    }
-
-    fn is_case(&self, case: Case) -> bool {
-        self.from_case(self.case).to_case(case) == self.name
-    }
-}
 
 #[cfg(test)]
 mod test {

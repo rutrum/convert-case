@@ -41,6 +41,7 @@ impl WordCase {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Pattern {
     /// Lowercase patterns are words that are entirely in lowercase
     Lowercase,

@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Boundary {
     Hyphen,
     Underscore,
@@ -50,7 +51,7 @@ impl Boundary {
 }
 
 // gross
-pub fn split(s: &str, boundaries: Vec<Boundary>) -> Vec<String> {
+pub fn split(s: &str, boundaries: &Vec<Boundary>) -> Vec<String> {
 
     let single_splits = s.chars().enumerate()
         .filter(|(_, c)| boundaries.iter().any(|b| b.detect_one(*c)))

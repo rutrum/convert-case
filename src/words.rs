@@ -17,7 +17,7 @@ impl Words {
             DigitLower, LowerDigit, Acronyms,
         ];
 
-        let words = boundary::split(name, default_boundaries);
+        let words = boundary::split(name, &default_boundaries);
 
         Self { words }
     }
@@ -25,7 +25,7 @@ impl Words {
     pub fn from_casing(name: &str, case: Case) -> Self {
         let bs = case.boundaries();
 
-        let words = boundary::split(name, bs);
+        let words = boundary::split(name, &bs);
 
         Self { words }
     }
