@@ -17,29 +17,19 @@ pub enum Boundary {
 impl Boundary {
     pub fn delims() -> Vec<Self> {
         use Boundary::*;
-        vec![
-            Hyphen,
-            Underscore,
-            Space
-        ]
+        vec![Hyphen, Underscore, Space]
     }
 
     pub fn digits() -> Vec<Self> {
         use Boundary::*;
-        vec![
-            DigitUpper,
-            DigitLower,
-            UpperDigit,
-            LowerDigit,
-        ]
+        vec![DigitUpper, DigitLower, UpperDigit, LowerDigit]
     }
 
     pub fn defaults() -> Vec<Self> {
         use Boundary::*;
         vec![
-            Underscore, Hyphen, Space,
-            LowerUpper, UpperDigit, DigitUpper,
-            DigitLower, LowerDigit, Acronyms,
+            Underscore, Hyphen, Space, LowerUpper, UpperDigit, DigitUpper, DigitLower, LowerDigit,
+            Acronyms,
         ]
     }
 
@@ -80,10 +70,15 @@ impl Boundary {
 // and can be copied.  Also no fear in adding duplicates
 
 // gross
-pub fn split<'a, T>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str> where T: AsRef<str> {
+pub fn split<'a, T>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
+where
+    T: AsRef<str>,
+{
     let s = s.as_ref();
 
-    let single_splits = s.chars().enumerate()
+    let single_splits = s
+        .chars()
+        .enumerate()
         .filter(|(_, c)| boundaries.iter().any(|b| b.detect_one(*c)))
         .map(|(i, _)| i + 1)
         .collect();
@@ -95,18 +90,18 @@ pub fn split<'a, T>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str> where T: 
         let mid_iter = w.chars().skip(1);
         let right_iter = w.chars().skip(2);
 
-        let three_iter = left_iter.clone()
-            .zip(mid_iter.clone())
-            .zip(right_iter);
+        let three_iter = left_iter.clone().zip(mid_iter.clone()).zip(right_iter);
         let two_iter = left_iter.clone().zip(mid_iter);
 
-        let mut splits: Vec<usize> = three_iter.enumerate()
-            .filter(|(_, ((c,d),e))| boundaries.iter().any(|b| b.detect_three(*c, *d, *e)))
+        let mut splits: Vec<usize> = three_iter
+            .enumerate()
+            .filter(|(_, ((c, d), e))| boundaries.iter().any(|b| b.detect_three(*c, *d, *e)))
             .map(|(i, _)| i + 1)
             .chain(
-                two_iter.enumerate()
-                        .filter(|(_, (c, d))| boundaries.iter().any(|b| b.detect_two(*c, *d)))
-                        .map(|(i, _)| i + 1)
+                two_iter
+                    .enumerate()
+                    .filter(|(_, (c, d))| boundaries.iter().any(|b| b.detect_two(*c, *d)))
+                    .map(|(i, _)| i + 1),
             )
             .collect();
         splits.sort_unstable();
@@ -124,7 +119,7 @@ pub fn replace_at_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
     let mut second;
     for &x in splits.iter().rev() {
         let pair = first.split_at(x);
-        first = &pair.0[..(pair.0.len()-1)];
+        first = &pair.0[..(pair.0.len() - 1)];
         second = pair.1;
         words.push(second);
     }
@@ -145,11 +140,10 @@ pub fn split_on_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
         words.push(second);
     }
     words.push(first);
-    
+
     words
 }
 
 // A boundary is either a replacement or not, maybe its Option<(usize, usize)>, where each
 // index is what part to extract to make the word boundary.  If there is no replacement then
 // its both are the same
-

@@ -107,21 +107,20 @@
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
 
-mod case;
-mod pattern;
 pub mod boundary;
+mod case;
 mod converter;
+mod pattern;
 
 pub use boundary::Boundary;
-pub use pattern::Pattern;
 pub use case::Case;
 pub use converter::Converter;
+pub use pattern::Pattern;
 
 /// Describes items that can be converted into a case.
 ///
 /// Implemented for string slices `&str` and owned strings `String`.
 pub trait Casing<T: AsRef<str>> {
-
     /// References `self` and converts to the given case.
     fn to_case(&self, case: Case) -> String;
 
@@ -136,7 +135,10 @@ pub trait Casing<T: AsRef<str>> {
     fn is_case(&self, case: Case) -> bool;
 }
 
-impl<T: AsRef<str>> Casing<T> for T where String: PartialEq<T> {
+impl<T: AsRef<str>> Casing<T> for T
+where
+    String: PartialEq<T>,
+{
     fn to_case(&self, case: Case) -> String {
         StateConverter::new(self).to_case(case)
     }
@@ -166,7 +168,7 @@ impl<T: AsRef<str>> Casing<T> for T where String: PartialEq<T> {
 /// ```
 pub struct StateConverter<'a, T: AsRef<str>> {
     s: &'a T,
-    conv: Converter
+    conv: Converter,
 }
 
 impl<'a, T: AsRef<str>> StateConverter<'a, T> {
@@ -182,7 +184,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     fn new_from_case(s: &'a T, case: Case) -> Self {
         Self {
             s,
-            conv: Converter::new().from_case(case)
+            conv: Converter::new().from_case(case),
         }
     }
 
@@ -206,9 +208,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     }
 
     pub fn to_case(self, case: Case) -> String {
-        self.conv
-            .to_case(case)
-            .convert(self.s)
+        self.conv.to_case(case).convert(self.s)
     }
 
     pub fn from_case(self, case: Case) -> Self {
@@ -219,7 +219,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -228,10 +227,9 @@ mod test {
     fn possible_cases(s: &str) -> Vec<Case> {
         Case::deterministic_cases()
             .into_iter()
-            .filter(|case| s.from_case(*case).to_case(*case) == s )
+            .filter(|case| s.from_case(*case).to_case(*case) == s)
             .collect()
     }
-
 
     #[test]
     fn lossless_against_lossless() {

@@ -63,64 +63,67 @@ impl Pattern {
     pub fn mutate(&self, words: &[&str]) -> Vec<String> {
         use Pattern::*;
         match self {
-            Lowercase => words.iter()
+            Lowercase => words
+                .iter()
                 .map(|word| WordCase::Lower.mutate(word))
                 .collect(),
-            Uppercase => words.iter()
+            Uppercase => words
+                .iter()
                 .map(|word| WordCase::Upper.mutate(word))
                 .collect(),
-            Capital => words.iter()
+            Capital => words
+                .iter()
                 .map(|word| WordCase::Capital.mutate(word))
                 .collect(),
-            Toggle => words.iter()
+            Toggle => words
+                .iter()
                 .map(|word| WordCase::Toggle.mutate(word))
                 .collect(),
             Sentence => {
-                let word_cases = iter::once(WordCase::Capital)
-                    .chain(iter::once(WordCase::Lower).cycle());
-                words.iter()
+                let word_cases =
+                    iter::once(WordCase::Capital).chain(iter::once(WordCase::Lower).cycle());
+                words
+                    .iter()
                     .zip(word_cases)
                     .map(|(word, word_case)| word_case.mutate(word))
                     .collect()
             }
             Camel => {
-                let word_cases = iter::once(WordCase::Lower)
-                    .chain(iter::once(WordCase::Capital).cycle());
-                words.iter()
+                let word_cases =
+                    iter::once(WordCase::Lower).chain(iter::once(WordCase::Capital).cycle());
+                words
+                    .iter()
                     .zip(word_cases)
                     .map(|(word, word_case)| word_case.mutate(word))
                     .collect()
             }
             Alternating => {
                 let mut upper = false;
-                words.iter()
-                .map(|word| {
-                    word.chars()
-                        .map(|letter| {
-                            if letter.is_uppercase() || letter.is_lowercase() {
-                                if upper {
-                                    upper = false;
-                                    letter.to_uppercase().to_string()
+                words
+                    .iter()
+                    .map(|word| {
+                        word.chars()
+                            .map(|letter| {
+                                if letter.is_uppercase() || letter.is_lowercase() {
+                                    if upper {
+                                        upper = false;
+                                        letter.to_uppercase().to_string()
+                                    } else {
+                                        upper = true;
+                                        letter.to_lowercase().to_string()
+                                    }
                                 } else {
-                                    upper = true;
-                                    letter.to_lowercase().to_string()
+                                    letter.to_string()
                                 }
-                            } else {
-                                letter.to_string()
-                            }
-                        })
-                        .collect()
-                })
-                .collect()
+                            })
+                            .collect()
+                    })
+                    .collect()
             }
             #[cfg(feature = "random")]
-            Random => {
-                randomize(words)
-            }
+            Random => randomize(words),
             #[cfg(feature = "random")]
-            PseudoRandom => {
-                pseudo_randomize(words)
-            }
+            PseudoRandom => pseudo_randomize(words),
         }
     }
 }
@@ -129,7 +132,8 @@ impl Pattern {
 #[cfg(feature = "random")]
 fn randomize(words: &[&str]) -> Vec<String> {
     let mut rng = rand::thread_rng();
-    words.iter()
+    words
+        .iter()
         .map(|word| {
             word.chars()
                 .map(|letter| {
@@ -152,7 +156,8 @@ fn pseudo_randomize(words: &[&str]) -> Vec<String> {
 
     // Keeps track of when to alternate
     let mut alt: Option<bool> = None;
-    words.iter()
+    words
+        .iter()
         .map(|word| {
             word.chars()
                 .map(|letter| {

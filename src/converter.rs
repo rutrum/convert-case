@@ -1,7 +1,7 @@
 use crate::boundary;
 use crate::Boundary;
-use crate::Pattern;
 use crate::Case;
+use crate::Pattern;
 
 pub struct Converter {
     boundaries: Vec<Boundary>,
@@ -24,7 +24,10 @@ impl Converter {
         Self::default()
     }
 
-    pub fn convert<T>(&self, s: T) -> String where T: AsRef<str> {
+    pub fn convert<T>(&self, s: T) -> String
+    where
+        T: AsRef<str>,
+    {
         let words = boundary::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             p.mutate(&words).join(&self.delim)
@@ -71,7 +74,10 @@ impl Converter {
         self
     }
 
-    pub fn set_delim<T>(mut self, d: T) -> Self where T: ToString {
+    pub fn set_delim<T>(mut self, d: T) -> Self
+    where
+        T: ToString,
+    {
         self.delim = d.to_string();
         self
     }
@@ -124,8 +130,7 @@ mod test {
 
     #[test]
     fn custom_delim() {
-        let conv = Converter::new()
-            .set_delim("..");
+        let conv = Converter::new().set_delim("..");
         assert_eq!("oh..My", conv.convert("ohMy"));
     }
 
@@ -155,7 +160,7 @@ mod test {
         assert_eq!("test_08bound", conv.convert("Test 08Bound"));
         assert_eq!("a8a_a8a", conv.convert("a8aA8A"));
     }
-    
+
     #[test]
     fn add_boundary() {
         let conv = Converter::new()
@@ -164,12 +169,10 @@ mod test {
             .add_boundary(Boundary::LowerUpper);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
     }
-    
+
     #[test]
     fn reuse_after_change() {
-        let conv = Converter::new()
-            .from_case(Case::Snake)
-            .to_case(Case::Kebab);
+        let conv = Converter::new().from_case(Case::Snake).to_case(Case::Kebab);
         assert_eq!("word-wordword", conv.convert("word_wordWord"));
 
         let conv = conv.add_boundary(Boundary::LowerUpper);
@@ -179,8 +182,15 @@ mod test {
     #[test]
     fn explicit_boundaries() {
         let conv = Converter::new()
-            .set_boundaries(&[Boundary::DigitLower, Boundary::DigitUpper, Boundary::Acronyms])
+            .set_boundaries(&[
+                Boundary::DigitLower,
+                Boundary::DigitUpper,
+                Boundary::Acronyms,
+            ])
             .to_case(Case::Snake);
-        assert_eq!("section8_lesson2_http_requests", conv.convert("section8lesson2HTTPRequests"));
+        assert_eq!(
+            "section8_lesson2_http_requests",
+            conv.convert("section8lesson2HTTPRequests")
+        );
     }
 }

@@ -1,8 +1,8 @@
 #[cfg(test)]
 use strum_macros::EnumIter;
 
-use crate::pattern::Pattern;
 use crate::boundary::Boundary;
+use crate::pattern::Pattern;
 
 /// Defines the type of casing a string can be.
 ///
@@ -203,8 +203,8 @@ impl Case {
     }
 
     pub fn boundaries(&self) -> Vec<Boundary> {
-        use Case::*;
         use Boundary::*;
+        use Case::*;
         match self {
             Upper | Lower | Title | Toggle | Alternating => vec![Space],
             Snake | UpperSnake | ScreamingSnake => vec![Underscore],
@@ -215,8 +215,7 @@ impl Case {
 
             UpperFlat | Flat => vec![],
             Camel | UpperCamel | Pascal => vec![
-                LowerUpper, Acronyms, LowerDigit, 
-                UpperDigit, DigitLower, DigitUpper
+                LowerUpper, Acronyms, LowerDigit, UpperDigit, DigitLower, DigitUpper,
             ],
         }
     }
