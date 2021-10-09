@@ -64,9 +64,9 @@ impl Converter {
         self
     }
 
-    pub fn remove_boundaries(mut self, bs: Vec<Boundary>) -> Self {
+    pub fn remove_boundaries(mut self, bs: &[Boundary]) -> Self {
         for b in bs {
-            self.boundaries.retain(|&x| x != b);
+            self.boundaries.retain(|&x| x != *b);
         }
         self
     }
@@ -150,7 +150,7 @@ mod test {
     #[test]
     fn no_digit_boundaries() {
         let conv = Converter::new()
-            .remove_boundaries(Boundary::digits())
+            .remove_boundaries(&Boundary::digits())
             .to_case(Case::Snake);
         assert_eq!("test_08bound", conv.convert("Test 08Bound"));
         assert_eq!("a8a_a8a", conv.convert("a8aA8A"));

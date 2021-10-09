@@ -129,6 +129,9 @@ pub trait Casing<T: AsRef<str>> {
     /// how to parse `self` before converting to a case.
     fn from_case(&self, case: Case) -> StateConverter<T>;
 
+    /// Creates a write docs
+    fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+
     /// Determines if `self` is of the given case.
     fn is_case(&self, case: Case) -> bool;
 }
@@ -136,6 +139,10 @@ pub trait Casing<T: AsRef<str>> {
 impl<T: AsRef<str>> Casing<T> for T where String: PartialEq<T> {
     fn to_case(&self, case: Case) -> String {
         StateConverter::new(self).to_case(case)
+    }
+
+    fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+        StateConverter::new(self).with_boundaries(bs)
     }
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
@@ -179,11 +186,17 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
-    // change name
-    pub fn split_on(self, bs: &[Boundary]) -> Self {
+    pub fn with_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
             conv: self.conv.set_boundaries(bs),
+        }
+    }
+
+    pub fn without_boundaries(self, bs: &[Boundary]) -> Self {
+        Self {
+            s: self.s,
+            conv: self.conv.remove_boundaries(bs),
         }
     }
 
@@ -383,6 +396,27 @@ mod test {
     fn string_is_kebab() {
         assert!("im-kebab-case".is_case(Case::Kebab));
         assert!(!"im_not_kebab".is_case(Case::Kebab));
+    }
+
+    #[test]
+    fn remove_boundaries() {
+        assert_eq!(
+            "m02_s05_binary_trees.pdf",
+            "M02S05BinaryTrees.pdf"
+                .from_case(Case::Pascal)
+                .without_boundaries(&[Boundary::UpperDigit])
+                .to_case(Case::Snake)
+        )
+    }
+
+    #[test]
+    fn with_boundaries() {
+        assert_eq!(
+            "my-dumb-file-name",
+            "my_dumbFileName"
+                .with_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
+                .to_case(Case::Kebab)
+        )
     }
 
     use std::collections::HashSet;

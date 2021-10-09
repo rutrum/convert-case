@@ -15,6 +15,15 @@ pub enum Boundary {
 }
 
 impl Boundary {
+    pub fn delims() -> Vec<Self> {
+        use Boundary::*;
+        vec![
+            Hyphen,
+            Underscore,
+            Space
+        ]
+    }
+
     pub fn digits() -> Vec<Self> {
         use Boundary::*;
         vec![
