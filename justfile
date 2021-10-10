@@ -14,7 +14,7 @@ coverage:
     cargo tarpaulin --all-features --out Xml && pycobertura show cobertura.xml
 
 doc:
-    cargo doc
+    cargo doc --all-features
 
 watch-doc:
-    watchexec -- just doc
+    watchexec -- "just doc && cargo test --all-features --doc"

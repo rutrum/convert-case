@@ -41,25 +41,66 @@ impl WordCase {
     }
 }
 
+/// A pattern is how a set of words is mutated before joining with
+/// a delimeter.
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Pattern {
-    /// Lowercase patterns are words that are entirely in lowercase
+    /// Lowercase patterns make all words lowercase.
     Lowercase,
+
+    /// Uppercase patterns make all words uppercase.
     Uppercase,
+
+    /// Capital patterns makes the first letter of each word uppercase
+    /// and the remaining letters of each word lowercase.
     Capital,
+
+    /// Capital patterns make the first word capitalized and the
+    /// remaining lowercase.
     Sentence,
+
+    /// Camel patterns make the first word lowercase and the remaining
+    /// uppercase.
     Camel,
 
+    /// Alternating patterns make each letter of each word alternate
+    /// between lowercase and uppercase.  They alternate across words,
+    /// which means the last letter of one word and the first letter of the
+    /// next will not be the same letter casing.
     Alternating,
+
+    /// Toggle patterns have the first letter of each word uppercase
+    /// and the remaining letters of each word uppercase.
     Toggle,
 
+    /// Random patterns will lowercase or uppercase each letter
+    /// uniformly randomly.  This uses the `rand` crate and is only available with the "random"
+    /// feature.
     #[cfg(feature = "random")]
     Random,
+
+    /// PseudoRandom patterns are random-like patterns.  Instead of randomizing
+    /// each letter individually, it mutates each pair of characters
+    /// as either (Lowercase, Uppercase) or (Uppercase, Lowercase).  This generates
+    /// more "random looking" words.  A consequence of this algorithm for randomization
+    /// is that there will never be three consecutive letters that are all lowercase
+    /// or all uppercase.  This uses the `rand` crate and is only available with the "random"
+    /// feature.
     #[cfg(feature = "random")]
     PseudoRandom,
 }
 
 impl Pattern {
+    /// Generates a vector of new `String`s in the right pattern given
+    /// the input strings.
+    /// ```
+    /// use convert_case::Pattern;
+    ///
+    /// assert_eq!(
+    ///     vec!["crack", "the", "skye"],
+    ///     Pattern::Lowercase.mutate(&vec!["CRACK", "the", "Skye"]),
+    /// )
+    /// ```
     pub fn mutate(&self, words: &[&str]) -> Vec<String> {
         use Pattern::*;
         match self {
@@ -228,7 +269,12 @@ mod test {
 
     #[test]
     fn mutate_empty_strings() {
-        for wcase in [WordCase::Lower, WordCase::Upper, WordCase::Capital, WordCase::Toggle] {
+        for wcase in [
+            WordCase::Lower,
+            WordCase::Upper,
+            WordCase::Capital,
+            WordCase::Toggle,
+        ] {
             assert_eq!(String::new(), wcase.mutate(&String::new()))
         }
     }

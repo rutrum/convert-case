@@ -1,30 +1,59 @@
+/// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
+/// and `Space`, consume the character they split on, whereas the other boundaries
+/// do not.
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Boundary {
+    /// Splits on `-`, consuming the character on segmentation.
     Hyphen,
+
+    /// Splits on `_`, consuming the character on segmentation.
     Underscore,
+
+    /// Splits on space, consuming the character on segmentation.
     Space,
 
+    /// Splits where an uppercase letter is followed by a lowercase letter.  This is seldom used,
+    /// and is not included in the [defaults](Boundary::defaults).
     UpperLower,
+
+    /// Splits where a lowercase letter is followed by an uppercase letter.
     LowerUpper,
+
+    /// Splits where digit is followed by an uppercase letter.
     DigitUpper,
+
+    /// Splits where an uppercase letter is followed by a digit.
     UpperDigit,
+
+    /// Splits where digit is followed by a lowercase letter.
     DigitLower,
+
+    /// Splits where a lowercase letter is followed by a digit.
     LowerDigit,
 
-    Acronyms,
+    /// Acronyms are identified by two uppercase letters followed by a lowercase letter.
+    /// The word boundary is between the two uppercase letters.  For example, "HTTPRequest"
+    /// would have an acronym boundary identified at "PRe" and split into "HTTP" and "Request".
+    Acronyms, // rename to acronym
 }
 
 impl Boundary {
+    /// Returns the boundaries that split around single characters, `Hyphen`,
+    /// `Underscore`, and `Space`.
     pub fn delims() -> Vec<Self> {
         use Boundary::*;
         vec![Hyphen, Underscore, Space]
     }
 
+    /// Returns the boundaries that involve digits, `DigitUpper`, `DigitLower`, `UpperDigit`, and
+    /// `LowerDigit`.
     pub fn digits() -> Vec<Self> {
         use Boundary::*;
         vec![DigitUpper, DigitLower, UpperDigit, LowerDigit]
     }
 
+    /// The default list of boundaries used when no case is provided in `from_case`.  This includes
+    /// all the boundaries except the `UpperLower` boundary.
     pub fn defaults() -> Vec<Self> {
         use Boundary::*;
         vec![

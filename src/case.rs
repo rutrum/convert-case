@@ -12,6 +12,18 @@ use crate::Boundary;
 /// let super_mario_title: String = "super_mario_64".to_case(Case::Title);
 /// assert_eq!("Super Mario 64", super_mario_title);
 /// ```
+///
+/// A case is the pair of a [pattern](enum.Pattern.html) and a delimeter (a string).  Given
+/// a list of words, a pattern describes how to mutate the words and a delimeter is how the mutated
+/// words are joined together.  These inherantly are the properties of what makes a "multiword
+/// identifier case", or simply "case".
+///
+/// This crate provides the ability to convert "from" a case.  This introduces a different feature
+/// of cases which are the word boundaries that segment the identifier into words.  For example, a
+/// snake case identifier `my_var_name` can be split on underscores `_` to segment into words.  A
+/// camel case identifier `myVarName` is split where a lowercase letter is followed by an
+/// uppercase letter.  Each case is also associated with a list of boundaries that are used when
+/// converting "from" a particular case.
 #[cfg_attr(test, derive(EnumIter))]
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
@@ -169,6 +181,15 @@ pub enum Case {
 }
 
 impl Case {
+    /// Returns the delimiter used in the corresponding case.  The following
+    /// table outlines which cases use which delimeter.
+    ///
+    /// | Cases | Delimeter |
+    /// | --- | --- |
+    /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
+    /// | Snake, UpperSnake, ScreamingSnake | Underscore `_` |
+    /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
+    /// | UpperFlat, Flat, Camel, UpperCamel, Pascal | Empty string, no delimeter |
     pub const fn delim(&self) -> &'static str {
         use Case::*;
         match self {
@@ -183,6 +204,18 @@ impl Case {
         }
     }
 
+    /// Returns the pattern used in the corresponding case.  The following
+    /// table outlines which cases use which pattern.
+    ///
+    /// | Cases | Pattern |
+    /// | --- | --- |
+    /// | Upper, UpperSnake, ScreamingSnake, UpperFlat, Cobol, UpperKebab | Uppercase |
+    /// | Lower, Snake, Kebab, Flat | Lowercase |
+    /// | Title, Pascal, UpperCamel, Train | Capital |
+    /// | Camel | Camel |
+    /// | Alternating | Alternating |
+    /// | Random | Random |
+    /// | PseudoRandom | PseudoRandom |
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
@@ -202,6 +235,17 @@ impl Case {
         }
     }
 
+    /// Returns the boundaries used in the corresponding case.  That is, where can word boundaries
+    /// be distinguished in a string of the given case.  The table outlines which cases use which
+    /// set of boundaries.
+    ///
+    /// | Cases | Boundaries |
+    /// | --- | --- |
+    /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
+    /// | Snake, UpperSnake, ScreamingSnake | Underscore `_` |
+    /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
+    /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronyms |
+    /// | UpperFlat, Flat | No boundaries |
     pub fn boundaries(&self) -> Vec<Boundary> {
         use Boundary::*;
         use Case::*;
@@ -222,8 +266,7 @@ impl Case {
 
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
-    /// Returns a vector with all case enum variants.  This was
-    /// created for use in the `ccase` binary.
+    /// Returns a vector with all case enum variants in no particular order.
     pub fn all_cases() -> Vec<Case> {
         use Case::*;
         vec![
@@ -251,12 +294,16 @@ impl Case {
         ]
     }
 
+    /// Returns a vector with the two "random" feature cases `Random` and `PseudoRandom`.  Only
+    /// defined in the "random" feature.
     #[cfg(feature = "random")]
     pub fn random_cases() -> Vec<Case> {
         use Case::*;
         vec![Random, PseudoRandom]
     }
 
+    /// Returns a vector with all the cases that do not depend on randomness.  This is all
+    /// the cases not in the "random" feature.
     pub fn deterministic_cases() -> Vec<Case> {
         use Case::*;
         vec![
