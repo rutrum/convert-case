@@ -102,24 +102,24 @@
 //! following in your `Cargo.toml`.
 //! ```{toml}
 //! [dependencies]
-//! convert_case = { version = "^0.3, features = ["random"] }
+//! convert_case = { version = "^0.3.0", features = ["random"] }
 //! ```
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
 
-pub mod boundary;
 mod case;
 mod converter;
 mod pattern;
+mod segmentation;
 
-pub use boundary::Boundary;
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
+pub use segmentation::Boundary;
 
 /// Describes items that can be converted into a case.
 ///
-/// Implemented for string slices `&str` and owned strings `String`.
+/// Implemented for string slices `&str`, `String`, and `&String`.
 pub trait Casing<T: AsRef<str>> {
     /// References `self` and converts to the given case.
     fn to_case(&self, case: Case) -> String;
@@ -188,6 +188,13 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    pub fn from_case(self, case: Case) -> Self {
+        Self {
+            conv: self.conv.from_case(case),
+            ..self
+        }
+    }
+
     pub fn with_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
@@ -209,13 +216,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
 
     pub fn to_case(self, case: Case) -> String {
         self.conv.to_case(case).convert(self.s)
-    }
-
-    pub fn from_case(self, case: Case) -> Self {
-        Self {
-            conv: self.conv.from_case(case),
-            ..self
-        }
     }
 }
 
@@ -404,7 +404,7 @@ mod test {
                 .from_case(Case::Pascal)
                 .without_boundaries(&[Boundary::UpperDigit])
                 .to_case(Case::Snake)
-        )
+        );
     }
 
     #[test]
@@ -414,6 +414,38 @@ mod test {
             "my_dumbFileName"
                 .with_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
                 .to_case(Case::Kebab)
+        );
+    }
+
+    #[cfg(feature = "random")]
+    #[test]
+    fn random_case_boundaries() {
+        for random_case in Case::random_cases() {
+            assert_eq!(
+                "split_by_spaces",
+                "Split By Spaces"
+                    .from_case(random_case)
+                    .to_case(Case::Snake)
+            );
+        }
+    }
+
+    #[test]
+    fn early_convert() {
+        assert_eq!(
+            "myCrazywordLIST",
+            "myCrazy-word-LIST".from_case(Case::Kebab).convert(),
+        )
+    }
+
+    #[test]
+    fn multiple_from_case() {
+        assert_eq!(
+            "longtime_nosee",
+            "LongTime NoSee"
+                .from_case(Case::Camel)
+                .from_case(Case::Title)
+                .to_case(Case::Snake),
         )
     }
 

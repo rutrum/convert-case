@@ -1,8 +1,8 @@
 #[cfg(test)]
 use strum_macros::EnumIter;
 
-use crate::boundary::Boundary;
 use crate::pattern::Pattern;
+use crate::Boundary;
 
 /// Defines the type of casing a string can be.
 ///
@@ -169,7 +169,7 @@ pub enum Case {
 }
 
 impl Case {
-    pub const fn delim(&self) -> &str {
+    pub const fn delim(&self) -> &'static str {
         use Case::*;
         match self {
             Upper | Lower | Title | Toggle | Alternating => " ",
@@ -249,6 +249,12 @@ impl Case {
             #[cfg(feature = "random")]
             PseudoRandom,
         ]
+    }
+
+    #[cfg(feature = "random")]
+    pub fn random_cases() -> Vec<Case> {
+        use Case::*;
+        vec![Random, PseudoRandom]
     }
 
     pub fn deterministic_cases() -> Vec<Case> {

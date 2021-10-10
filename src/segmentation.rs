@@ -70,7 +70,7 @@ impl Boundary {
 // and can be copied.  Also no fear in adding duplicates
 
 // gross
-pub fn split<'a, T>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
+pub fn split<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
 where
     T: AsRef<str>,
 {
@@ -144,6 +144,15 @@ pub fn split_on_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
     words
 }
 
-// A boundary is either a replacement or not, maybe its Option<(usize, usize)>, where each
-// index is what part to extract to make the word boundary.  If there is no replacement then
-// its both are the same
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn split_on_delims() {
+        assert_eq!(
+            vec!["my", "word", "list", "separated", "by", "delims"],
+            split("my_word-list separated-by_delims", &Boundary::delims())
+        )
+    }
+}

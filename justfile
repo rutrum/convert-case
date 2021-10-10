@@ -11,4 +11,10 @@ watch-build:
     watchexec -- "reset && just build"
 
 coverage:
-    cargo tarpaulin --out Xml && pycobertura show cobertura.xml
+    cargo tarpaulin --all-features --out Xml && pycobertura show cobertura.xml
+
+doc:
+    cargo doc
+
+watch-doc:
+    watchexec -- just doc

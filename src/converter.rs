@@ -1,4 +1,4 @@
-use crate::boundary;
+use crate::segmentation;
 use crate::Boundary;
 use crate::Case;
 use crate::Pattern;
@@ -28,7 +28,7 @@ impl Converter {
     where
         T: AsRef<str>,
     {
-        let words = boundary::split(&s, &self.boundaries);
+        let words = segmentation::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             p.mutate(&words).join(&self.delim)
         } else {
@@ -162,12 +162,30 @@ mod test {
     }
 
     #[test]
+    fn remove_boundary() {
+        let conv = Converter::new()
+            .remove_boundary(Boundary::DigitUpper)
+            .to_case(Case::Snake);
+        assert_eq!("test_08bound", conv.convert("Test 08Bound"));
+        assert_eq!("a_8_a_a_8a", conv.convert("a8aA8A"));
+    }
+
+    #[test]
     fn add_boundary() {
         let conv = Converter::new()
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
             .add_boundary(Boundary::LowerUpper);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
+    }
+
+    #[test]
+    fn add_boundaries() {
+        let conv = Converter::new()
+            .from_case(Case::Snake)
+            .to_case(Case::Kebab)
+            .add_boundaries(&[Boundary::LowerUpper, Boundary::UpperLower]);
+        assert_eq!("word-word-w-ord", conv.convert("word_wordWord"));
     }
 
     #[test]
