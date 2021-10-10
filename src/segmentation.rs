@@ -1,6 +1,30 @@
+#[cfg(test)]
+use strum_macros::EnumIter;
+
 /// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
 /// and `Space`, consume the character they split on, whereas the other boundaries
 /// do not.
+///
+/// The struct offers methods that return `Vec`s containing useful groups of boundaries.  It also
+/// contains the [`list_from`](Boundary::list_from) method which will generate a list of boundaries
+/// based on a string slice.
+/// ```
+/// use convert_case::{Boundary, Case, Casing, Converter};
+///
+/// assert_eq!(
+///     "transformations_in3d",
+///     "TransformationsIn3D"
+///         .from_case(Case::Camel)
+///         .without_boundaries(&Boundary::digits())
+///         .to_case(Case::Snake)
+/// );
+///
+/// let conv = Converter::new()
+///     .set_boundaries(&Boundary::list_from("aA "))
+///     .to_case(Case::Title);
+/// assert_eq!("7empest By Tool", conv.convert("7empest byTool"));
+/// ```
+#[cfg_attr(test, derive(EnumIter))]
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Boundary {
     /// Splits on `-`, consuming the character on segmentation.
@@ -38,27 +62,118 @@ pub enum Boundary {
 }
 
 impl Boundary {
-    /// Returns the boundaries that split around single characters, `Hyphen`,
-    /// `Underscore`, and `Space`.
-    pub fn delims() -> Vec<Self> {
-        use Boundary::*;
-        vec![Hyphen, Underscore, Space]
+    /// Returns a list of all boundaries that are identified within the given string.
+    /// Could be a short of writing out all the boundaries in a list directly.  This will not
+    /// identify boundary `UpperLower` if it also used as part of `Acronyms`.
+    ///
+    /// If you want to be very explicit and not overlap boundaries, it is recommended to use a colon
+    /// character.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![Hyphen, Space, LowerUpper, UpperDigit, DigitLower],
+    ///     Boundary::list_from("aA8a -")
+    /// );
+    /// assert_eq!(
+    ///     vec![Underscore, LowerUpper, DigitUpper, Acronyms],
+    ///     Boundary::list_from("bD:0B:_:AAa")
+    /// );
+    /// ```
+    pub fn list_from(s: &str) -> Vec<Self> {
+        Boundary::all().iter().filter(|boundary| {
+            let left_iter = s.chars();
+            let mid_iter = s.chars().skip(1);
+            let right_iter = s.chars().skip(2);
+
+            let mut one_iter = left_iter.clone();
+
+            // Also capture when the previous pair was both uppercase, so we don't
+            // match the UpperLower boundary in the case of Acronyms
+            let two_iter = left_iter.clone().zip(mid_iter.clone());
+            let mut two_iter_and_upper = two_iter.clone()
+                .zip(std::iter::once(false).chain(
+                        two_iter.map(|(a, b)| a.is_uppercase() && b.is_uppercase())
+                ));
+
+            let mut three_iter = left_iter.zip(mid_iter).zip(right_iter);
+
+            one_iter.any(|a| boundary.detect_one(a))
+                || two_iter_and_upper.any(|((a, b), is_acro)| boundary.detect_two(a, b) && !is_acro)
+                || three_iter.any(|((a, b), c)| boundary.detect_three(a, b, c))
+        }).map(|b| *b).collect()
     }
 
-    /// Returns the boundaries that involve digits, `DigitUpper`, `DigitLower`, `UpperDigit`, and
-    /// `LowerDigit`.
-    pub fn digits() -> Vec<Self> {
-        use Boundary::*;
-        vec![DigitUpper, DigitLower, UpperDigit, LowerDigit]
-    }
-
-    /// The default list of boundaries used when no case is provided in `from_case`.  This includes
+    /// The default list of boundaries used when `Casing::to_case` is called directly
+    /// and in a `Converter` generated from `Converter::new()`.  This includes
     /// all the boundaries except the `UpperLower` boundary.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![
+    ///         Underscore, Hyphen, Space, LowerUpper, UpperDigit, 
+    ///         DigitUpper, DigitLower, LowerDigit, Acronyms,
+    ///     ],
+    ///     Boundary::defaults()
+    /// );
+    /// ```
     pub fn defaults() -> Vec<Self> {
         use Boundary::*;
         vec![
             Underscore, Hyphen, Space, LowerUpper, UpperDigit, DigitUpper, DigitLower, LowerDigit,
             Acronyms,
+        ]
+    }
+
+    /// Returns the boundaries that split around single characters: `Hyphen`,
+    /// `Underscore`, and `Space`.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![Hyphen, Underscore, Space],
+    ///     Boundary::delims()
+    /// );
+    /// ```
+    pub fn delims() -> Vec<Self> {
+        use Boundary::*;
+        vec![Hyphen, Underscore, Space]
+    }
+
+    /// Returns the boundaries that involve digits: `DigitUpper`, `DigitLower`, `UpperDigit`, and
+    /// `LowerDigit`.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![DigitUpper, UpperDigit, DigitLower, LowerDigit],
+    ///     Boundary::digits()
+    /// );
+    /// ```
+    pub fn digits() -> Vec<Self> {
+        use Boundary::*;
+        vec![DigitUpper, UpperDigit, DigitLower, LowerDigit]
+    }
+
+    /// Returns all boundaries.  Note that this includes the `UpperLower` variant which
+    /// might be unhelpful.  Please look at [`Boundary::defaults`].
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![
+    ///         Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper,
+    ///         UpperDigit, DigitLower, LowerDigit, Acronyms,
+    ///     ],
+    ///     Boundary::all()
+    /// );
+    /// ```
+    pub fn all() -> Vec<Self> {
+        use Boundary::*;
+        vec![
+            Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper, UpperDigit, 
+            DigitLower, LowerDigit, Acronyms
         ]
     }
 
@@ -176,6 +291,15 @@ pub fn split_on_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn all_boundaries_in_iter() {
+        let all = Boundary::all();
+        for boundary in Boundary::iter() {
+            assert!(all.contains(&boundary));
+        }
+    }
 
     #[test]
     fn split_on_delims() {
@@ -183,5 +307,22 @@ mod test {
             vec!["my", "word", "list", "separated", "by", "delims"],
             split("my_word-list separated-by_delims", &Boundary::delims())
         )
+    }
+
+    #[test]
+    fn boundaries_found_in_string() {
+        use Boundary::*;
+        assert_eq!(
+            vec![LowerUpper, UpperLower, LowerDigit],
+            Boundary::list_from("a8.Aa.aA")
+        );
+        assert_eq!(
+            Boundary::digits(),
+            Boundary::list_from("b1B1b")
+        );
+        assert_eq!(
+            vec![Hyphen, Underscore, Space, Acronyms],
+            Boundary::list_from("AAa -_")
+        );
     }
 }

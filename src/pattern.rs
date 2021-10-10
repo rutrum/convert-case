@@ -43,39 +43,103 @@ impl WordCase {
 
 /// A pattern is how a set of words is mutated before joining with
 /// a delimeter.
+///
+/// The `Random` and `PseudoRandom` patterns are used for their respective cases
+/// and are only available in the "random" feature. 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Pattern {
     /// Lowercase patterns make all words lowercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["case", "conversion", "library"],
+    ///     Pattern::Lowercase.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Lowercase,
 
     /// Uppercase patterns make all words uppercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["CASE", "CONVERSION", "LIBRARY"],
+    ///     Pattern::Uppercase.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Uppercase,
 
     /// Capital patterns makes the first letter of each word uppercase
     /// and the remaining letters of each word lowercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["Case", "Conversion", "Library"],
+    ///     Pattern::Capital.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Capital,
 
     /// Capital patterns make the first word capitalized and the
     /// remaining lowercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["Case", "conversion", "library"],
+    ///     Pattern::Sentence.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Sentence,
 
     /// Camel patterns make the first word lowercase and the remaining
     /// uppercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["case", "Conversion", "Library"],
+    ///     Pattern::Camel.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Camel,
 
     /// Alternating patterns make each letter of each word alternate
     /// between lowercase and uppercase.  They alternate across words,
     /// which means the last letter of one word and the first letter of the
     /// next will not be the same letter casing.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["cAsE", "cOnVeRsIoN", "lIbRaRy"],
+    ///     Pattern::Alternating.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// assert_eq!(
+    ///     vec!["aNoThEr", "ExAmPlE"],
+    ///     Pattern::Alternating.mutate(&["Another", "Example"]),
+    /// );
+    /// ```
     Alternating,
 
     /// Toggle patterns have the first letter of each word uppercase
     /// and the remaining letters of each word uppercase.
+    /// ```
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["cASE", "cONVERSION", "lIBRARY"],
+    ///     Pattern::Toggle.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     Toggle,
 
     /// Random patterns will lowercase or uppercase each letter
     /// uniformly randomly.  This uses the `rand` crate and is only available with the "random"
-    /// feature.
+    /// feature.  This example will not pass the assertion due to randomness, but it used as an 
+    /// example of what output is possible.
+    /// ```should_panic
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["Case", "coNVeRSiOn", "lIBraRY"],
+    ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
     #[cfg(feature = "random")]
     Random,
 
@@ -85,7 +149,15 @@ pub enum Pattern {
     /// more "random looking" words.  A consequence of this algorithm for randomization
     /// is that there will never be three consecutive letters that are all lowercase
     /// or all uppercase.  This uses the `rand` crate and is only available with the "random"
-    /// feature.
+    /// feature.  This example will not pass the assertion due to randomness, but it used as an 
+    /// example of what output is possible.
+    /// ```should_panic
+    /// use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["cAsE", "cONveRSioN", "lIBrAry"],
+    ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"]),
+    /// );
+    /// ```
     #[cfg(feature = "random")]
     PseudoRandom,
 }

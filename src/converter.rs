@@ -10,7 +10,7 @@ use crate::Pattern;
 /// 2) `pattern`: how words are mutated, or how each character's case will change.
 /// 3) `delim` or delimeter: how the mutated words are joined into the final string.
 ///
-/// Then calling [`convert`](Converter::convert) on a string will apply a case conversion
+/// Then calling [`convert`](Converter::convert) on a `Converter` will apply a case conversion
 /// defined by those fields.  The `Converter` struct is what is used underneath those functions
 /// available in the `Casing` struct.  
 ///
@@ -48,11 +48,11 @@ use crate::Pattern;
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 ///
-/// let conv = Converter::new()
+/// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
 ///     .set_pattern(Pattern::Camel)
 ///     .set_delim(".");
-/// assert_eq!("collision.Shape.2d", conv.convert("CollisionShape2D"));
+/// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
 /// ```
 pub struct Converter {
     /// How a string is segmented into words.
