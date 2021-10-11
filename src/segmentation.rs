@@ -28,36 +28,106 @@ use strum_macros::EnumIter;
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Boundary {
     /// Splits on `-`, consuming the character on segmentation.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::Hyphen],
+    ///     Boundary::list_from("-")
+    /// );
+    /// ```
     Hyphen,
 
     /// Splits on `_`, consuming the character on segmentation.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::Underscore],
+    ///     Boundary::list_from("_")
+    /// );
+    /// ```
     Underscore,
 
     /// Splits on space, consuming the character on segmentation.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::Space],
+    ///     Boundary::list_from(" ")
+    /// );
+    /// ```
     Space,
 
     /// Splits where an uppercase letter is followed by a lowercase letter.  This is seldom used,
     /// and is not included in the [defaults](Boundary::defaults).
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::UpperLower],
+    ///     Boundary::list_from("Aa")
+    /// );
+    /// ```
     UpperLower,
 
     /// Splits where a lowercase letter is followed by an uppercase letter.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::LowerUpper],
+    ///     Boundary::list_from("aA")
+    /// );
+    /// ```
     LowerUpper,
 
     /// Splits where digit is followed by an uppercase letter.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::DigitUpper],
+    ///     Boundary::list_from("1A")
+    /// );
+    /// ```
     DigitUpper,
 
     /// Splits where an uppercase letter is followed by a digit.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::UpperDigit],
+    ///     Boundary::list_from("A1")
+    /// );
+    /// ```
     UpperDigit,
 
     /// Splits where digit is followed by a lowercase letter.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::DigitLower],
+    ///     Boundary::list_from("1a")
+    /// );
+    /// ```
     DigitLower,
 
     /// Splits where a lowercase letter is followed by a digit.
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::LowerDigit],
+    ///     Boundary::list_from("a1")
+    /// );
+    /// ```
     LowerDigit,
 
     /// Acronyms are identified by two uppercase letters followed by a lowercase letter.
     /// The word boundary is between the two uppercase letters.  For example, "HTTPRequest"
     /// would have an acronym boundary identified at "PRe" and split into "HTTP" and "Request".
+    /// ```
+    /// use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::Acronyms],
+    ///     Boundary::list_from("AAa")
+    /// );
+    /// ```
     Acronyms, // rename to acronym
 }
 
