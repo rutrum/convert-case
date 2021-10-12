@@ -8,14 +8,19 @@ use strum_macros::EnumIter;
 /// The struct offers methods that return `Vec`s containing useful groups of boundaries.  It also
 /// contains the [`list_from`](Boundary::list_from) method which will generate a list of boundaries
 /// based on a string slice.
+///
+/// Note that all boundaries are distinct and do not share functionality.  That is, there is no
+/// such DigitLetter variant, because that would be equivalent to the current `DigitUpper` and
+/// `DigitLower` variants.  For common functionality, consider using
+/// some provided functions that return a list of boundaries.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
 ///
 /// assert_eq!(
-///     "transformations_in3d",
+///     "transformations_in_3d",
 ///     "TransformationsIn3D"
 ///         .from_case(Case::Camel)
-///         .without_boundaries(&Boundary::digits())
+///         .without_boundaries(&Boundary::digit_letter())
 ///         .to_case(Case::Snake)
 /// );
 ///
@@ -124,17 +129,17 @@ pub enum Boundary {
     /// ```
     /// use convert_case::Boundary;
     /// assert_eq!(
-    ///     vec![Boundary::Acronyms],
+    ///     vec![Boundary::Acronym],
     ///     Boundary::list_from("AAa")
     /// );
     /// ```
-    Acronyms, // rename to acronym
+    Acronym,
 }
 
 impl Boundary {
     /// Returns a list of all boundaries that are identified within the given string.
     /// Could be a short of writing out all the boundaries in a list directly.  This will not
-    /// identify boundary `UpperLower` if it also used as part of `Acronyms`.
+    /// identify boundary `UpperLower` if it also used as part of `Acronym`.
     ///
     /// If you want to be very explicit and not overlap boundaries, it is recommended to use a colon
     /// character.
@@ -146,7 +151,7 @@ impl Boundary {
     ///     Boundary::list_from("aA8a -")
     /// );
     /// assert_eq!(
-    ///     vec![Underscore, LowerUpper, DigitUpper, Acronyms],
+    ///     vec![Underscore, LowerUpper, DigitUpper, Acronym],
     ///     Boundary::list_from("bD:0B:_:AAa")
     /// );
     /// ```
@@ -159,7 +164,7 @@ impl Boundary {
             let mut one_iter = left_iter.clone();
 
             // Also capture when the previous pair was both uppercase, so we don't
-            // match the UpperLower boundary in the case of Acronyms
+            // match the UpperLower boundary in the case of Acronym
             let two_iter = left_iter.clone().zip(mid_iter.clone());
             let mut two_iter_and_upper = two_iter.clone()
                 .zip(std::iter::once(false).chain(
@@ -183,7 +188,7 @@ impl Boundary {
     /// assert_eq!(
     ///     vec![
     ///         Underscore, Hyphen, Space, LowerUpper, UpperDigit, 
-    ///         DigitUpper, DigitLower, LowerDigit, Acronyms,
+    ///         DigitUpper, DigitLower, LowerDigit, Acronym,
     ///     ],
     ///     Boundary::defaults()
     /// );
@@ -192,7 +197,7 @@ impl Boundary {
         use Boundary::*;
         vec![
             Underscore, Hyphen, Space, LowerUpper, UpperDigit, DigitUpper, DigitLower, LowerDigit,
-            Acronyms,
+            Acronym,
         ]
     }
 
@@ -226,6 +231,35 @@ impl Boundary {
         vec![DigitUpper, UpperDigit, DigitLower, LowerDigit]
     }
 
+    /// Returns the boundaries that are letters followed by digits: `UpperDigit` and `LowerDigit`.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![UpperDigit, LowerDigit],
+    ///     Boundary::letter_digit()
+    /// );
+    /// ```
+    pub fn letter_digit() -> Vec<Self> {
+        use Boundary::*;
+        vec![UpperDigit, LowerDigit]
+    }
+
+    /// Returns the boundaries that are digits followed by letters: `DigitUpper` and
+    /// `DigitLower`.
+    /// ```
+    /// use convert_case::Boundary;
+    /// use Boundary::*;
+    /// assert_eq!(
+    ///     vec![DigitUpper, DigitLower],
+    ///     Boundary::digit_letter()
+    /// );
+    /// ```
+    pub fn digit_letter() -> Vec<Self> {
+        use Boundary::*;
+        vec![DigitUpper, DigitLower]
+    }
+
     /// Returns all boundaries.  Note that this includes the `UpperLower` variant which
     /// might be unhelpful.  Please look at [`Boundary::defaults`].
     /// ```
@@ -234,7 +268,7 @@ impl Boundary {
     /// assert_eq!(
     ///     vec![
     ///         Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper,
-    ///         UpperDigit, DigitLower, LowerDigit, Acronyms,
+    ///         UpperDigit, DigitLower, LowerDigit, Acronym,
     ///     ],
     ///     Boundary::all()
     /// );
@@ -243,7 +277,7 @@ impl Boundary {
         use Boundary::*;
         vec![
             Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper, UpperDigit, 
-            DigitLower, LowerDigit, Acronyms
+            DigitLower, LowerDigit, Acronym
         ]
     }
 
@@ -272,7 +306,7 @@ impl Boundary {
 
     fn detect_three(&self, c: char, d: char, e: char) -> bool {
         use Boundary::*;
-        if let Acronyms = self {
+        if let Acronym = self {
             c.is_uppercase() && d.is_uppercase() && e.is_lowercase()
         } else {
             false
@@ -391,7 +425,7 @@ mod test {
             Boundary::list_from("b1B1b")
         );
         assert_eq!(
-            vec![Hyphen, Underscore, Space, Acronyms],
+            vec![Hyphen, Underscore, Space, Acronym],
             Boundary::list_from("AAa -_")
         );
     }

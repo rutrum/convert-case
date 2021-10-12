@@ -91,7 +91,7 @@ pub enum Pattern {
     Sentence,
 
     /// Camel patterns make the first word lowercase and the remaining
-    /// uppercase.
+    /// capitalized.
     /// ```
     /// use convert_case::Pattern;
     /// assert_eq!(

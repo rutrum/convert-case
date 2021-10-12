@@ -19,7 +19,7 @@ use crate::Boundary;
 /// identifier case", or simply "case".
 ///
 /// This crate provides the ability to convert "from" a case.  This introduces a different feature
-/// of cases which are the word boundaries that segment the identifier into words.  For example, a
+/// of cases which are the [word boundaries](Boundary) that segment the identifier into words.  For example, a
 /// snake case identifier `my_var_name` can be split on underscores `_` to segment into words.  A
 /// camel case identifier `myVarName` is split where a lowercase letter is followed by an
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
@@ -28,6 +28,9 @@ use crate::Boundary;
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Uppercase](`Pattern::Uppercase`)
+    /// * Delimeter: Space
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -36,6 +39,9 @@ pub enum Case {
     Upper,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Lowercase](`Pattern::Lowercase`)
+    /// * Delimeter: Space
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -46,6 +52,9 @@ pub enum Case {
     /// Title case strings are delimited by spaces. Only the leading character of
     /// each word is uppercase.  No inferences are made about language, so words
     /// like "as", "to", and "for" will still be capitalized.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Capital](`Pattern::Capital`)
+    /// * Delimeter: Space
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -55,6 +64,9 @@ pub enum Case {
 
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Toggle](`Pattern::Toggle`)
+    /// * Delimeter: Space
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -64,6 +76,11 @@ pub enum Case {
 
     /// Camel case strings are lowercase, but for every word _except the first_ the
     /// first letter is capitalized.
+    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
+    /// [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    /// [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Pattern: [Camel](`Pattern::Camel`)
+    /// * Delimeter: No delimeter
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -73,6 +90,11 @@ pub enum Case {
 
     /// Pascal case strings are lowercase, but for every word the
     /// first letter is capitalized.
+    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
+    /// [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    /// [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Pattern: [Capital](`Pattern::Capital`)
+    /// * Delimeter: No delimeter
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -80,10 +102,13 @@ pub enum Case {
     /// ```
     Pascal,
 
-    /// Upper camel case is an alternative name for Pascal case.
+    /// Upper camel case is an alternative name for [Pascal case](Case::Pascal).
     UpperCamel,
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
+    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Delimeter: Underscore `_`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -92,6 +117,9 @@ pub enum Case {
     Snake,
 
     /// Upper snake case strings are delimited by underscores `_` and are all uppercase.
+    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Delimeter: Underscore `_`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -99,10 +127,13 @@ pub enum Case {
     /// ```
     UpperSnake,
 
-    /// Screaming snake case is an alternative name for upper snake case.
+    /// Screaming snake case is an alternative name for [upper snake case](Case::UpperSnake).
     ScreamingSnake,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Delimeter: Hyphen `-`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -111,6 +142,9 @@ pub enum Case {
     Kebab,
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Delimeter: Hyphen `-`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -118,11 +152,14 @@ pub enum Case {
     /// ```
     Cobol,
 
-    /// Screaming snake case is an alternative name for upper snake case.
+    /// Upper kebab case is an alternative name for [Cobol case](Case::Cobol).
     UpperKebab,
 
     /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
     /// except for the leading character of each word.
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Capital](Pattern::Capital)
+    /// * Delimeter: Hyphen `-`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -130,8 +167,10 @@ pub enum Case {
     /// ```
     Train,
 
-    /// Flat case strings are all lowercase, with no delimiter.  Converting to
-    /// this case is **lossy**.  That is, word boundaries are lost.
+    /// Flat case strings are all lowercase, with no delimiter. Note that word boundaries are lost.
+    /// * Boundaries: No boundaries
+    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Delimeter: No delimeter
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -139,8 +178,10 @@ pub enum Case {
     /// ```
     Flat,
 
-    /// Upper flat case strings are all uppercase, with no delimiter.  Converting to
-    /// this case is **lossy**.  That is, word boundaries are lost.
+    /// Upper flat case strings are all uppercase, with no delimiter. Note that word boundaries are lost.
+    /// * Boundaries: No boundaries
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Delimeter: No delimeter
     ///
     /// ```
     /// use convert_case::{Case, Casing};
@@ -150,6 +191,10 @@ pub enum Case {
 
     /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
     /// and lowercase.
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [Alternating](Pattern::Alternating)
+    /// * Delimeter: Space
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// assert_eq!("mY vArIaBlE nAmE", "My variable NAME".to_case(Case::Alternating));
@@ -159,11 +204,15 @@ pub enum Case {
     /// Random case strings are delimited by spaces and characters are
     /// randomly upper case or lower case.  This uses the `rand` crate
     /// and is only available with the "random" feature.
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [Random](Pattern::Random)
+    /// * Delimeter: Space
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
-    /// `new` could be "My vaRIAbLE nAme" for example.
+    /// String `new` could be "My vaRIAbLE nAme" for example.
     #[cfg(any(doc, feature = "random"))]
     Random,
 
@@ -171,11 +220,15 @@ pub enum Case {
     /// upper case or lower case, but there will never more than two consecutive lower
     /// case or upper case letters in a row.  This uses the `rand` crate and is
     /// only available with the "random" feature.
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [PseudoRandom](Pattern::PseudoRandom)
+    /// * Delimeter: Space
+    ///
     /// ```
     /// use convert_case::{Case, Casing};
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
-    /// `new` could be "mY vArIAblE NamE" for example.
+    /// String `new` could be "mY vArIAblE NamE" for example.
     #[cfg(any(doc, feature = "random"))]
     PseudoRandom,
 }
@@ -244,7 +297,7 @@ impl Case {
     /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
     /// | Snake, UpperSnake, ScreamingSnake | Underscore `_` |
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
-    /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronyms |
+    /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronym |
     /// | UpperFlat, Flat | No boundaries |
     pub fn boundaries(&self) -> Vec<Boundary> {
         use Boundary::*;
@@ -259,7 +312,7 @@ impl Case {
 
             UpperFlat | Flat => vec![],
             Camel | UpperCamel | Pascal => vec![
-                LowerUpper, Acronyms, LowerDigit, UpperDigit, DigitLower, DigitUpper,
+                LowerUpper, Acronym, LowerDigit, UpperDigit, DigitLower, DigitUpper,
             ],
         }
     }

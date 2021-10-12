@@ -189,7 +189,7 @@ impl Converter {
     /// use convert_case::{Boundary, Case, Converter};
     ///
     /// let conv = Converter::new()
-    ///     .remove_boundary(Boundary::Acronyms)
+    ///     .remove_boundary(Boundary::Acronym)
     ///     .to_case(Case::Kebab);
     /// assert_eq!("httprequest-parser", conv.convert("HTTPRequest_parser"));
     /// ```
@@ -381,7 +381,7 @@ mod test {
             .set_boundaries(&[
                 Boundary::DigitLower,
                 Boundary::DigitUpper,
-                Boundary::Acronyms,
+                Boundary::Acronym,
             ])
             .to_case(Case::Snake);
         assert_eq!(

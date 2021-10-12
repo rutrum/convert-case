@@ -2,17 +2,17 @@
 //!
 //! # Command Line Utility `ccase`
 //!
-//! Since version "0.3.0" this crate is just a case conversion _library_.  The command line utility
-//! that uses the tools in this library has been moved to the `ccase` crate.  You can read about it
-//! at the [GitHub repository](https://github.com/rutrum/convert-case/tree/master/ccase).
+//! This library was developed for the purposes of a command line utility for converting
+//! the case of strings and filenames.  You can check out 
+//! [`ccase` on Github](https://github.com/rutrum/convert-case/tree/master/ccase).
 //!
 //! # Rust Library
 //!
 //! Provides a [`Case`](enum.Case.html) enum which defines a variety of cases to convert into.
-//! A `Case` can be used with an item that implements the [`Casing`](trait.Casing.html) trait,
-//! which allows the item to be converted to a given case.
+//! Strings have implemented the [`Casing`](trait.Casing.html) trait, which adds methods for 
+//! case conversion.
 //!
-//! You can convert a string or string slice into a case using the `to_case` method.
+//! You can convert strings into a case using the [`to_case`](Casing::to_case) method.
 //! ```
 //! use convert_case::{Case, Casing};
 //!
@@ -21,15 +21,16 @@
 //! assert_eq!("Ronnie-James-Dio", "RONNIE_JAMES_DIO".to_case(Case::Train));
 //! ```
 //!
-//! By default, `to_case` will split along all word boundaries, that is
+//! By default, `to_case` will split along a set of default word boundaries, that is
 //! * space characters ` `,
 //! * underscores `_`,
 //! * hyphens `-`,
 //! * changes in capitalization from lowercase to uppercase `aA`,
-//! * and adjacent digits and letters `a1` and `1a`.
+//! * adjacent digits and letters `a1`, `1a`, `A1`, `1A`,
+//! * and acroynms `AAa` (as in `HTTPRequest`).
 //!
 //! For more accuracy, the `from_case` method splits based on the word boundaries
-//! of a particular case.  For example, splitting from snake case will only treat
+//! of a particular case.  For example, splitting from snake case will only use
 //! underscores as word boundaries.
 //! ```
 //! use convert_case::{Case, Casing};
@@ -44,8 +45,8 @@
 //! );
 //! ```
 //!
-//! By default (and when converting from camel case or similar cases) `convert_case`
-//! will detect acronyms.  It also ignores any leading, trailing, or duplicate delimiters.
+//! Case conversion can detect acronyms for camel-like strings.  It also ignores any leading, 
+//! trailing, or duplicate delimiters.
 //! ```
 //! use convert_case::{Case, Casing};
 //!
@@ -68,7 +69,7 @@
 //! assert_eq!("ὀδυσσεύς", odysseus.to_case(Case::Lower));
 //! ```
 //!
-//! For the purposes of case conversion, characters followed by digits and vice-versa are
+//! By default, characters followed by digits and vice-versa are
 //! considered word boundaries.  In addition, any special ASCII characters (besides `_` and `-`)
 //! are ignored.
 //! ```
@@ -78,6 +79,15 @@
 //! assert_eq!("10,000_days", "10,000Days".to_case(Case::Snake));
 //! assert_eq!("HELLO, WORLD!", "Hello, world!".to_case(Case::Upper));
 //! assert_eq!("One\ntwo\nthree", "ONE\nTWO\nTHREE".to_case(Case::Title));
+//! ```
+//!
+//! You can also test what case a string is in.
+//! ```
+//! use convert_case::{Case, Casing};
+//!
+//! assert!( "css-class-name".is_case(Case::Kebab));
+//! assert!(!"css-class-name".is_case(Case::Snake));
+//! assert!(!"UPPER_CASE_VAR".is_case(Case::Snake));
 //! ```
 //!
 //! # Note on Accuracy
@@ -94,6 +104,78 @@
 //! // Converts using an unexpected method
 //! assert_eq!("my_kebab_like_variable", "myKebab-like-variable".to_case(Case::Snake));
 //! ```
+//!
+//! # Boundary Specificity
+//!
+//! It can be difficult to determine how to split a string into words.  That is why this case
+//! provides the [`from_case`](Casing::from_case) functionality, but sometimes that isn't enough
+//! to meet a specific use case.
+//!
+//! Take an identifier has the word `2D`, such as `scale2D`.  No exclusive usage of `from_case` will
+//! be enough to solve the problem.  In this case we can further specify which boundaries to split
+//! the string on.  `convert_case` provides some patterns for achieving this specificity.
+//! We can specify what boundaries we want to split on using the [`Boundary` enum](Boundary).
+//! ```
+//! use convert_case::{Boundary, Case, Casing};
+//!
+//! // Not quite what we want
+//! assert_eq!(
+//!     "scale_2_d",
+//!     "scale2D"
+//!         .from_case(Case::Camel)
+//!         .to_case(Case::Snake)
+//! );
+//!
+//! // Remove boundary from Case::Camel
+//! assert_eq!(
+//!     "scale_2d",
+//!     "scale2D"
+//!         .from_case(Case::Camel)
+//!         .without_boundaries(&[Boundary::DigitUpper, Boundary::DigitLower])
+//!         .to_case(Case::Snake)
+//! );
+//!
+//! // Write boundaries explicitly
+//! assert_eq!(
+//!     "scale_2d",
+//!     "scale2D"
+//!         .with_boundaries(&[Boundary::LowerDigit])
+//!         .to_case(Case::Snake)
+//! );
+//! ```
+//!
+//! The `Casing` trait provides initial methods, but any subsequent methods that do not resolve
+//! the conversion return a [`StateConverter`] struct.  It contains similar methods as `Casing`.
+//!
+//! # Custom Cases
+//!
+//! Because `Case` is an enum, you can't create your own variant for your use case.  However
+//! the parameters for case conversion have been encapsulated into the [`Converter`] struct
+//! which can be used for specific use cases.
+//!
+//! Suppose you wanted to format a word like camel case, where the first word is lower case and the
+//! rest are capitalized.  But you want to include a delimeter like underscore.  This case isn't
+//! available as a `Case` variant, but you can create it by constructing the parameters of the
+//! `Converter`.
+//! ```
+//! use convert_case::{Case, Casing, Converter, Pattern};
+//!
+//! let conv = Converter::new()
+//!     .set_pattern(Pattern::Camel)
+//!     .set_delim("_");
+//!
+//! assert_eq!(
+//!     "my_Special_Case",
+//!     conv.convert("My Special Case")
+//! )
+//! ```
+//! Just as with the `Casing` trait, you can also manually set the boundaries strings are split 
+//! on.  You can use any of the [`Pattern`] variants available.  This even includes [`Pattern::Sentence`]
+//! which isn't used in any `Case` variant.  You can also set no pattern at all, which will
+//! maintain the casing of each letter in the input string.  You can also, of course, set any string as your
+//! delimeter.
+//!
+//! For more details on how strings are converted, see the docs for [`Converter`].
 //!
 //! # Random Feature
 //!
@@ -117,21 +199,64 @@ pub use converter::Converter;
 pub use pattern::Pattern;
 pub use segmentation::Boundary;
 
-/// Describes items that can be converted into a case.
+/// Describes items that can be converted into a case.  This trait is used
+/// in conjunction with the [`StateConverter`] struct which is returned from a couple
+/// methods on `Casing`.
 ///
-/// Implemented for string slices `&str`, `String`, and `&String`.
+/// Implemented for strings `&str`, `String`, and `&String`.
 pub trait Casing<T: AsRef<str>> {
-    /// References `self` and converts to the given case.
+
+    /// Convert the string into the given case.  It will reference `self` and create a new
+    /// `String` with the same pattern and delimeter as `case`.  It will split on boundaries
+    /// defined at [`Boundary::defaults()`].
+    /// ```
+    /// use convert_case::{Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "tetronimo-piece-border",
+    ///     "Tetronimo piece border".to_case(Case::Kebab)
+    /// );
+    /// ```
     fn to_case(&self, case: Case) -> String;
 
-    /// Creates a `Converter` struct, which saves information about
-    /// how to parse `self` before converting to a case.
+    /// Start the case conversion by storing the boundaries associated with the given case.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "2020-08-10_dannie_birthday",
+    ///     "2020-08-10 Dannie Birthday"
+    ///         .from_case(Case::Title)
+    ///         .to_case(Case::Snake)
+    /// );
+    /// ```
     fn from_case(&self, case: Case) -> StateConverter<T>;
 
-    /// Creates a write docs
+    /// Creates a `StateConverter` struct initialized with the boundaries
+    /// provided.
+    /// ```
+    /// use convert_case::{Boundary, Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "e1_m1_hangar",
+    ///     "E1M1 Hangar"
+    ///         .with_boundaries(&[Boundary::DigitUpper, Boundary::Space])
+    ///         .to_case(Case::Snake)
+    /// );
+    /// ```
     fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
-    /// Determines if `self` is of the given case.
+    /// Determines if `self` is of the given case.  This is done simply by applying
+    /// the conversion and seeing if the result is the same.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// 
+    /// assert!( "kebab-case-string".is_case(Case::Kebab));
+    /// assert!( "Train-Case-String".is_case(Case::Train));
+    ///
+    /// assert!(!"kebab-case-string".is_case(Case::Snake));
+    /// assert!(!"kebab-case-string".is_case(Case::Train));
+    /// ```
     fn is_case(&self, case: Case) -> bool;
 }
 
@@ -158,8 +283,9 @@ where
 
 /// Holds information about parsing before converting into a case.
 ///
-/// This struct is used when invoking the `from_case` method on
-/// `Casing`.
+/// This struct is used when invoking the `from_case` and `with_boundaries` methods on
+/// `Casing`.  For a more fine grained approach to case conversion, consider using the [`Converter`]
+/// struct.
 /// ```
 /// use convert_case::{Case, Casing};
 ///
@@ -188,6 +314,18 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    /// Uses the boundaries associated with `case` for word segmentation.  This
+    /// will overwrite any boundary information initialized before.  This method is
+    /// likely not useful, but provided anyway.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    ///
+    /// let name = "Chuck Schuldiner"
+    ///     .from_case(Case::Snake) // from Casing trait
+    ///     .from_case(Case::Title) // from StateConverter, overwrites previous
+    ///     .to_case(Case::Kebab);
+    /// assert_eq!("chuck-schuldiner", name);
+    /// ```
     pub fn from_case(self, case: Case) -> Self {
         Self {
             conv: self.conv.from_case(case),
@@ -195,6 +333,18 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    /// Overwrites boundaries for word segmentation with those provided.  This will overwrite
+    /// any boundary information initialized before.  This method is likely not useful, but
+    /// provided anyway.
+    /// ```
+    /// use convert_case::{Boundary, Case, Casing};
+    ///
+    /// let song = "theHumbling river-puscifer"
+    ///     .from_case(Case::Kebab) // from Casing trait
+    ///     .with_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
+    ///     .to_case(Case::Pascal);
+    /// assert_eq!("TheHumblingRiver-puscifer", song);  // doesn't split on hyphen `-`
+    /// ```
     pub fn with_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
@@ -202,6 +352,20 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
+    /// Removes any boundaries that were already initialized.  This is particularly useful when a
+    /// case like `Case::Camel` has a lot of associated word boundaries, but you want to exclude
+    /// some.
+    /// ```
+    /// use convert_case::{Boundary, Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "2d_transformation",
+    ///     "2dTransformation"
+    ///         .from_case(Case::Camel)
+    ///         .without_boundaries(&Boundary::digits())
+    ///         .to_case(Case::Snake)
+    /// );
+    /// ```
     pub fn without_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
@@ -209,11 +373,15 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         }
     }
 
-    /// Consumes the `StateConverter` and converts the string.
-    pub fn convert(self) -> String {
-        self.conv.convert(self.s)
-    }
-
+    /// Consumes the `StateConverter` and returns the converted string.
+    /// ```
+    /// use convert_case::{Boundary, Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "ice-cream social",
+    ///     "Ice-Cream Social".from_case(Case::Title).to_case(Case::Lower)
+    /// );
+    /// ```
     pub fn to_case(self, case: Case) -> String {
         self.conv.to_case(case).convert(self.s)
     }
@@ -428,14 +596,6 @@ mod test {
                     .to_case(Case::Snake)
             );
         }
-    }
-
-    #[test]
-    fn early_convert() {
-        assert_eq!(
-            "myCrazywordLIST",
-            "myCrazy-word-LIST".from_case(Case::Kebab).convert(),
-        )
     }
 
     #[test]
