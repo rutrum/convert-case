@@ -140,7 +140,7 @@ pub enum Pattern {
     ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    #[cfg(feature = "random")]
+    #[cfg(any(doc, feature = "random"))]
     Random,
 
     /// PseudoRandom patterns are random-like patterns.  Instead of randomizing
@@ -158,7 +158,7 @@ pub enum Pattern {
     ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"]),
     /// );
     /// ```
-    #[cfg(feature = "random")]
+    #[cfg(any(doc, feature = "random"))]
     PseudoRandom,
 }
 
