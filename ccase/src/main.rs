@@ -1,4 +1,3 @@
-use atty::Stream;
 use clap::{crate_version, App, AppSettings, Arg, SubCommand};
 use convert_case::Case;
 
@@ -6,7 +5,18 @@ use ccase_lib::conversion::Conversion;
 use ccase_lib::CaseClassification;
 use ccase_lib::Error;
 
+use ccase_lib::file;
+use ccase_lib::pipe_or_inline;
+use ccase_lib::case_args;
+
 // Idea: add option -d aA0 to split on lower to upper, and upper to digit
+//
+// examples
+//
+// ccase --to snake -d aA myVarName
+// ccase list --help
+// ccase list snake
+// ccase
 
 fn main() -> Result<(), Error> {
     let app = create_app();
@@ -48,31 +58,7 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
         .about("Converts to and from various cases.")
         .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(
-            SubCommand::with_name("file")
-                .about("Rename files in new cases")
-                .setting(AppSettings::ArgRequiredElseHelp)
-                .version(crate_version!())
-                .author("Dave Purdum <purdum41@gmail.com>")
-                .about("Renames files into various cases.")
-                .arg(
-                    Arg::with_name("PATH")
-                        .help("The path to the file to rename.")
-                        //.default_value("")
-                        .requires("to-case")
-                        //.required(true)
-                        .validator(pipe_or_inline),
-                )
-                .arg(
-                    Arg::with_name("ext")
-                        .short("e")
-                        .long("ext")
-                        .help("Use to also convert the file extension.")
-                        .long_help(
-                            "Will convert the file extension as though \
-                                   it were separate identifier, in addition to the filename.",
-                        ),
-                )
-                .args(&case_args()),
+            file::subcommand()
         )
         .subcommand(SubCommand::with_name("list").about("List available cases"))
         .arg(
@@ -84,46 +70,8 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
         .args(&case_args())
 }
 
-fn case_args() -> Vec<Arg<'static, 'static>> {
-    vec![
-        Arg::with_name("to-case")
-            .short("t")
-            .long("to")
-            .value_name("CASE")
-            .help("The case to convert into.")
-            .takes_value(true)
-            .validator(is_valid_case),
-        Arg::with_name("from-case")
-            .short("f")
-            .long("from")
-            .value_name("CASE")
-            .help("The case to parse input as.")
-            .validator(is_valid_case)
-            .takes_value(true),
-    ]
-}
-
-// Returns true if either a string is provided or data
-// is being piped in from stdin
-fn pipe_or_inline(s: String) -> Result<(), String> {
-    let valid = !s.is_empty() || atty::isnt(Stream::Stdin);
-    if valid {
-        Ok(())
-    } else {
-        Err("require input inline or from stdin".to_string())
-    }
-}
-
-fn is_valid_case(s: String) -> Result<(), String> {
-    match Case::from_str(s.as_str()) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(format!("the '{}' case is not implemented", s)),
-    }
-}
-
 #[cfg(test)]
 mod test {
-
     use assert_cli::Assert;
 
     #[test]

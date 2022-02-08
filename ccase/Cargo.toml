@@ -22,7 +22,7 @@ name = "ccase"
 path = "src/main.rs"
 
 [dependencies]
-convert_case = { version = "^0.4", path = "../", features = ["random"] }
+convert_case = { version = "^0.5", path = "../", features = ["random"] }
 clap = "2.33.0"
 atty = "0.2.14"
 
