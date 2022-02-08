@@ -22,11 +22,18 @@ fn main() -> Result<(), Error> {
     let matches = app.get_matches();
 
     let to_case_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
-    let input = matches.value_of("INPUT").ok_or(Error::NoInput)?;
-
     let to_case = case_from_str(to_case_str).ok_or(Error::NoSuchCase)?;
 
-    println!("{}", input.to_case(to_case));
+    let input = matches.value_of("INPUT").ok_or(Error::NoInput)?;
+
+    let converted = if let Some(from_case_str) = matches.value_of("from-case") {
+        let from_case = case_from_str(from_case_str).ok_or(Error::NoSuchCase)?;
+        input.from_case(from_case).to_case(to_case)
+    } else {
+        input.to_case(to_case)
+    };
+
+    println!("{}", converted);
 
     Ok(())
 }
@@ -48,6 +55,14 @@ fn app<'a>() -> App<'a> {
                 .long("to")
                 .value_name("CASE")
                 .help("Case to convert string into.")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("from-case")
+                .short('f')
+                .long("from")
+                .value_name("CASE")
+                .help("Case to convert string from.")
                 .takes_value(true)
         )
 }
@@ -72,11 +87,32 @@ mod test {
     }
 
     #[test]
+    fn from_case() {
+        Assert::main_binary()
+            .with_args(&["-f", "camel", "-t", "snake", "myVar-Name"])
+            .stdout()
+            .is("my_var-name")
+            .unwrap();
+
+        Assert::main_binary()
+            .with_args(&["-t", "camel", "--from", "kebab", "my-Var-Name_longer"])
+            .stdout()
+            .is("myVarName_longer")
+            .unwrap();
+    }
+
+    #[test]
     fn to_case_not_lower() {
         Assert::main_binary()
             .with_args(&["--to", "KeBAB", "myVarName"])
             .stdout()
             .is("my-var-name")
+            .unwrap();
+
+        Assert::main_binary()
+            .with_args(&["--from", "KeBAB", "-t", "snake", "my-bad-VARiable"])
+            .stdout()
+            .is("my_bad_variable")
             .unwrap();
     }
 
