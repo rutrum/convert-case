@@ -18,3 +18,9 @@ doc:
 
 watch-doc:
     watchexec -- "just doc && cargo test --all-features --doc"
+
+tree:
+    tree -I target
+
+test-ccase:
+    cargo test -p ccase --no-fail-fast
