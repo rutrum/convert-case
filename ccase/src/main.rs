@@ -28,14 +28,19 @@ fn main() -> Result<(), Error> {
 
     let input = get_input(&matches)?;
 
-    let converted = if let Some(from_case_str) = matches.value_of("from-case") {
+    if let Some(from_case_str) = matches.value_of("from-case") {
         let from_case = case_from_str(from_case_str).ok_or(Error::NoSuchCase)?;
-        input.from_case(from_case).to_case(to_case)
+        for line in input.split("\n") {
+            let converted = line.from_case(from_case).to_case(to_case);
+            println!("{}", converted);
+        }
     } else {
-        input.to_case(to_case)
+        for line in input.split("\n") {
+            let converted = line.to_case(to_case);
+            println!("{}", converted);
+        }
     };
 
-    println!("{}", converted);
     Ok(())
 }
 
@@ -134,6 +139,23 @@ mod test {
             .fails()
             .stderr()
             .contains("error")
+            .unwrap();
+    }
+
+    #[test]
+    fn multiline_input() {
+        Assert::main_binary()
+            .with_args(&["-t", "pascal"])
+            .stdin("cat_dog\ndog_cat")
+            .stdout()
+            .contains("CatDog\nDogCat")
+            .unwrap();
+
+        Assert::main_binary()
+            .with_args(&["-f", "snake", "-t", "pascal"])
+            .stdin("cat_dog\ndog_cat")
+            .stdout()
+            .contains("CatDog\nDogCat")
             .unwrap();
     }
 
