@@ -1,6 +1,8 @@
-use clap::{App, AppSettings, Arg, ArgMatches, crate_version};
+use clap::{ArgMatches};
 use convert_case::{Case, Casing};
 use std::io::{self, Read};
+
+mod app;
 
 #[derive(Debug)]
 enum Error {
@@ -20,7 +22,7 @@ fn case_from_str(s: &str) -> Option<Case> {
 }
 
 fn main() -> Result<(), Error> {
-    let app = app();
+    let app = app::create();
     let matches = app.get_matches();
 
     let to_case_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
@@ -63,43 +65,6 @@ fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
     } else {
         Err(Error::NoInput)
     }
-}
-
-fn app<'a>() -> App<'a> {
-    App::new("Convert Case")
-        .version(crate_version!())
-        .author("Dave Purdum <davepurdum@pm.me>")
-        .about("Converts strings to and from cases.")
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .arg(
-            Arg::new("INPUT")
-                .help("String to convert.")
-                .default_value("")
-                .validator(|s| {
-                    if s.trim().len() > 0 || atty::isnt(atty::Stream::Stdin) {
-                        Ok(())
-                    } else {
-                        Err("required value from stdin or as an argument".to_string())
-                    }
-                })
-        )
-        .arg(
-            Arg::new("to-case")
-                .short('t')
-                .long("to")
-                .value_name("CASE")
-                .help("Case to convert string into.")
-                .takes_value(true)
-                .required(true)
-        )
-        .arg(
-            Arg::new("from-case")
-                .short('f')
-                .long("from")
-                .value_name("CASE")
-                .help("Case to convert string from.")
-                .takes_value(true)
-        )
 }
 
 #[cfg(test)]
