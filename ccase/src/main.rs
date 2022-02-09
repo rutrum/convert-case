@@ -61,20 +61,6 @@ fn main() -> Result<(), Error> {
         _ => {}
     }
 
-    /*
-    if let Err(ref e) = input {
-        if matches.value_of("to-case").is_some() {
-            app.error(
-                ErrorKind::MissingRequiredArgument,
-                e.msg()
-            ).exit()
-        } else {
-            app.print_help().unwrap();
-            return Ok(())
-        }
-    }
-    */
-
     let input = input_result.unwrap();
     let to_case = to_case_result.unwrap();
 
@@ -99,6 +85,7 @@ fn get_to_case<'a>(matches: &'a ArgMatches) -> Result<Case, Error> {
     case_from_str(to_case_str).ok_or(Error::InvalidCase)
 }
 
+/// This should really return a buffer, not a string, then run the command on each line
 fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
     if let Some(input) = matches.value_of("INPUT") {
         if input.trim().len() > 0 {
@@ -113,8 +100,15 @@ fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
         let mut v = Vec::new();
         handle.read_to_end(&mut v).map_err(|_| Error::Stdin)?;
 
-        let s = String::from_utf8(v).map_err(|_| Error::Stdin)?;
-        Ok(s.trim().to_string())
+        let s = String::from_utf8(v)
+            .map_err(|_| Error::Stdin)?
+            .trim()
+            .to_string();
+        if s.is_empty() {
+            Err(Error::InputMissing)
+        } else {
+            Ok(s)
+        }
     } else {
         Err(Error::InputMissing)
     }
@@ -122,159 +116,153 @@ fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
 
 #[cfg(test)]
 mod test {
-    use assert_cli::Assert;
+    use assert_cmd::Command;
+    use predicates::prelude::*;
 
     #[test]
     fn to_case() {
-        Assert::main_binary()
-            .with_args(&["-t", "snake", "myVarName"])
-            .stdout()
-            .is("my_var_name")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "snake", "myVarName"])
+            .assert()
+            .success()
+            .stdout("my_var_name\n");
 
-        Assert::main_binary()
-            .with_args(&["myVarName", "--to", "kebab"])
-            .stdout()
-            .is("my-var-name")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["myVarName", "--to", "kebab"])
+            .assert()
+            .success()
+            .stdout("my-var-name\n");
     }
 
     #[test]
     fn invalid_case() {
-        Assert::main_binary()
-            .with_args(&["-t", "blah", "asdfASDF"])
-            .fails()
-            .stderr()
-            .contains("error: Invalid value for '--to <CASE>'")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "blah", "myVarName"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: Invalid value for '--to <CASE>'"));
 
-        Assert::main_binary()
-            .with_args(&["-f", "blah", "-t", "snake", "asdfASDF"])
-            .fails()
-            .stderr()
-            .contains("error: Invalid value for '--from <CASE>'")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "blah", "-t", "snake", "asdfASDF"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: Invalid value for '--from <CASE>'"));
     }
 
     #[test]
-    fn no_to_case_input_argument() {
-        Assert::main_binary()
-            .with_args(&["varName"])
-            .fails()
-            .stderr()
-            .contains("error: The following required arguments were not provided")
-            .stderr()
-            .contains("--to <CASE>")
-            .unwrap();
+    fn no_to_case() {
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["myVarName"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
+                    predicate::str::contains("--to <CASE>")
+            ));
     }
 
     #[test]
-    fn no_to_case_input_stdin() {
-        Assert::main_binary()
-            .stdin("varName")
-            .fails()
-            .stderr()
-            .contains("error: The following required arguments were not provided")
-            .stderr()
-            .contains("--to <CASE>")
-            .unwrap();
+    fn no_to_case_stdin() {
+        Command::cargo_bin("ccase").unwrap()
+            .write_stdin("varName")
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
+                    predicate::str::contains("--to <CASE>")
+            ));
     }
 
     #[test]
     fn input_from_stdin() {
-        Assert::main_binary()
-            .with_args(&["-t", "snake"])
-            .stdin("myVarName")
-            .stdout()
-            .is("my_var_name")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .write_stdin("myVarName")
+            .args(&["-t", "snake"])
+            .assert()
+            .success()
+            .stdout("my_var_name\n");
     }
 
     #[test]
     fn no_input() {
-        Assert::main_binary()
-            .with_args(&["-t", "snake"])
-            .fails()
-            .stderr()
-            .contains("error: The following required arguments were not provided")
-            .stderr()
-            .contains("<INPUT>")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "snake"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
+                    predicate::str::contains("<INPUT>")
+            ));
     }
 
     #[test]
     fn multiline_input() {
-        Assert::main_binary()
-            .with_args(&["-t", "pascal"])
-            .stdin("cat_dog\ndog_cat")
-            .stdout()
-            .contains("CatDog\nDogCat")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "pascal"])
+            .write_stdin("cat_dog\ndog_cat")
+            .assert()
+            .success()
+            .stdout("CatDog\nDogCat\n");
 
-        Assert::main_binary()
-            .with_args(&["-f", "snake", "-t", "pascal"])
-            .stdin("cat_dog\ndog_cat")
-            .stdout()
-            .contains("CatDog\nDogCat")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "snake", "-t", "pascal"])
+            .write_stdin("cat_dog\ndog_cat")
+            .assert()
+            .success()
+            .stdout("CatDog\nDogCat\n");
     }
 
     #[test]
-    fn default_shows_help() {
-        Assert::main_binary()
-            .fails()
-            .stderr()
-            .contains("USAGE")
-            .stderr()
-            .contains("ARGS")
-            .stderr()
-            .contains("OPTIONS")
-            .unwrap();
+    fn no_arg_show_help() {
+        Command::cargo_bin("ccase").unwrap()
+            .assert()
+            .success()
+            .stderr(predicate::str::contains("USAGE").and(
+                    predicate::str::contains("ARGS").and(
+                    predicate::str::contains("OPTIONS")
+            )));
     }
 
     #[test]
-    fn bad_to_from_input() {
-        // No to value
-        Assert::main_binary()
-            .with_args(&["myVar-Name", "-t"])
-            .fails()
-            .unwrap();
+    fn bad_ordering_to_from() {
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["myVar-Name", "-t"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("The argument '--to <CASE>' requires a value"));
 
-        // No from value
-        Assert::main_binary()
-            .with_args(&["-f", "-t", "kebab", "blah"])
-            .fails()
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "-t", "kebab", "blah"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("The argument '--from <CASE>' requires a value"));
     }
 
     #[test]
     fn from_case() {
-        Assert::main_binary()
-            .with_args(&["-f", "camel", "-t", "snake", "myVar-Name"])
-            .stdout()
-            .is("my_var-name")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "camel", "-t", "snake", "myVar-Name"])
+            .assert()
+            .success()
+            .stdout("my_var-name\n");
 
-        Assert::main_binary()
-            .with_args(&["-t", "camel", "--from", "kebab", "my-Var-Name_longer"])
-            .stdout()
-            .is("myVarName_longer")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "camel", "--from", "kebab", "my-Var-Name_longer"])
+            .assert()
+            .success()
+            .stdout("myVarName_longer\n");
     }
 
     #[test]
     fn to_case_not_lower() {
-        Assert::main_binary()
-            .with_args(&["--to", "KeBAB", "myVarName"])
-            .stdout()
-            .is("my-var-name")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["--to", "KeBAB", "myVarName"])
+            .assert()
+            .success()
+            .stdout("my-var-name\n");
 
-        Assert::main_binary()
-            .with_args(&["--from", "KeBAB", "-t", "snake", "my-bad-VARiable"])
-            .stdout()
-            .is("my_bad_variable")
-            .unwrap();
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["--from", "KeBAB", "-t", "snake", "my-bad-VARiable"])
+            .assert()
+            .success()
+            .stdout("my_bad_variable\n");
     }
 
 }

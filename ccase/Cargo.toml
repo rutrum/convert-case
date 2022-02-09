@@ -27,6 +27,7 @@ clap = { version = "3.0.14", features = ["cargo", "color"] }
 atty = "0.2.14"
 
 [dev-dependencies]
-assert_cli = "^0.6"
+predicates = "2.1.1"
+assert_cmd = "2.0.4"
 strum = "0.18.0"
 strum_macros = "0.18.0"
