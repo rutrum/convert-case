@@ -130,6 +130,10 @@ mod test {
             .fails()
             .stderr()
             .contains("USAGE")
+            .stderr()
+            .contains("ARGS")
+            .stderr()
+            .contains("OPTIONS")
             .unwrap();
     }
 

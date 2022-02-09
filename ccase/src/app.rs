@@ -15,10 +15,14 @@ pub fn create<'a>() -> App<'a> {
         ])
 }
 
+fn subcommand_list<'a>() -> App<'a> {
+    App::new("")
+
+}
+
 fn arg_input<'a>() -> Arg<'a> {
     Arg::new("INPUT")
         .help("String to convert.")
-        .default_value("")
         .validator(validate_input)
 }
 
@@ -37,7 +41,6 @@ fn arg_to_case<'a>() -> Arg<'a> {
         .value_name("CASE")
         .help("Case to convert string into.")
         .takes_value(true)
-        .required(true)
 }
 
 fn arg_from_case<'a>() -> Arg<'a> {
