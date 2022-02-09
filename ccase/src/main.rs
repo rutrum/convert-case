@@ -1,10 +1,12 @@
-use clap::{App, AppSettings, Arg, crate_version};
+use clap::{App, AppSettings, Arg, ArgMatches, crate_version};
 use convert_case::{Case, Casing};
+use std::io::{self, Read};
 
 #[derive(Debug)]
 enum Error {
     NoToCase,
     NoSuchCase,
+    Stdin,
     NoInput,
 }
 
@@ -24,7 +26,7 @@ fn main() -> Result<(), Error> {
     let to_case_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
     let to_case = case_from_str(to_case_str).ok_or(Error::NoSuchCase)?;
 
-    let input = matches.value_of("INPUT").ok_or(Error::NoInput)?;
+    let input = get_input(&matches)?;
 
     let converted = if let Some(from_case_str) = matches.value_of("from-case") {
         let from_case = case_from_str(from_case_str).ok_or(Error::NoSuchCase)?;
@@ -34,8 +36,28 @@ fn main() -> Result<(), Error> {
     };
 
     println!("{}", converted);
-
     Ok(())
+}
+
+fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
+    if let Some(input) = matches.value_of("INPUT") {
+        if input.trim().len() > 0 {
+            return Ok(input.into());
+        }
+    } 
+
+    if atty::isnt(atty::Stream::Stdin) {
+        let stdin = io::stdin();
+        let mut handle = stdin.lock();
+
+        let mut v = Vec::new();
+        handle.read_to_end(&mut v).map_err(|_| Error::Stdin)?;
+
+        let s = String::from_utf8(v).map_err(|_| Error::Stdin)?;
+        Ok(s.trim().to_string())
+    } else {
+        Err(Error::NoInput)
+    }
 }
 
 fn app<'a>() -> App<'a> {
@@ -47,7 +69,14 @@ fn app<'a>() -> App<'a> {
         .arg(
             Arg::new("INPUT")
                 .help("String to convert.")
-                .requires("to-case")
+                .default_value("")
+                .validator(|s| {
+                    if s.trim().len() > 0 || atty::isnt(atty::Stream::Stdin) {
+                        Ok(())
+                    } else {
+                        Err("required value from stdin or as an argument".to_string())
+                    }
+                })
         )
         .arg(
             Arg::new("to-case")
@@ -56,6 +85,7 @@ fn app<'a>() -> App<'a> {
                 .value_name("CASE")
                 .help("Case to convert string into.")
                 .takes_value(true)
+                .required(true)
         )
         .arg(
             Arg::new("from-case")
@@ -80,9 +110,54 @@ mod test {
             .unwrap();
 
         Assert::main_binary()
-            .with_args(&["--to", "kebab", "myVarName"])
+            .with_args(&["myVarName", "--to", "kebab"])
             .stdout()
             .is("my-var-name")
+            .unwrap();
+    }
+
+    #[test]
+    fn input_from_stdin() {
+        Assert::main_binary()
+            .with_args(&["-t", "snake"])
+            .stdin("myVarName")
+            .stdout()
+            .is("my_var_name")
+            .unwrap();
+    }
+
+    #[test]
+    #[ignore] // Doesn't work automatically, can verify manually
+    fn no_input() {
+        Assert::main_binary()
+            .with_args(&["-t", "snake"])
+            .fails()
+            .stderr()
+            .contains("error")
+            .unwrap();
+    }
+
+    #[test]
+    fn default_shows_help() {
+        Assert::main_binary()
+            .fails()
+            .stderr()
+            .contains("USAGE")
+            .unwrap();
+    }
+
+    #[test]
+    fn bad_to_from_input() {
+        // No to value
+        Assert::main_binary()
+            .with_args(&["myVar-Name", "-t"])
+            .fails()
+            .unwrap();
+
+        // No from value
+        Assert::main_binary()
+            .with_args(&["-f", "-t", "kebab", "blah"])
+            .fails()
             .unwrap();
     }
 
