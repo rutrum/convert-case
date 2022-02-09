@@ -1,4 +1,4 @@
-use clap::{ArgMatches};
+use clap::{ArgMatches, ErrorKind};
 use convert_case::{Case, Casing};
 use std::io::{self, Read};
 
@@ -6,10 +6,26 @@ mod app;
 
 #[derive(Debug)]
 enum Error {
-    NoToCase,
-    NoSuchCase,
+    InvalidCase,
+    InputMissing,
+    ToCaseMissing,
     Stdin,
-    NoInput,
+}
+
+impl Error {
+    fn msg(&self) -> &str {
+        use Error::*;
+        match self {
+            InputMissing => "The following required arguments were not provided:\n     <INPUT>",
+            ToCaseMissing => "The following required arguments were not provided:\n     --to <CASE>",
+            Stdin => "Failure to read from stdin",
+            _ => ""
+        }
+    }
+
+    fn kind(&self) -> ErrorKind {
+        ErrorKind::MissingRequiredArgument
+    }
 }
 
 fn case_from_str(s: &str) -> Option<Case> {
@@ -22,16 +38,48 @@ fn case_from_str(s: &str) -> Option<Case> {
 }
 
 fn main() -> Result<(), Error> {
-    let app = app::create();
-    let matches = app.get_matches();
 
-    let to_case_str = matches.value_of("to-case").ok_or(Error::NoToCase)?;
-    let to_case = case_from_str(to_case_str).ok_or(Error::NoSuchCase)?;
+    let mut app = app::create();
+    let matches = app.clone().get_matches();
 
-    let input = get_input(&matches)?;
+    let input_result = get_input(&matches);
+    let to_case_result = get_to_case(&matches);
+
+    match (&input_result, &to_case_result) {
+        (Err(Error::InputMissing), Err(Error::ToCaseMissing)) => {
+            app.write_help(&mut io::stderr()).unwrap();
+            return Ok(())
+        }
+
+        (Err(e @ Error::InputMissing), _) => 
+            app.error(e.kind(), e.msg()).exit(),
+
+        (Err(e), _) => app.error(e.kind(), e.msg()).exit(),
+
+        (_, Err(e)) => app.error(e.kind(), e.msg()).exit(),
+
+        _ => {}
+    }
+
+    /*
+    if let Err(ref e) = input {
+        if matches.value_of("to-case").is_some() {
+            app.error(
+                ErrorKind::MissingRequiredArgument,
+                e.msg()
+            ).exit()
+        } else {
+            app.print_help().unwrap();
+            return Ok(())
+        }
+    }
+    */
+
+    let input = input_result.unwrap();
+    let to_case = to_case_result.unwrap();
 
     if let Some(from_case_str) = matches.value_of("from-case") {
-        let from_case = case_from_str(from_case_str).ok_or(Error::NoSuchCase)?;
+        let from_case = case_from_str(from_case_str).ok_or(Error::InvalidCase)?;
         for line in input.split("\n") {
             let converted = line.from_case(from_case).to_case(to_case);
             println!("{}", converted);
@@ -44,6 +92,11 @@ fn main() -> Result<(), Error> {
     };
 
     Ok(())
+}
+
+fn get_to_case<'a>(matches: &'a ArgMatches) -> Result<Case, Error> {
+    let to_case_str = matches.value_of("to-case").ok_or(Error::ToCaseMissing)?;
+    case_from_str(to_case_str).ok_or(Error::InvalidCase)
 }
 
 fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
@@ -63,7 +116,7 @@ fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
         let s = String::from_utf8(v).map_err(|_| Error::Stdin)?;
         Ok(s.trim().to_string())
     } else {
-        Err(Error::NoInput)
+        Err(Error::InputMissing)
     }
 }
 
@@ -87,6 +140,47 @@ mod test {
     }
 
     #[test]
+    fn invalid_case() {
+        Assert::main_binary()
+            .with_args(&["-t", "blah", "asdfASDF"])
+            .fails()
+            .stderr()
+            .contains("error: Invalid value for '--to <CASE>'")
+            .unwrap();
+
+        Assert::main_binary()
+            .with_args(&["-f", "blah", "-t", "snake", "asdfASDF"])
+            .fails()
+            .stderr()
+            .contains("error: Invalid value for '--from <CASE>'")
+            .unwrap();
+    }
+
+    #[test]
+    fn no_to_case_input_argument() {
+        Assert::main_binary()
+            .with_args(&["varName"])
+            .fails()
+            .stderr()
+            .contains("error: The following required arguments were not provided")
+            .stderr()
+            .contains("--to <CASE>")
+            .unwrap();
+    }
+
+    #[test]
+    fn no_to_case_input_stdin() {
+        Assert::main_binary()
+            .stdin("varName")
+            .fails()
+            .stderr()
+            .contains("error: The following required arguments were not provided")
+            .stderr()
+            .contains("--to <CASE>")
+            .unwrap();
+    }
+
+    #[test]
     fn input_from_stdin() {
         Assert::main_binary()
             .with_args(&["-t", "snake"])
@@ -97,13 +191,14 @@ mod test {
     }
 
     #[test]
-    #[ignore] // Doesn't work automatically, can verify manually
     fn no_input() {
         Assert::main_binary()
             .with_args(&["-t", "snake"])
             .fails()
             .stderr()
-            .contains("error")
+            .contains("error: The following required arguments were not provided")
+            .stderr()
+            .contains("<INPUT>")
             .unwrap();
     }
 

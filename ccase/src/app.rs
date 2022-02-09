@@ -1,13 +1,14 @@
 //! Functions for creating the clap cli application
 
-use clap::{App, AppSettings, Arg, crate_version};
+use clap::{App, Arg, ColorChoice, crate_version};
+use convert_case::{Case, Casing};
 
 pub fn create<'a>() -> App<'a> {
-    App::new("Convert Case")
+    App::new("ccase")
         .version(crate_version!())
         .author("Dave Purdum <davepurdum@pm.me>")
         .about("Converts strings to and from cases.")
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .color(ColorChoice::Never)
         .args(vec![
             arg_input(),
             arg_to_case(),
@@ -15,23 +16,35 @@ pub fn create<'a>() -> App<'a> {
         ])
 }
 
+/*
 fn subcommand_list<'a>() -> App<'a> {
     App::new("")
-
 }
+*/
 
 fn arg_input<'a>() -> Arg<'a> {
     Arg::new("INPUT")
         .help("String to convert.")
-        .validator(validate_input)
+        //.validator(validate_input)
 }
 
+/*
 fn validate_input(s: &str) -> Result<(), String> {
     if s.trim().len() > 0 || atty::isnt(atty::Stream::Stdin) {
         Ok(())
     } else {
-        Err("required value from stdin or as an argument".to_string())
+        Err("require value from stdin or as an argument".to_string())
     }
+}
+*/
+
+fn matches_case(s: &str) -> Result<(), String> {
+    for case in Case::all_cases() {
+        if format!("{:?}", case).to_case(Case::Flat) == s.to_string().to_case(Case::Flat) {
+            return Ok(());
+        }
+    }
+    Err(format!("no such case `{}`", s))
 }
 
 fn arg_to_case<'a>() -> Arg<'a> {
@@ -41,6 +54,7 @@ fn arg_to_case<'a>() -> Arg<'a> {
         .value_name("CASE")
         .help("Case to convert string into.")
         .takes_value(true)
+        .validator(|s| matches_case(s))
 }
 
 fn arg_from_case<'a>() -> Arg<'a> {
@@ -50,4 +64,5 @@ fn arg_from_case<'a>() -> Arg<'a> {
         .value_name("CASE")
         .help("Case to convert string from.")
         .takes_value(true)
+        .validator(matches_case)
 }

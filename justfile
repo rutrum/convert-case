@@ -24,3 +24,6 @@ tree:
 
 test-ccase:
     cargo test -p ccase --no-fail-fast
+
+run:
+    cargo run -p ccase
