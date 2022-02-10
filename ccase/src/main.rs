@@ -88,9 +88,7 @@ fn get_to_case<'a>(matches: &'a ArgMatches) -> Result<Case, Error> {
 /// This should really return a buffer, not a string, then run the command on each line
 fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
     if let Some(input) = matches.value_of("INPUT") {
-        //if input.len() > 0 {
-            return Ok(input.into());
-        //}
+        return Ok(input.into());
     } 
 
     if atty::isnt(atty::Stream::Stdin) {
@@ -273,5 +271,14 @@ mod test {
             .assert()
             .success()
             .stdout("\n\n\n");
+    }
+
+    #[test]
+    fn empty_string_as_arg() {
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "snake", r#""#])
+            .assert()
+            .success()
+            .stdout("\n");
     }
 }
