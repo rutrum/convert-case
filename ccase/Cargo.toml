@@ -13,10 +13,6 @@ documentation = "https://github.com/rutrum/convert-case/tree/master/ccase"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-name = "ccase_lib"
-path = "src/lib.rs"
-
 [[bin]]
 name = "ccase"
 path = "src/main.rs"
