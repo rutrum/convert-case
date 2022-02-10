@@ -25,18 +25,7 @@ fn subcommand_list<'a>() -> App<'a> {
 fn arg_input<'a>() -> Arg<'a> {
     Arg::new("INPUT")
         .help("String to convert.")
-        //.validator(validate_input)
 }
-
-/*
-fn validate_input(s: &str) -> Result<(), String> {
-    if s.trim().len() > 0 || atty::isnt(atty::Stream::Stdin) {
-        Ok(())
-    } else {
-        Err("require value from stdin or as an argument".to_string())
-    }
-}
-*/
 
 fn matches_case(s: &str) -> Result<(), String> {
     for case in Case::all_cases() {

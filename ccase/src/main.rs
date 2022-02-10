@@ -88,9 +88,9 @@ fn get_to_case<'a>(matches: &'a ArgMatches) -> Result<Case, Error> {
 /// This should really return a buffer, not a string, then run the command on each line
 fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
     if let Some(input) = matches.value_of("INPUT") {
-        if input.trim().len() > 0 {
+        //if input.len() > 0 {
             return Ok(input.into());
-        }
+        //}
     } 
 
     if atty::isnt(atty::Stream::Stdin) {
@@ -102,8 +102,8 @@ fn get_input<'a>(matches: &'a ArgMatches) -> Result<String, Error> {
 
         let s = String::from_utf8(v)
             .map_err(|_| Error::Stdin)?
-            .trim()
             .to_string();
+
         if s.is_empty() {
             Err(Error::InputMissing)
         } else {
@@ -143,7 +143,7 @@ mod test {
             .stderr(predicate::str::contains("error: Invalid value for '--to <CASE>'"));
 
         Command::cargo_bin("ccase").unwrap()
-            .args(&["-f", "blah", "-t", "snake", "asdfASDF"])
+            .args(&["-f", "blah", "-t", "snake", "string"])
             .assert()
             .failure()
             .stderr(predicate::str::contains("error: Invalid value for '--from <CASE>'"));
@@ -265,4 +265,13 @@ mod test {
             .stdout("my_bad_variable\n");
     }
 
+    #[test]
+    fn newlines_as_stdin() {
+        Command::cargo_bin("ccase").unwrap()
+            .write_stdin("\n\n")
+            .args(&["-t", "snake"])
+            .assert()
+            .success()
+            .stdout("\n\n\n");
+    }
 }
