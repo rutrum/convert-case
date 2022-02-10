@@ -6,20 +6,20 @@ mod app;
 
 #[derive(Debug)]
 enum Error {
-    InvalidCase,
+    InvalidCase(String),
     InputMissing,
     ToCaseMissing,
     Stdin,
 }
 
 impl Error {
-    fn msg(&self) -> &str {
+    fn msg(&self) -> String {
         use Error::*;
         match self {
-            InputMissing => "The following required arguments were not provided:\n     <INPUT>",
-            ToCaseMissing => "The following required arguments were not provided:\n     --to <CASE>",
-            Stdin => "Failure to read from stdin",
-            _ => ""
+            InputMissing => "The following required arguments were not provided:\n     <INPUT>".to_string(),
+            ToCaseMissing => "The following required arguments were not provided:\n     --to <CASE>".to_string(),
+            Stdin => "Failure to read from stdin.".to_string(),
+            InvalidCase(c) => format!("Invalid value for '--to <CASE>': no such case {}", c),
         }
     }
 
@@ -65,7 +65,7 @@ fn main() -> Result<(), Error> {
     let to_case = to_case_result.unwrap();
 
     if let Some(from_case_str) = matches.value_of("from-case") {
-        let from_case = case_from_str(from_case_str).ok_or(Error::InvalidCase)?;
+        let from_case = case_from_str(from_case_str).ok_or(Error::InvalidCase(from_case_str.to_string()))?;
         for line in input.split("\n") {
             let converted = line.from_case(from_case).to_case(to_case);
             println!("{}", converted);
@@ -82,7 +82,7 @@ fn main() -> Result<(), Error> {
 
 fn get_to_case<'a>(matches: &'a ArgMatches) -> Result<Case, Error> {
     let to_case_str = matches.value_of("to-case").ok_or(Error::ToCaseMissing)?;
-    case_from_str(to_case_str).ok_or(Error::InvalidCase)
+    case_from_str(to_case_str).ok_or(Error::InvalidCase(to_case_str.to_string()))
 }
 
 /// This should really return a buffer, not a string, then run the command on each line
@@ -133,6 +133,21 @@ mod test {
     }
 
     #[test]
+    fn from_case() {
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "camel", "-t", "snake", "myVar-Name"])
+            .assert()
+            .success()
+            .stdout("my_var-name\n");
+
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-t", "camel", "--from", "kebab", "my-Var-Name_longer"])
+            .assert()
+            .success()
+            .stdout("myVarName_longer\n");
+    }
+
+    #[test]
     fn invalid_case() {
         Command::cargo_bin("ccase").unwrap()
             .args(&["-t", "blah", "myVarName"])
@@ -156,12 +171,29 @@ mod test {
             .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
                     predicate::str::contains("--to <CASE>")
             ));
+
+        Command::cargo_bin("ccase").unwrap()
+            .args(&["-f", "kebab", "myVarName"])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
+                    predicate::str::contains("--to <CASE>")
+            ));
     }
 
     #[test]
     fn no_to_case_stdin() {
         Command::cargo_bin("ccase").unwrap()
             .write_stdin("varName")
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
+                    predicate::str::contains("--to <CASE>")
+            ));
+
+        Command::cargo_bin("ccase").unwrap()
+            .write_stdin("varName")
+            .args(&["-f", "kebab"])
             .assert()
             .failure()
             .stderr(predicate::str::contains("error: The following required arguments were not provided").and(
@@ -231,21 +263,6 @@ mod test {
             .assert()
             .failure()
             .stderr(predicate::str::contains("The argument '--from <CASE>' requires a value"));
-    }
-
-    #[test]
-    fn from_case() {
-        Command::cargo_bin("ccase").unwrap()
-            .args(&["-f", "camel", "-t", "snake", "myVar-Name"])
-            .assert()
-            .success()
-            .stdout("my_var-name\n");
-
-        Command::cargo_bin("ccase").unwrap()
-            .args(&["-t", "camel", "--from", "kebab", "my-Var-Name_longer"])
-            .assert()
-            .success()
-            .stdout("myVarName_longer\n");
     }
 
     #[test]
