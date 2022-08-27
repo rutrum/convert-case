@@ -1,12 +1,12 @@
 //! Functions for creating the clap cli application
 
-use clap::{App, Arg, ColorChoice, crate_version};
+use clap::{App, AppSettings, Arg, ColorChoice, crate_version, crate_authors};
 use convert_case::{Case, Casing};
 
 pub fn create<'a>() -> App<'a> {
     App::new("ccase")
         .version(crate_version!())
-        .author("Dave Purdum <davepurdum@pm.me>")
+        .author(crate_authors!())
         .about("Converts strings to and from cases.")
         .color(ColorChoice::Never)
         .args(vec![
@@ -14,17 +14,35 @@ pub fn create<'a>() -> App<'a> {
             arg_to_case(),
             arg_from_case(),
         ])
+        .subcommand(subcommand_list())
 }
 
-/*
 fn subcommand_list<'a>() -> App<'a> {
-    App::new("")
+    App::new("list")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about("Description of string cases.")
+        .color(ColorChoice::Never)
+        .arg(arg_case())
+        .setting(AppSettings::ArgRequiredElseHelp)
 }
-*/
+
+fn arg_case<'a>() -> Arg<'a> {
+    Arg::new("CASE")
+        .help("Case to query.")
+}
 
 fn arg_input<'a>() -> Arg<'a> {
     Arg::new("INPUT")
         .help("String to convert.")
+}
+
+fn arg_boundaries<'a>() -> Arg<'a> {
+    Arg::new("boundaries")
+        .short('b')
+        .value_name("BOUNDARY_STRING")
+        .help("String of boundaries to split by.")
+        .takes_value(true)
 }
 
 fn matches_case(s: &str) -> Result<(), String> {

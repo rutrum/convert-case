@@ -1,14 +1,16 @@
-use clap::{ArgMatches, ErrorKind};
+use clap::{App, ArgMatches, ErrorKind};
 use convert_case::{Case, Casing};
 use std::io::{self, Read};
 
 mod app;
+mod list;
 
 #[derive(Debug)]
 enum Error {
     InvalidCase(String),
     InputMissing,
     ToCaseMissing,
+    CaseMissing,
     Stdin,
 }
 
@@ -18,6 +20,7 @@ impl Error {
         match self {
             InputMissing => "The following required arguments were not provided:\n     <INPUT>".to_string(),
             ToCaseMissing => "The following required arguments were not provided:\n     --to <CASE>".to_string(),
+            CaseMissing => "The following required arguments were not provided:\n     <CASE>".to_string(),
             Stdin => "Failure to read from stdin.".to_string(),
             InvalidCase(c) => format!("Invalid value for '--to <CASE>': no such case {}", c),
         }
@@ -42,13 +45,33 @@ fn main() -> Result<(), Error> {
     let mut app = app::create();
     let matches = app.clone().get_matches();
 
+    match &matches.subcommand() {
+        Some(("list", sub_matches)) => {
+            let case = list_get_case(&sub_matches)?;
+            list::print_about_case(&case);
+        }
+        _ => {
+            resolve_no_subcommand_usage(&mut app, &matches)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn list_get_case(matches: &ArgMatches) -> Result<Case, Error> {
+    let case_str = matches.value_of("CASE").ok_or(Error::CaseMissing)?;
+    case_from_str(case_str).ok_or(Error::InvalidCase(case_str.to_string()))
+}
+
+/// Logic when no subcommand is used
+fn resolve_no_subcommand_usage(app: &mut App, matches: &ArgMatches) -> Result<(), Error> {
     let input_result = get_input(&matches);
     let to_case_result = get_to_case(&matches);
 
     match (&input_result, &to_case_result) {
         (Err(Error::InputMissing), Err(Error::ToCaseMissing)) => {
             app.write_help(&mut io::stderr()).unwrap();
-            return Ok(())
+            std::process::exit(1);
         }
 
         (Err(e @ Error::InputMissing), _) => 
@@ -243,7 +266,7 @@ mod test {
     fn no_arg_show_help() {
         Command::cargo_bin("ccase").unwrap()
             .assert()
-            .success()
+            .failure()
             .stderr(predicate::str::contains("USAGE").and(
                     predicate::str::contains("ARGS").and(
                     predicate::str::contains("OPTIONS")
