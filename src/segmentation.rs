@@ -1,6 +1,8 @@
 #[cfg(test)]
 use strum_macros::EnumIter;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 /// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
 /// and `Space`, consume the character they split on, whereas the other boundaries
 /// do not.
@@ -157,9 +159,9 @@ impl Boundary {
     /// ```
     pub fn list_from(s: &str) -> Vec<Self> {
         Boundary::all().iter().filter(|boundary| {
-            let left_iter = s.chars();
-            let mid_iter = s.chars().skip(1);
-            let right_iter = s.chars().skip(2);
+            let left_iter = s.graphemes(true);
+            let mid_iter = s.graphemes(true).skip(1);
+            let right_iter = s.graphemes(true).skip(2);
 
             let mut one_iter = left_iter.clone();
 
@@ -168,7 +170,7 @@ impl Boundary {
             let two_iter = left_iter.clone().zip(mid_iter.clone());
             let mut two_iter_and_upper = two_iter.clone()
                 .zip(std::iter::once(false).chain(
-                        two_iter.map(|(a, b)| a.is_uppercase() && b.is_uppercase())
+                        two_iter.map(|(a, b)| a == a.to_uppercase() && b == b.to_uppercase())
                 ));
 
             let mut three_iter = left_iter.zip(mid_iter).zip(right_iter);
@@ -281,37 +283,51 @@ impl Boundary {
         ]
     }
 
-    fn detect_one(&self, c: char) -> bool {
+    fn detect_one(&self, c: &str) -> bool {
         use Boundary::*;
         match self {
-            Hyphen => c == '-',
-            Underscore => c == '_',
-            Space => c == ' ',
+            Hyphen => c == "-",
+            Underscore => c == "_",
+            Space => c == " ",
             _ => false,
         }
     }
 
-    fn detect_two(&self, c: char, d: char) -> bool {
+    fn detect_two(&self, c: &str, d: &str) -> bool {
         use Boundary::*;
         match self {
-            UpperLower => c.is_uppercase() && d.is_lowercase(),
-            LowerUpper => c.is_lowercase() && d.is_uppercase(),
-            DigitUpper => c.is_ascii_digit() && d.is_uppercase(),
-            UpperDigit => c.is_uppercase() && d.is_ascii_digit(),
-            DigitLower => c.is_ascii_digit() && d.is_lowercase(),
-            LowerDigit => c.is_lowercase() && d.is_ascii_digit(),
+            UpperLower => grapheme_is_uppercase(c) && grapheme_is_lowercase(d),
+            LowerUpper => grapheme_is_lowercase(c) && grapheme_is_uppercase(d),
+            DigitUpper => grapheme_is_digit(c) && grapheme_is_uppercase(d),
+            UpperDigit => grapheme_is_uppercase(c) && grapheme_is_digit(d),
+            DigitLower => grapheme_is_digit(c) && grapheme_is_lowercase(d),
+            LowerDigit => grapheme_is_lowercase(c) && grapheme_is_digit(d),
             _ => false,
         }
     }
 
-    fn detect_three(&self, c: char, d: char, e: char) -> bool {
+    fn detect_three(&self, c: &str, d: &str, e: &str) -> bool {
         use Boundary::*;
         if let Acronym = self {
-            c.is_uppercase() && d.is_uppercase() && e.is_lowercase()
+            grapheme_is_uppercase(c)
+                && grapheme_is_uppercase(d)
+                && grapheme_is_lowercase(e)
         } else {
             false
         }
     }
+}
+
+fn grapheme_is_digit(c: &str) -> bool {
+    c.chars().all(|c| c.is_ascii_digit())
+}
+
+fn grapheme_is_uppercase(c: &str) -> bool {
+    c.to_uppercase() != c.to_lowercase() && c == c.to_uppercase()
+}
+
+fn grapheme_is_lowercase(c: &str) -> bool {
+    c.to_uppercase() != c.to_lowercase() && c == c.to_lowercase()
 }
 
 // idea: make a bitset for each boundary.  Its fixed size,
@@ -325,7 +341,7 @@ where
     let s = s.as_ref();
 
     let single_splits = s
-        .chars()
+        .graphemes(true)
         .enumerate()
         .filter(|(_, c)| boundaries.iter().any(|b| b.detect_one(*c)))
         .map(|(i, _)| i + 1)
@@ -334,9 +350,9 @@ where
     let words = replace_at_indicies(s, single_splits);
 
     let final_words = words.iter().flat_map(|&w| {
-        let left_iter = w.chars();
-        let mid_iter = w.chars().skip(1);
-        let right_iter = w.chars().skip(2);
+        let left_iter = w.graphemes(true);
+        let mid_iter = w.graphemes(true).skip(1);
+        let right_iter = w.graphemes(true).skip(2);
 
         let three_iter = left_iter.clone().zip(mid_iter.clone()).zip(right_iter);
         let two_iter = left_iter.clone().zip(mid_iter);

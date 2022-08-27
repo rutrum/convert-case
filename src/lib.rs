@@ -641,4 +641,18 @@ mod test {
             assert!(possible.iter().any(|c| c == &case));
         }
     }
+
+    // From issue https://github.com/rutrum/convert-case/issues/8
+    #[test]
+    fn accent_mark() {
+        let s = "música moderna".to_string();
+        assert_eq!("MúsicaModerna", s.to_case(Case::Pascal));
+    }
+
+    // From issue https://github.com/rutrum/convert-case/issues/4
+    #[test]
+    fn russian() {
+        let s = "ПЕРСПЕКТИВА24".to_string();
+        let n = s.to_case(Case::Title);
+    }
 }
