@@ -28,5 +28,5 @@ test-ccase: build-ccase
 build-ccase:
     cargo build -p ccase
 
-run:
-    cargo run -p ccase
+run *OPTIONS:
+    cargo run -p ccase -- {{OPTIONS}}

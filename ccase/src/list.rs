@@ -86,6 +86,7 @@ mod test {
             ))));
     }
 
+    /*
     #[test]
     fn help_by_default() {
         Command::cargo_bin("ccase").unwrap()
@@ -98,4 +99,5 @@ mod test {
                     predicate::str::contains("OPTIONS")
             ))));
     }
+    */
 }

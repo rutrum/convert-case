@@ -1,8 +1,7 @@
 //! Functions for creating the clap cli application
 
-use clap::{App, AppSettings, Arg, ColorChoice, crate_version, crate_authors};
+use clap::{App, Arg, ColorChoice, crate_version, crate_authors};
 use convert_case::{Case, Casing};
-use crate::list;
 
 pub fn create<'a>() -> App<'a> {
     App::new("ccase")
@@ -16,6 +15,17 @@ pub fn create<'a>() -> App<'a> {
             arg_from_case(),
         ])
         .subcommand(subcommand_list())
+        .subcommand(subcommand_file())
+}
+
+fn subcommand_file<'a>() -> App<'a> {
+    App::new("file")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about("Rename files to a certain case.")
+        .color(ColorChoice::Never)
+        .arg(arg_file())
+        .arg_required_else_help(true)
 }
 
 fn subcommand_list<'a>() -> App<'a> {
@@ -25,6 +35,11 @@ fn subcommand_list<'a>() -> App<'a> {
         .about("Description of string cases.")
         .color(ColorChoice::Never)
         .arg(arg_case())
+}
+
+fn arg_file<'a>() -> Arg<'a> {
+    Arg::new("FILE")
+        .help("Path to file.")
 }
 
 fn arg_case<'a>() -> Arg<'a> {

@@ -4,6 +4,7 @@ use std::io::{self, Read};
 
 mod app;
 mod list;
+mod file;
 
 #[derive(Debug)]
 enum Error {
@@ -52,6 +53,9 @@ fn main() -> Result<(), Error> {
                 Err(Error::CaseMissing) => println!("{}", list::about()),
                 Err(e) => return Err(e),
             }
+        }
+        Some(("file", submatches)) => {
+
         }
         _ => {
             resolve_no_subcommand_usage(&mut app, &matches)?;

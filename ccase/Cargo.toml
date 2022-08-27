@@ -19,7 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 convert_case = { version = "^0.5", path = "../", features = ["random"] }
-clap = { version = "3.0.14", features = ["cargo", "color"] }
+clap = { version = "^3.2", features = ["cargo", "color"] }
 atty = "0.2.14"
 
 [dev-dependencies]
