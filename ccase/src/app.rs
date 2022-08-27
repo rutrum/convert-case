@@ -2,6 +2,7 @@
 
 use clap::{App, AppSettings, Arg, ColorChoice, crate_version, crate_authors};
 use convert_case::{Case, Casing};
+use crate::list;
 
 pub fn create<'a>() -> App<'a> {
     App::new("ccase")
@@ -24,7 +25,6 @@ fn subcommand_list<'a>() -> App<'a> {
         .about("Description of string cases.")
         .color(ColorChoice::Never)
         .arg(arg_case())
-        .setting(AppSettings::ArgRequiredElseHelp)
 }
 
 fn arg_case<'a>() -> Arg<'a> {

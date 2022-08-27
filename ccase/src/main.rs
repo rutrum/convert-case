@@ -47,8 +47,11 @@ fn main() -> Result<(), Error> {
 
     match &matches.subcommand() {
         Some(("list", sub_matches)) => {
-            let case = list_get_case(&sub_matches)?;
-            list::print_about_case(&case);
+            match list_get_case(&sub_matches) {
+                Ok(case) => list::print_about_case(&case),
+                Err(Error::CaseMissing) => println!("{}", list::about()),
+                Err(e) => return Err(e),
+            }
         }
         _ => {
             resolve_no_subcommand_usage(&mut app, &matches)?;

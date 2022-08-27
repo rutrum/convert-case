@@ -2,6 +2,15 @@
 
 use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 
+pub fn about() -> String {
+    format!("Cases can be defined as a pattern joined with a delimeter.\n\
+    Patterns are how a single word is cased (upper or lower).\n\
+    Delimeters are strings that join words together.\n\
+    \n\
+    You can find exact details about a case with `ccase list <query>`.\n\
+    \n{}", all_cases_as_case())
+}
+
 pub fn print_about_case(case: &Case) {
     println!("{}\n\n{:>10}: {}\n{:>10}: {}\n{:>10}: {}",
         case_in_case(&case),
@@ -26,6 +35,10 @@ pub fn pattern_in_pattern(pattern: &Pattern) -> String {
     let conv = Converter::new()
         .set_pattern(*pattern);
     conv.convert(format!("{:?}", pattern))
+}
+
+pub fn all_cases_as_case() -> String {
+    Case::all_cases().iter().map(case_in_case).collect::<Vec<String>>().join("\n")
 }
 
 pub fn boundary_shortcode(boundary: &Boundary) -> &'static str {
