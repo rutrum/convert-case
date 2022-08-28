@@ -105,6 +105,7 @@ impl Converter {
     {
         let words = segmentation::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
+            let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
             p.mutate(&words).join(&self.delim)
         } else {
             words.join(&self.delim)

@@ -140,6 +140,7 @@ pub enum Pattern {
     ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
+    #[cfg(feature = "random")]
     #[cfg(any(doc, feature = "random"))]
     Random,
 

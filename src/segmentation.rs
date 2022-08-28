@@ -1,7 +1,7 @@
 #[cfg(test)]
 use strum_macros::EnumIter;
 
-use unicode_segmentation::UnicodeSegmentation;
+use unicode_segmentation::{UnicodeSegmentation}; //, GraphemeCursor};
 
 /// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
 /// and `Space`, consume the character they split on, whereas the other boundaries
@@ -170,7 +170,7 @@ impl Boundary {
             let two_iter = left_iter.clone().zip(mid_iter.clone());
             let mut two_iter_and_upper = two_iter.clone()
                 .zip(std::iter::once(false).chain(
-                        two_iter.map(|(a, b)| a == a.to_uppercase() && b == b.to_uppercase())
+                        two_iter.map(|(a, b)| grapheme_is_uppercase(a) && grapheme_is_uppercase(b))
                 ));
 
             let mut three_iter = left_iter.zip(mid_iter).zip(right_iter);
@@ -334,7 +334,7 @@ fn grapheme_is_lowercase(c: &str) -> bool {
 // and can be copied.  Also no fear in adding duplicates
 
 // gross
-pub fn split<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
+pub fn split_old<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
 where
     T: AsRef<str>,
 {
@@ -374,6 +374,93 @@ where
     });
 
     final_words.rev().filter(|s| !s.is_empty()).collect()
+}
+
+pub fn split<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<String>
+where
+    T: AsRef<str>,
+{
+    use std::iter::once;
+    // create split_points function that counts off by graphemes into list
+    
+    let s = s.as_ref();
+
+    // Some<bool> means the following
+    // None: no split
+    // Some(false): split between characters
+    // Some(true): split consuming characters
+
+    let left_iter = s.graphemes(true);
+    let mid_iter = s.graphemes(true).skip(1);
+    let right_iter = s.graphemes(true).skip(2);
+
+    let singles = left_iter.clone();
+    let doubles = left_iter.clone().zip(mid_iter.clone());
+    let triples = left_iter.zip(mid_iter).zip(right_iter);
+
+    let singles = singles
+        .map(|c| boundaries.iter().any(|b| b.detect_one(c)))
+        .map(|split| if split {Some(true)} else {None});
+    let doubles = doubles
+        .map(|(c,d)| boundaries.iter().any(|b| b.detect_two(c, d)))
+        .map(|split| if split {Some(false)} else {None});
+    let triples = triples
+        .map(|((c,d),e)| boundaries.iter().any(|b| b.detect_three(c, d, e)))
+        .map(|split| if split {Some(false)} else {None});
+
+    let split_points = singles
+        .zip(once(None).chain(doubles))
+        .zip(once(None).chain(triples).chain(once(None)))
+        .map(|((s, d), t)| s.or(d).or(t));
+
+    let mut words = Vec::new();
+    let mut word = String::new();
+    for (c, split) in s.graphemes(true).zip(split_points) {
+        match split {
+            // no split here
+            None => word.push_str(c),
+            // split here, consume letter
+            Some(true) => words.push(std::mem::take(&mut word)),
+            // split here, keep letter
+            Some(false) => {
+                words.push(std::mem::take(&mut word));
+                word.push_str(c);
+            }
+            // dont push an empty string, do nothing
+            _ => {}
+        }
+    }
+    words.push(word);
+
+    /*
+    let mut words = Vec::new();
+    let mut left_idx = 0;
+    let mut total_chars = 0;
+    let mut skip = 0;
+    let mut cur = GraphemeCursor::new(left_idx, s.len(), true);
+
+    for (right_idx, split) in split_points.enumerate() {
+        match split {
+            // no split here
+            None => {},
+            // split here, consume letter
+            Some(true) => {
+                let mut right_bound = left_bound;
+                for _ in 0..total_chars {
+                    right_bound = cur.next_boundary(s, skip).unwrap().unwrap();
+                }
+                words.push(&s[left_bound..right_bound])
+            }
+            // split here, keep letter
+            Some(false) => {
+            }
+            // dont push an empty string, do nothing
+            _ => {}
+        }
+    }
+    */
+
+    return words.into_iter().filter(|s| !s.is_empty()).collect();
 }
 
 pub fn replace_at_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
@@ -432,6 +519,10 @@ mod test {
     #[test]
     fn boundaries_found_in_string() {
         use Boundary::*;
+        assert_eq!(
+            vec![UpperLower],
+            Boundary::list_from(".Aaaa")
+        );
         assert_eq!(
             vec![LowerUpper, UpperLower, LowerDigit],
             Boundary::list_from("a8.Aa.aA")
