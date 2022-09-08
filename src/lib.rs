@@ -58,11 +58,13 @@
 //!
 //! It also works non-ascii characters.  However, no inferences on the language itself is made.
 //! For instance, the digraph `ij` in Dutch will not be capitalized, because it is represented
-//! as two distinct Unicode characters.  However, `æ` would be capitalized.
+//! as two distinct Unicode characters.  However, `æ` would be capitalized.  Accuracy with unicode
+//! characters is done using the `unicode-segmentation` crate, the sole dependency of this crate.
 //! ```
 //! use convert_case::{Case, Casing};
 //!
 //! assert_eq!("granat-äpfel", "GranatÄpfel".to_case(Case::Kebab));
+//! assert_eq!("Перспектива 24", "ПЕРСПЕКТИВА24".to_case(Case::Title));
 //!
 //! // The example from str::to_lowercase documentation
 //! let odysseus = "ὈΔΥΣΣΕΎΣ";
@@ -654,6 +656,6 @@ mod test {
     #[test]
     fn russian() {
         let s = "ПЕРСПЕКТИВА24".to_string();
-        let n = s.to_case(Case::Title);
+        let _n = s.to_case(Case::Title);
     }
 }

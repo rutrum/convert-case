@@ -15,7 +15,7 @@ assert_eq!(
     "2020-04-16_my_cat_cali".from_case(Case::Snake).to_case(Case::Title)
 );
 ```
-You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.  Bonus: this crate has _0 dependencies!_
+You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
 
 ## Command Line Utility `ccase`
 
