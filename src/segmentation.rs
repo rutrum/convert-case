@@ -178,7 +178,7 @@ impl Boundary {
             one_iter.any(|a| boundary.detect_one(a))
                 || two_iter_and_upper.any(|((a, b), is_acro)| boundary.detect_two(a, b) && !is_acro)
                 || three_iter.any(|((a, b), c)| boundary.detect_three(a, b, c))
-        }).map(|b| *b).collect()
+        }).copied().collect()
     }
 
     /// The default list of boundaries used when `Casing::to_case` is called directly
@@ -330,53 +330,7 @@ fn grapheme_is_lowercase(c: &str) -> bool {
     c.to_uppercase() != c.to_lowercase() && c == c.to_lowercase()
 }
 
-// idea: make a bitset for each boundary.  Its fixed size,
-// and can be copied.  Also no fear in adding duplicates
-
-// gross
-pub fn split_old<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<&'a str>
-where
-    T: AsRef<str>,
-{
-    let s = s.as_ref();
-
-    let single_splits = s
-        .graphemes(true)
-        .enumerate()
-        .filter(|(_, c)| boundaries.iter().any(|b| b.detect_one(*c)))
-        .map(|(i, _)| i + 1)
-        .collect();
-
-    let words = replace_at_indicies(s, single_splits);
-
-    let final_words = words.iter().flat_map(|&w| {
-        let left_iter = w.graphemes(true);
-        let mid_iter = w.graphemes(true).skip(1);
-        let right_iter = w.graphemes(true).skip(2);
-
-        let three_iter = left_iter.clone().zip(mid_iter.clone()).zip(right_iter);
-        let two_iter = left_iter.clone().zip(mid_iter);
-
-        let mut splits: Vec<usize> = three_iter
-            .enumerate()
-            .filter(|(_, ((c, d), e))| boundaries.iter().any(|b| b.detect_three(*c, *d, *e)))
-            .map(|(i, _)| i + 1)
-            .chain(
-                two_iter
-                    .enumerate()
-                    .filter(|(_, (c, d))| boundaries.iter().any(|b| b.detect_two(*c, *d)))
-                    .map(|(i, _)| i + 1),
-            )
-            .collect();
-        splits.sort_unstable();
-
-        split_on_indicies(w, splits)
-    });
-
-    final_words.rev().filter(|s| !s.is_empty()).collect()
-}
-
-pub fn split<'a, T: ?Sized>(s: &'a T, boundaries: &[Boundary]) -> Vec<String>
+pub fn split<T>(s: T, boundaries: &[Boundary]) -> Vec<String>
 where
     T: AsRef<str>,
 {
@@ -426,8 +380,6 @@ where
                 words.push(std::mem::take(&mut word));
                 word.push_str(c);
             }
-            // dont push an empty string, do nothing
-            _ => {}
         }
     }
     words.push(word);
@@ -460,39 +412,7 @@ where
     }
     */
 
-    return words.into_iter().filter(|s| !s.is_empty()).collect();
-}
-
-pub fn replace_at_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
-    let mut words = Vec::new();
-
-    let mut first = s;
-    let mut second;
-    for &x in splits.iter().rev() {
-        let pair = first.split_at(x);
-        first = &pair.0[..(pair.0.len() - 1)];
-        second = pair.1;
-        words.push(second);
-    }
-    words.push(first);
-
-    words
-}
-
-pub fn split_on_indicies(s: &str, splits: Vec<usize>) -> Vec<&str> {
-    let mut words = Vec::new();
-
-    let mut first = s;
-    let mut second;
-    for &x in splits.iter().rev() {
-        let pair = first.split_at(x);
-        first = pair.0;
-        second = pair.1;
-        words.push(second);
-    }
-    words.push(first);
-
-    words
+    words.into_iter().filter(|s| !s.is_empty()).collect()
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
 
-use std::ffi::{OsString};
+// use std::ffi::{OsString};
 
 #[test]
 fn string_type() {
@@ -29,6 +29,7 @@ fn string_ref_type() {
     );
 }
 
+/*
 #[test]
 fn os_string_type() {
     let s: OsString = OsString::from("rust_programming_language");
@@ -37,3 +38,4 @@ fn os_string_type() {
         s.to_case(Case::Pascal),
     );
 }
+*/

@@ -230,6 +230,7 @@ pub trait Casing<T: AsRef<str>> {
     ///         .to_case(Case::Snake)
     /// );
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn from_case(&self, case: Case) -> StateConverter<T>;
 
     /// Creates a `StateConverter` struct initialized with the boundaries
