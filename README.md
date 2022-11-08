@@ -5,7 +5,7 @@ Converts to and from various cases.
 ## Rust Library `convert_case`
 
 Convert case was written in Rust and is ready to be used inline with your rust code as a library.
-```{rust}
+```rs
 use convert_case::{Case, Casing};
 
 assert_eq!("ronnieJamesDio", "Ronnie_James_dio".to_case(Case::Camel));
@@ -20,7 +20,7 @@ You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) f
 ## Command Line Utility `ccase`
 
 The command line utility `ccase` was made to leverage the tools in the `convert_case` library.
-```
+```sh
 $ ccase -t title super_mario_64
 Super Mario 64
 
@@ -33,13 +33,42 @@ convertToCamel
 
 You can read more about the `ccase` executable in the [`ccase` directory](https://github.com/rutrum/convert-case/tree/master/ccase) within this repository.
 
+## Node.js package `node-convert-case`
+
+A Node.js library made with bindings to convert_case. It leverages [neon](https://neon-bindings.com/) to accomplish this.
+```js
+import { Case, Boundary, Pattern, CS } from "node-convert-case";
+
+// Using toCase
+let marioTitle: string = CS("super_mario_64").toCase(Case.Title).toString();
+assert("Super Mario 64" === marioTitle);
+
+// Using toCase with the optional argument 'fromCase'
+marioTitle = CS("super_mario_64").toCase(Case.Title, Case.Lower).toString();
+assert("Super_mario_64" === marioTitle);
+
+// Using isCase
+let pascalStr = "ExceptionHandler";
+assert(CS(pascalStr).isCase(Case.Pascal));
+
+// Using mutate
+let characterCode: string = CS("567N9854G321K").mutate(
+    {
+        boundaries: [Boundary.UpperDigit],
+        delim: "-",
+        pattern: Pattern.Lowercase
+    }
+).toString();
+assert("567n-9854g-321k" === characterCode);
+```
+
 ## Links
 
-| | `convert_case` | `ccase` |
-| --- | --- | --- |
-| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
-| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
-| Documentation | [docs.rs](https://docs.rs/convert_case) | |
+| | `convert_case` | `ccase` | `node-convert-case` |
+| --- | --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) | [github](https://github.com/Wild-W/convert-case) |
+| Library | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) | [npmjs.com](https://www.npmjs.com/package/node-convert-case) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | | |
 
 ## Cases
 
