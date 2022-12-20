@@ -210,6 +210,7 @@ pub enum Case {
     ///
     /// ```
     /// use convert_case::{Case, Casing};
+    /// # #[cfg(any(doc, feature = "random"))]
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
     /// String `new` could be "My vaRIAbLE nAme" for example.
@@ -226,6 +227,7 @@ pub enum Case {
     ///
     /// ```
     /// use convert_case::{Case, Casing};
+    /// # #[cfg(any(doc, feature = "random"))]
     /// let new = "My variable NAME".to_case(Case::Random);
     /// ```
     /// String `new` could be "mY vArIAblE NamE" for example.

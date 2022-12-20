@@ -1,5 +1,6 @@
 test:
-    cargo test --all
+    cargo test
+    cargo test --features random
 
 watch-test:
     watchexec -- "reset && just test"

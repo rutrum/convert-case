@@ -135,6 +135,7 @@ pub enum Pattern {
     /// example of what output is possible.
     /// ```should_panic
     /// use convert_case::Pattern;
+    /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["Case", "coNVeRSiOn", "lIBraRY"],
     ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"])
@@ -154,11 +155,13 @@ pub enum Pattern {
     /// example of what output is possible.
     /// ```should_panic
     /// use convert_case::Pattern;
+    /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["cAsE", "cONveRSioN", "lIBrAry"],
     ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"]),
     /// );
     /// ```
+    #[cfg(feature = "random")]
     #[cfg(any(doc, feature = "random"))]
     PseudoRandom,
 }
