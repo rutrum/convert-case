@@ -215,6 +215,7 @@ pub enum Case {
     /// ```
     /// String `new` could be "My vaRIAbLE nAme" for example.
     #[cfg(any(doc, feature = "random"))]
+    #[cfg(feature = "random")]
     Random,
 
     /// Pseudo-random case strings are delimited by spaces and characters are randomly
@@ -232,6 +233,7 @@ pub enum Case {
     /// ```
     /// String `new` could be "mY vArIAblE NamE" for example.
     #[cfg(any(doc, feature = "random"))]
+    #[cfg(feature = "random")]
     PseudoRandom,
 }
 

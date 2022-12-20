@@ -19,7 +19,7 @@ You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) f
 
 ## Command Line Utility `ccase`
 
-The command line utility `ccase` was made to leverage the tools in the `convert_case` library.
+The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to expose the tools of the `convert_case` library to the command line.
 ```
 $ ccase -t title super_mario_64
 Super Mario 64
@@ -31,13 +31,11 @@ $ ccase -t camel "convert to camel"
 convertToCamel
 ```
 
-You can read more about the `ccase` executable in the [`ccase` directory](https://github.com/rutrum/convert-case/tree/master/ccase) within this repository.
-
 ## Links
 
 | | `convert_case` | `ccase` |
 | --- | --- | --- |
-| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case/tree/master/ccase) |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/ccase) |
 | Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
 | Documentation | [docs.rs](https://docs.rs/convert_case) | |
 
@@ -53,11 +51,9 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Toggle | mY vARIABLE nAME |
 | Alternating | mY vArIaBlE nAmE |
 | Camel | myVariableName |
-| Pascal | MyVariableName |
-| UpperCamel | MyVariableName |
+| Pascal<br />UpperCamel | MyVariableName |
 | Snake | my\_variable\_name |
-| UpperSnake | MY\_VARIABLE\_NAME |
-| ScreamingSnake | MY\_VARIABLE\_NAME |
+| UpperSnake<br />ScreamingSnake | MY\_VARIABLE\_NAME |
 | Kebab | my-variable-name |
 | Cobol | MY-VARIABLE-NAME |
 | Train | My-Variable-Name |

@@ -4,7 +4,7 @@
 //!
 //! This library was developed for the purposes of a command line utility for converting
 //! the case of strings and filenames.  You can check out 
-//! [`ccase` on Github](https://github.com/rutrum/convert-case/tree/master/ccase).
+//! [`ccase` on Github](https://github.com/rutrum/ccase).
 //!
 //! # Rust Library
 //!
