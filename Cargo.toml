@@ -2,7 +2,7 @@
 name = "convert_case"
 version = "0.6.0"
 authors = ["Rutrum <dave@rutrum.net>"]
-edition = "2018"
+edition = "2021"
 description = "Convert strings into any case"
 license = "MIT"
 keywords = [ "casing", "case", "string" ]
