@@ -21,12 +21,3 @@ watch-doc:
 
 tree:
     tree -I target
-
-test-ccase: build-ccase
-    cargo test -p ccase --no-fail-fast
-
-build-ccase:
-    cargo build -p ccase
-
-run *OPTIONS:
-    cargo run -p ccase -- {{OPTIONS}}
