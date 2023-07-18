@@ -19,6 +19,7 @@ panic = 'abort'
 
 [features]
 random = ["rand"]
+encased = []
 
 [dependencies]
 rand = { version = "^0.7", optional = true }

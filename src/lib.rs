@@ -3,13 +3,13 @@
 //! # Command Line Utility `ccase`
 //!
 //! This library was developed for the purposes of a command line utility for converting
-//! the case of strings and filenames.  You can check out 
+//! the case of strings and filenames.  You can check out
 //! [`ccase` on Github](https://github.com/rutrum/ccase).
 //!
 //! # Rust Library
 //!
 //! Provides a [`Case`](enum.Case.html) enum which defines a variety of cases to convert into.
-//! Strings have implemented the [`Casing`](trait.Casing.html) trait, which adds methods for 
+//! Strings have implemented the [`Casing`](trait.Casing.html) trait, which adds methods for
 //! case conversion.
 //!
 //! You can convert strings into a case using the [`to_case`](Casing::to_case) method.
@@ -45,7 +45,7 @@
 //! );
 //! ```
 //!
-//! Case conversion can detect acronyms for camel-like strings.  It also ignores any leading, 
+//! Case conversion can detect acronyms for camel-like strings.  It also ignores any leading,
 //! trailing, or duplicate delimiters.
 //! ```
 //! use convert_case::{Case, Casing};
@@ -171,7 +171,7 @@
 //!     conv.convert("My Special Case")
 //! )
 //! ```
-//! Just as with the `Casing` trait, you can also manually set the boundaries strings are split 
+//! Just as with the `Casing` trait, you can also manually set the boundaries strings are split
 //! on.  You can use any of the [`Pattern`] variants available.  This even includes [`Pattern::Sentence`]
 //! which isn't used in any `Case` variant.  You can also set no pattern at all, which will
 //! maintain the casing of each letter in the input string.  You can also, of course, set any string as your
@@ -191,13 +191,19 @@
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
 
+#![feature(adt_const_params)]
+
 mod case;
 mod converter;
+#[cfg(feature = "encased")]
+mod encased;
 mod pattern;
 mod segmentation;
 
 pub use case::Case;
 pub use converter::Converter;
+#[cfg(feature = "encased")]
+pub use encased::Encased;
 pub use pattern::Pattern;
 pub use segmentation::Boundary;
 
@@ -207,7 +213,6 @@ pub use segmentation::Boundary;
 ///
 /// Implemented for strings `&str`, `String`, and `&String`.
 pub trait Casing<T: AsRef<str>> {
-
     /// Convert the string into the given case.  It will reference `self` and create a new
     /// `String` with the same pattern and delimeter as `case`.  It will split on boundaries
     /// defined at [`Boundary::defaults()`].
@@ -253,7 +258,7 @@ pub trait Casing<T: AsRef<str>> {
     /// the conversion and seeing if the result is the same.
     /// ```
     /// use convert_case::{Case, Casing};
-    /// 
+    ///
     /// assert!( "kebab-case-string".is_case(Case::Kebab));
     /// assert!( "Train-Case-String".is_case(Case::Train));
     ///
@@ -261,6 +266,15 @@ pub trait Casing<T: AsRef<str>> {
     /// assert!(!"kebab-case-string".is_case(Case::Train));
     /// ```
     fn is_case(&self, case: Case) -> bool;
+
+    #[cfg(feature = "encased")]
+    fn encased<const CASE: Case>(&self) -> Encased<CASE>
+    where
+        Self: AsRef<str> + Sized,
+        String: PartialEq<Self>,
+    {
+        Encased::<CASE>::new::<CASE, Self>(&self)
+    }
 }
 
 impl<T: AsRef<str>> Casing<T> for T
