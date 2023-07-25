@@ -191,7 +191,7 @@
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
 
-#![feature(adt_const_params)]
+//ADT_CONST_PARAMS_REPLACE
 
 mod case;
 mod converter;
