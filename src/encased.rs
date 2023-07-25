@@ -1,5 +1,7 @@
 #![cfg(feature = "encased")]
 use crate::{Case, Casing};
+
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub struct Encased<const CASE: Case>(String);
 
 impl<const C: Case> Encased<C> {
