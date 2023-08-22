@@ -1,5 +1,5 @@
 #[cfg(test)]
-use strum_macros::EnumIter;
+use strum::EnumIter;
 
 use unicode_segmentation::{UnicodeSegmentation}; //, GraphemeCursor};
 
