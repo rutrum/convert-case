@@ -16,3 +16,9 @@ impl<const C: Case> Encased<C> {
         &self.0
     }
 }
+
+impl<const C: Case> ToString for Encased<C>{
+    fn to_string(&self) -> String {
+        self.raw().clone()
+    }
+}
