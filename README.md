@@ -53,7 +53,7 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Camel | myVariableName |
 | Pascal<br />UpperCamel | MyVariableName |
 | Snake | my\_variable\_name |
-| UpperSnake<br />ScreamingSnake | MY\_VARIABLE\_NAME |
+| Constant <br />UpperSnake | MY\_VARIABLE\_NAME |
 | Kebab | my-variable-name |
 | Cobol | MY-VARIABLE-NAME |
 | Train | My-Variable-Name |
@@ -62,6 +62,8 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Random | MY vaRiabLe nAME |
 | PseudoRandom | mY VaRiAblE nAMe |
 
-## License
+## Change Log
 
-Licensed under [MIT License](./LICENSE).
+### 0.7.0
+
+* Replace `Case::ScreamingSnake` with `Case::Constant`.

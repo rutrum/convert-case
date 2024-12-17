@@ -116,19 +116,19 @@ pub enum Case {
     /// ```
     Snake,
 
-    /// Upper snake case strings are delimited by underscores `_` and are all uppercase.
+    /// Constant case strings are delimited by underscores `_` and are all uppercase.
     /// * Boundaries: [Underscore](Boundary::Underscore)
     /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Underscore `_`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::UpperSnake))
+    /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::Constant))
     /// ```
-    UpperSnake,
+    Constant,
 
-    /// Screaming snake case is an alternative name for [upper snake case](Case::UpperSnake).
-    ScreamingSnake,
+    /// Upper snake case is an alternative name for [constant case](Case::Constant).
+    UpperSnake,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
     /// * Boundaries: [Hyphen](Boundary::Hyphen)
@@ -244,14 +244,14 @@ impl Case {
     /// | Cases | Delimeter |
     /// | --- | --- |
     /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
-    /// | Snake, UpperSnake, ScreamingSnake | Underscore `_` |
+    /// | Snake, Constant, UpperSnake | Underscore `_` |
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
     /// | UpperFlat, Flat, Camel, UpperCamel, Pascal | Empty string, no delimeter |
     pub const fn delim(&self) -> &'static str {
         use Case::*;
         match self {
             Upper | Lower | Title | Toggle | Alternating => " ",
-            Snake | UpperSnake | ScreamingSnake => "_",
+            Snake | Constant | UpperSnake => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
 
             #[cfg(feature = "random")]
@@ -266,7 +266,7 @@ impl Case {
     ///
     /// | Cases | Pattern |
     /// | --- | --- |
-    /// | Upper, UpperSnake, ScreamingSnake, UpperFlat, Cobol, UpperKebab | Uppercase |
+    /// | Upper, Constant, UpperSnake, UpperFlat, Cobol, UpperKebab | Uppercase |
     /// | Lower, Snake, Kebab, Flat | Lowercase |
     /// | Title, Pascal, UpperCamel, Train | Capital |
     /// | Camel | Camel |
@@ -276,7 +276,7 @@ impl Case {
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
-            Upper | UpperSnake | ScreamingSnake | UpperFlat | Cobol | UpperKebab => {
+            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => {
                 Pattern::Uppercase
             }
             Lower | Snake | Kebab | Flat => Pattern::Lowercase,
@@ -299,7 +299,7 @@ impl Case {
     /// | Cases | Boundaries |
     /// | --- | --- |
     /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
-    /// | Snake, UpperSnake, ScreamingSnake | Underscore `_` |
+    /// | Snake, Constant, UpperSnake | Underscore `_` |
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
     /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronym |
     /// | UpperFlat, Flat | No boundaries |
@@ -308,7 +308,7 @@ impl Case {
         use Case::*;
         match self {
             Upper | Lower | Title | Toggle | Alternating => vec![Space],
-            Snake | UpperSnake | ScreamingSnake => vec![Underscore],
+            Snake | Constant | UpperSnake => vec![Underscore],
             Kebab | Cobol | UpperKebab | Train => vec![Hyphen],
 
             #[cfg(feature = "random")]
@@ -323,6 +323,7 @@ impl Case {
 
     // Created to avoid using the EnumIter trait from strum in
     // final library.  A test confirms that all cases are listed here.
+    // Why is this needed?  If it's only for ccase then I don't see why it's here.
     /// Returns a vector with all case enum variants in no particular order.
     pub fn all_cases() -> Vec<Case> {
         use Case::*;
@@ -335,8 +336,8 @@ impl Case {
             Pascal,
             UpperCamel,
             Snake,
+            Constant,
             UpperSnake,
-            ScreamingSnake,
             Kebab,
             Cobol,
             UpperKebab,
@@ -372,8 +373,8 @@ impl Case {
             Pascal,
             UpperCamel,
             Snake,
+            Constant,
             UpperSnake,
-            ScreamingSnake,
             Kebab,
             Cobol,
             UpperKebab,
