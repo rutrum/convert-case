@@ -36,7 +36,7 @@ use unicode_segmentation::{UnicodeSegmentation}; //, GraphemeCursor};
 pub enum Boundary {
     /// Splits on `-`, consuming the character on segmentation.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::Hyphen],
     ///     Boundary::list_from("-")
@@ -46,7 +46,7 @@ pub enum Boundary {
 
     /// Splits on `_`, consuming the character on segmentation.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::Underscore],
     ///     Boundary::list_from("_")
@@ -56,7 +56,7 @@ pub enum Boundary {
 
     /// Splits on space, consuming the character on segmentation.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::Space],
     ///     Boundary::list_from(" ")
@@ -67,7 +67,7 @@ pub enum Boundary {
     /// Splits where an uppercase letter is followed by a lowercase letter.  This is seldom used,
     /// and is not included in the [defaults](Boundary::defaults).
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::UpperLower],
     ///     Boundary::list_from("Aa")
@@ -77,7 +77,7 @@ pub enum Boundary {
 
     /// Splits where a lowercase letter is followed by an uppercase letter.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::LowerUpper],
     ///     Boundary::list_from("aA")
@@ -87,7 +87,7 @@ pub enum Boundary {
 
     /// Splits where digit is followed by an uppercase letter.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::DigitUpper],
     ///     Boundary::list_from("1A")
@@ -97,7 +97,7 @@ pub enum Boundary {
 
     /// Splits where an uppercase letter is followed by a digit.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::UpperDigit],
     ///     Boundary::list_from("A1")
@@ -107,7 +107,7 @@ pub enum Boundary {
 
     /// Splits where digit is followed by a lowercase letter.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::DigitLower],
     ///     Boundary::list_from("1a")
@@ -117,7 +117,7 @@ pub enum Boundary {
 
     /// Splits where a lowercase letter is followed by a digit.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::LowerDigit],
     ///     Boundary::list_from("a1")
@@ -129,7 +129,7 @@ pub enum Boundary {
     /// The word boundary is between the two uppercase letters.  For example, "HTTPRequest"
     /// would have an acronym boundary identified at "PRe" and split into "HTTP" and "Request".
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![Boundary::Acronym],
     ///     Boundary::list_from("AAa")
@@ -146,7 +146,7 @@ impl Boundary {
     /// If you want to be very explicit and not overlap boundaries, it is recommended to use a colon
     /// character.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![Hyphen, Space, LowerUpper, UpperDigit, DigitLower],
@@ -185,7 +185,7 @@ impl Boundary {
     /// and in a `Converter` generated from `Converter::new()`.  This includes
     /// all the boundaries except the `UpperLower` boundary.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![
@@ -206,7 +206,7 @@ impl Boundary {
     /// Returns the boundaries that split around single characters: `Hyphen`,
     /// `Underscore`, and `Space`.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![Hyphen, Underscore, Space],
@@ -221,7 +221,7 @@ impl Boundary {
     /// Returns the boundaries that involve digits: `DigitUpper`, `DigitLower`, `UpperDigit`, and
     /// `LowerDigit`.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![DigitUpper, UpperDigit, DigitLower, LowerDigit],
@@ -235,7 +235,7 @@ impl Boundary {
 
     /// Returns the boundaries that are letters followed by digits: `UpperDigit` and `LowerDigit`.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![UpperDigit, LowerDigit],
@@ -250,7 +250,7 @@ impl Boundary {
     /// Returns the boundaries that are digits followed by letters: `DigitUpper` and
     /// `DigitLower`.
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![DigitUpper, DigitLower],
@@ -265,7 +265,7 @@ impl Boundary {
     /// Returns all boundaries.  Note that this includes the `UpperLower` variant which
     /// might be unhelpful.  Please look at [`Boundary::defaults`].
     /// ```
-    /// use convert_case::Boundary;
+    /// # use convert_case::Boundary;
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![

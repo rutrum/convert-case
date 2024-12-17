@@ -33,8 +33,7 @@
 //! of a particular case.  For example, splitting from snake case will only use
 //! underscores as word boundaries.
 //! ```
-//! use convert_case::{Case, Casing};
-//!
+//! # use convert_case::{Case, Casing};
 //! assert_eq!(
 //!     "2020 04 16 My Cat Cali",
 //!     "2020-04-16_my_cat_cali".to_case(Case::Title)
@@ -48,8 +47,7 @@
 //! Case conversion can detect acronyms for camel-like strings.  It also ignores any leading, 
 //! trailing, or duplicate delimiters.
 //! ```
-//! use convert_case::{Case, Casing};
-//!
+//! # use convert_case::{Case, Casing};
 //! assert_eq!("io_stream", "IOStream".to_case(Case::Snake));
 //! assert_eq!("my_json_parser", "myJSONParser".to_case(Case::Snake));
 //!
@@ -61,8 +59,7 @@
 //! as two distinct Unicode characters.  However, `æ` would be capitalized.  Accuracy with unicode
 //! characters is done using the `unicode-segmentation` crate, the sole dependency of this crate.
 //! ```
-//! use convert_case::{Case, Casing};
-//!
+//! # use convert_case::{Case, Casing};
 //! assert_eq!("granat-äpfel", "GranatÄpfel".to_case(Case::Kebab));
 //! assert_eq!("Перспектива 24", "ПЕРСПЕКТИВА24".to_case(Case::Title));
 //!
@@ -75,8 +72,7 @@
 //! considered word boundaries.  In addition, any special ASCII characters (besides `_` and `-`)
 //! are ignored.
 //! ```
-//! use convert_case::{Case, Casing};
-//!
+//! # use convert_case::{Case, Casing};
 //! assert_eq!("e_5150", "E5150".to_case(Case::Snake));
 //! assert_eq!("10,000_days", "10,000Days".to_case(Case::Snake));
 //! assert_eq!("HELLO, WORLD!", "Hello, world!".to_case(Case::Upper));
@@ -85,8 +81,7 @@
 //!
 //! You can also test what case a string is in.
 //! ```
-//! use convert_case::{Case, Casing};
-//!
+//! # use convert_case::{Case, Casing};
 //! assert!( "css-class-name".is_case(Case::Kebab));
 //! assert!(!"css-class-name".is_case(Case::Snake));
 //! assert!(!"UPPER_CASE_VAR".is_case(Case::Snake));

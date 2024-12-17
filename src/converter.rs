@@ -46,8 +46,7 @@ use crate::Pattern;
 /// not provided as a variant of `Case`.
 ///
 /// ```
-/// use convert_case::{Boundary, Case, Casing, Converter, Pattern};
-///
+/// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
 ///     .set_pattern(Pattern::Camel)
@@ -82,8 +81,7 @@ impl Converter {
     /// The `Converter` will use `Boundary::defaults()` for boundaries, no pattern, and an empty
     /// string as a delimeter.
     /// ```
-    /// use convert_case::Converter;
-    ///
+    /// # use convert_case::Converter;
     /// let conv = Converter::new();
     /// assert_eq!("DeathPerennialQUEST", conv.convert("Death-Perennial QUEST"))
     /// ```
@@ -93,8 +91,7 @@ impl Converter {
 
     /// Converts a string.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Camel);
     /// assert_eq!("xmlHttpRequest", conv.convert("XML_HTTP_Request"))
@@ -114,8 +111,7 @@ impl Converter {
 
     /// Set the pattern and delimiter to those associated with the given case.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Pascal);
     /// assert_eq!("VariableName", conv.convert("variable name"))
@@ -129,8 +125,7 @@ impl Converter {
     /// Sets the boundaries to those associated with the provided case.  This is used
     /// by the `from_case` function in the `Casing` trait.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Snake)
     ///     .to_case(Case::Title);
@@ -143,8 +138,7 @@ impl Converter {
 
     /// Sets the boundaries to those provided.
     /// ```
-    /// use convert_case::{Boundary, Case, Converter};
-    ///
+    /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
     ///     .to_case(Case::Lower);
@@ -157,8 +151,7 @@ impl Converter {
 
     /// Adds a boundary to the list of boundaries.
     /// ```
-    /// use convert_case::{Boundary, Case, Converter};
-    ///
+    /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Title)
     ///     .add_boundary(Boundary::Hyphen)
@@ -172,8 +165,7 @@ impl Converter {
 
     /// Adds a vector of boundaries to the list of boundaries.
     /// ```
-    /// use convert_case::{Boundary, Case, Converter};
-    ///
+    /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Kebab)
     ///     .to_case(Case::Title)
@@ -187,8 +179,7 @@ impl Converter {
 
     /// Removes a boundary from the list of boundaries if it exists.
     /// ```
-    /// use convert_case::{Boundary, Case, Converter};
-    ///
+    /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .remove_boundary(Boundary::Acronym)
     ///     .to_case(Case::Kebab);
@@ -201,8 +192,7 @@ impl Converter {
 
     /// Removes all the provided boundaries from the list of boundaries if it exists.
     /// ```
-    /// use convert_case::{Boundary, Case, Converter};
-    ///
+    /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .remove_boundaries(&Boundary::digits())
     ///     .to_case(Case::Snake);
@@ -217,8 +207,7 @@ impl Converter {
 
     /// Sets the delimeter.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Snake)
     ///     .set_delim(".");
@@ -234,8 +223,7 @@ impl Converter {
 
     /// Sets the delimeter to an empty string.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Snake)
     ///     .remove_delim();
@@ -248,8 +236,7 @@ impl Converter {
 
     /// Sets the pattern.
     /// ```
-    /// use convert_case::{Case, Converter, Pattern};
-    ///
+    /// # use convert_case::{Case, Converter, Pattern};
     /// let conv = Converter::new()
     ///     .set_delim("_")
     ///     .set_pattern(Pattern::Sentence);
@@ -263,8 +250,7 @@ impl Converter {
     /// Sets the pattern field to `None`.  Where there is no pattern, a character's case is never
     /// mutated and will be maintained at the end of conversion.
     /// ```
-    /// use convert_case::{Case, Converter};
-    ///
+    /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Title)
     ///     .to_case(Case::Snake)

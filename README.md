@@ -66,4 +66,10 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ### 0.7.0
 
+Breaking changes:
+
 * Replace `Case::ScreamingSnake` with `Case::Constant`.
+
+Other changes:
+
+* Remove most imports from doc comments.
