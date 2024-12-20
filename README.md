@@ -74,3 +74,7 @@ Breaking changes:
 Other changes:
 
 * Remove most imports from doc comments.
+
+## Other Projects
+
+Github user [Wild-W](https://github.com/Wild-W) has built [nodejs bindings for convert_case](https://github.com/Wild-W/convert-case) that are up to date with 0.6.0.
