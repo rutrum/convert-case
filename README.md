@@ -65,3 +65,7 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 ## License
 
 Licensed under [MIT License](./LICENSE).
+
+## Other Projects
+
+Github user [Wild-W](https://github.com/Wild-W) has built [nodejs bindings for convert_case](https://github.com/Wild-W/convert-case) that are up to date with 0.6.0.
