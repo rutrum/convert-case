@@ -1,3 +1,6 @@
+#[cfg(feature = "encased")]
+use std::marker::ConstParamTy;
+
 #[cfg(test)]
 use strum::EnumIter;
 
@@ -24,6 +27,7 @@ use crate::Boundary;
 /// camel case identifier `myVarName` is split where a lowercase letter is followed by an
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
 /// converting "from" a particular case.
+#[cfg_attr(feature = "encased", derive(ConstParamTy))]
 #[cfg_attr(test, derive(EnumIter))]
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
