@@ -62,6 +62,18 @@ pub enum Case {
     /// ```
     Title,
 
+    /// Sentence case strings are delimited by spaces. Only the leading character of
+    /// the first word is uppercase.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Capital](`Pattern::Sentence`)
+    /// * Delimeter: Space
+    ///
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// assert_eq!("My variable name", "My variable NAME".to_case(Case::Sentence))
+    /// ```
+    Sentence,
+
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
     /// * Boundaries: [Space](`Boundary::Space`)
@@ -250,7 +262,7 @@ impl Case {
     pub const fn delim(&self) -> &'static str {
         use Case::*;
         match self {
-            Upper | Lower | Title | Toggle | Alternating => " ",
+            Upper | Lower | Title | Sentence | Toggle | Alternating => " ",
             Snake | Constant | UpperSnake => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
 
@@ -276,14 +288,13 @@ impl Case {
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
-            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => {
-                Pattern::Uppercase
-            }
+            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => Pattern::Uppercase,
             Lower | Snake | Kebab | Flat => Pattern::Lowercase,
             Title | Pascal | UpperCamel | Train => Pattern::Capital,
             Camel => Pattern::Camel,
             Toggle => Pattern::Toggle,
             Alternating => Pattern::Alternating,
+            Sentence => Pattern::Sentence,
 
             #[cfg(feature = "random")]
             Random => Pattern::Random,
@@ -307,7 +318,7 @@ impl Case {
         use Boundary::*;
         use Case::*;
         match self {
-            Upper | Lower | Title | Toggle | Alternating => vec![Space],
+            Upper | Lower | Title | Sentence | Toggle | Alternating => vec![Space],
             Snake | Constant | UpperSnake => vec![Underscore],
             Kebab | Cobol | UpperKebab | Train => vec![Hyphen],
 
@@ -331,6 +342,7 @@ impl Case {
             Upper,
             Lower,
             Title,
+            Sentence,
             Toggle,
             Camel,
             Pascal,
@@ -368,6 +380,7 @@ impl Case {
             Upper,
             Lower,
             Title,
+            Sentence,
             Toggle,
             Camel,
             Pascal,

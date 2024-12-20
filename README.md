@@ -68,7 +68,8 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 Breaking changes:
 
-* Replace `Case::ScreamingSnake` with `Case::Constant`.
+* Rename `Case::ScreamingSnake` to `Case::Constant`.
+* Add `Case::Sentence` (sentence pattern and space delimiter)
 
 Other changes:
 
