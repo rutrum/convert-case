@@ -100,6 +100,7 @@ impl Converter {
     where
         T: AsRef<str>,
     {
+        // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = segmentation::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();

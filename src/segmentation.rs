@@ -1,7 +1,7 @@
 #[cfg(test)]
 use strum::EnumIter;
 
-use unicode_segmentation::{UnicodeSegmentation}; //, GraphemeCursor};
+use unicode_segmentation::UnicodeSegmentation; //, GraphemeCursor};
 
 /// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
 /// and `Space`, consume the character they split on, whereas the other boundaries
@@ -158,27 +158,31 @@ impl Boundary {
     /// );
     /// ```
     pub fn list_from(s: &str) -> Vec<Self> {
-        Boundary::all().iter().filter(|boundary| {
-            let left_iter = s.graphemes(true);
-            let mid_iter = s.graphemes(true).skip(1);
-            let right_iter = s.graphemes(true).skip(2);
+        Boundary::all()
+            .iter()
+            .filter(|boundary| {
+                let left_iter = s.graphemes(true);
+                let mid_iter = s.graphemes(true).skip(1);
+                let right_iter = s.graphemes(true).skip(2);
 
-            let mut one_iter = left_iter.clone();
+                let mut one_iter = left_iter.clone();
 
-            // Also capture when the previous pair was both uppercase, so we don't
-            // match the UpperLower boundary in the case of Acronym
-            let two_iter = left_iter.clone().zip(mid_iter.clone());
-            let mut two_iter_and_upper = two_iter.clone()
-                .zip(std::iter::once(false).chain(
-                        two_iter.map(|(a, b)| grapheme_is_uppercase(a) && grapheme_is_uppercase(b))
+                // Also capture when the previous pair was both uppercase, so we don't
+                // match the UpperLower boundary in the case of Acronym
+                let two_iter = left_iter.clone().zip(mid_iter.clone());
+                let mut two_iter_and_upper = two_iter.clone().zip(std::iter::once(false).chain(
+                    two_iter.map(|(a, b)| grapheme_is_uppercase(a) && grapheme_is_uppercase(b)),
                 ));
 
-            let mut three_iter = left_iter.zip(mid_iter).zip(right_iter);
+                let mut three_iter = left_iter.zip(mid_iter).zip(right_iter);
 
-            one_iter.any(|a| boundary.detect_one(a))
-                || two_iter_and_upper.any(|((a, b), is_acro)| boundary.detect_two(a, b) && !is_acro)
-                || three_iter.any(|((a, b), c)| boundary.detect_three(a, b, c))
-        }).copied().collect()
+                one_iter.any(|a| boundary.detect_one(a))
+                    || two_iter_and_upper
+                        .any(|((a, b), is_acro)| boundary.detect_two(a, b) && !is_acro)
+                    || three_iter.any(|((a, b), c)| boundary.detect_three(a, b, c))
+            })
+            .copied()
+            .collect()
     }
 
     /// The default list of boundaries used when `Casing::to_case` is called directly
@@ -189,7 +193,7 @@ impl Boundary {
     /// use Boundary::*;
     /// assert_eq!(
     ///     vec![
-    ///         Underscore, Hyphen, Space, LowerUpper, UpperDigit, 
+    ///         Underscore, Hyphen, Space, LowerUpper, UpperDigit,
     ///         DigitUpper, DigitLower, LowerDigit, Acronym,
     ///     ],
     ///     Boundary::defaults()
@@ -278,8 +282,8 @@ impl Boundary {
     pub fn all() -> Vec<Self> {
         use Boundary::*;
         vec![
-            Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper, UpperDigit, 
-            DigitLower, LowerDigit, Acronym
+            Hyphen, Underscore, Space, LowerUpper, UpperLower, DigitUpper, UpperDigit, DigitLower,
+            LowerDigit, Acronym,
         ]
     }
 
@@ -309,9 +313,7 @@ impl Boundary {
     fn detect_three(&self, c: &str, d: &str, e: &str) -> bool {
         use Boundary::*;
         if let Acronym = self {
-            grapheme_is_uppercase(c)
-                && grapheme_is_uppercase(d)
-                && grapheme_is_lowercase(e)
+            grapheme_is_uppercase(c) && grapheme_is_uppercase(d) && grapheme_is_lowercase(e)
         } else {
             false
         }
@@ -334,9 +336,10 @@ pub fn split<T>(s: T, boundaries: &[Boundary]) -> Vec<String>
 where
     T: AsRef<str>,
 {
+    // TODO: can this be made not AsRef?
     use std::iter::once;
     // create split_points function that counts off by graphemes into list
-    
+
     let s = s.as_ref();
 
     // Some<bool> means the following
@@ -354,13 +357,13 @@ where
 
     let singles = singles
         .map(|c| boundaries.iter().any(|b| b.detect_one(c)))
-        .map(|split| if split {Some(true)} else {None});
+        .map(|split| if split { Some(true) } else { None });
     let doubles = doubles
-        .map(|(c,d)| boundaries.iter().any(|b| b.detect_two(c, d)))
-        .map(|split| if split {Some(false)} else {None});
+        .map(|(c, d)| boundaries.iter().any(|b| b.detect_two(c, d)))
+        .map(|split| if split { Some(false) } else { None });
     let triples = triples
-        .map(|((c,d),e)| boundaries.iter().any(|b| b.detect_three(c, d, e)))
-        .map(|split| if split {Some(false)} else {None});
+        .map(|((c, d), e)| boundaries.iter().any(|b| b.detect_three(c, d, e)))
+        .map(|split| if split { Some(false) } else { None });
 
     let split_points = singles
         .zip(once(None).chain(doubles))
@@ -439,18 +442,12 @@ mod test {
     #[test]
     fn boundaries_found_in_string() {
         use Boundary::*;
-        assert_eq!(
-            vec![UpperLower],
-            Boundary::list_from(".Aaaa")
-        );
+        assert_eq!(vec![UpperLower], Boundary::list_from(".Aaaa"));
         assert_eq!(
             vec![LowerUpper, UpperLower, LowerDigit],
             Boundary::list_from("a8.Aa.aA")
         );
-        assert_eq!(
-            Boundary::digits(),
-            Boundary::list_from("b1B1b")
-        );
+        assert_eq!(Boundary::digits(), Boundary::list_from("b1B1b"));
         assert_eq!(
             vec![Hyphen, Underscore, Space, Acronym],
             Boundary::list_from("AAa -_")
