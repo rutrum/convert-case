@@ -243,6 +243,20 @@ pub trait Casing<T: AsRef<str>> {
     /// ```
     fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
+    /// Creates a `StateConverter` struct initialized without the boundaries
+    /// provided.
+    /// ```
+    /// use convert_case::{Boundary, Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "2d_transformation",
+    ///     "2dTransformation"
+    ///         .without_boundaries(&Boundary::digits())
+    ///         .to_case(Case::Snake)
+    /// );
+    /// ```
+    fn without_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+
     /// Determines if `self` is of the given case.  This is done simply by applying
     /// the conversion and seeing if the result is the same.
     /// ```
@@ -267,6 +281,10 @@ where
 
     fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
         StateConverter::new(self).with_boundaries(bs)
+    }
+
+    fn without_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+        StateConverter::new(self).without_boundaries(bs)
     }
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
