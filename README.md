@@ -70,6 +70,7 @@ Breaking changes:
 
 * Rename `Case::ScreamingSnake` to `Case::Constant`.
 * Add `Case::Sentence` (sentence pattern and space delimiter)
+* `Casing` trait implemented for `Arc<str>` and `Rc<str>` again
 
 Other changes:
 

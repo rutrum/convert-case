@@ -89,8 +89,8 @@ pub enum Case {
     /// Camel case strings are lowercase, but for every word _except the first_ the
     /// first letter is capitalized.
     /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
-    /// [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
-    /// [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
     /// * Pattern: [Camel](`Pattern::Camel`)
     /// * Delimeter: No delimeter
     ///
@@ -103,8 +103,8 @@ pub enum Case {
     /// Pascal case strings are lowercase, but for every word the
     /// first letter is capitalized.
     /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
-    /// [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
-    /// [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
     /// * Pattern: [Capital](`Pattern::Capital`)
     /// * Delimeter: No delimeter
     ///
