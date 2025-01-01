@@ -22,7 +22,6 @@ fn string_ref_type() {
     assert_eq!("RustProgrammingLanguage", (&s).to_case(Case::Pascal),);
 }
 
-/*
 #[test]
 fn rc_str_type() {
     let s: Rc<str> = Rc::from("rust_programming_language");
@@ -35,6 +34,7 @@ fn arc_str_type() {
     assert_eq!("RustProgrammingLanguage", s.to_case(Case::Pascal),);
 }
 
+/*
 #[test]
 fn os_string_type() {
     let s: OsString = OsString::from("rust_programming_language");

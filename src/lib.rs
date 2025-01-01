@@ -272,8 +272,7 @@ pub trait Casing<T: AsRef<str>> {
 }
 
 impl<T: AsRef<str>> Casing<T> for T
-where
-    String: PartialEq<T>,
+where T: ToString
 {
     fn to_case(&self, case: Case) -> String {
         StateConverter::new(self).to_case(case)
@@ -293,7 +292,8 @@ where
 
     fn is_case(&self, case: Case) -> bool {
         // TODO: rewrite
-        &self.to_case(case) == self
+        //&self.to_case(case) == self
+        self.to_case(case) == self.to_string()
     }
 }
 
