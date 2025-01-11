@@ -3,7 +3,7 @@ test:
     cargo test --features random
 
 watch-test:
-    watchexec -- "reset && just test"
+    watchexec -e rs -rc reset -- just test
 
 build:
     cargo build --all

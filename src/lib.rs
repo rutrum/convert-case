@@ -186,11 +186,13 @@
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
 
+mod boundary;
 mod case;
 mod converter;
 mod pattern;
 mod segmentation;
 
+pub use boundary::Boundary as NewBoundary;
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
@@ -270,7 +272,8 @@ pub trait Casing<T: AsRef<str>> {
 }
 
 impl<T: AsRef<str>> Casing<T> for T
-where T: ToString
+where
+    T: ToString,
 {
     fn to_case(&self, case: Case) -> String {
         StateConverter::new(self).to_case(case)
