@@ -199,8 +199,6 @@ pub use segmentation::Boundary;
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple
 /// methods on `Casing`.
-///
-/// Implemented for strings `&str`, `String`, and `&String`.
 pub trait Casing<T: AsRef<str>> {
     /// Convert the string into the given case.  It will reference `self` and create a new
     /// `String` with the same pattern and delimeter as `case`.  It will split on boundaries
