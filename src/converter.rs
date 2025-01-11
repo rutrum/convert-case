@@ -36,7 +36,7 @@ use crate::Pattern;
 ///
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
-///     .set_boundaries(&[Boundary::Hyphen])
+///     .set_boundaries(&[Boundary::HYPHEN])
 ///     .set_pattern(Pattern::Lowercase)
 ///     .set_delim("_");
 /// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
@@ -48,7 +48,7 @@ use crate::Pattern;
 /// ```
 /// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 /// let dot_camel = Converter::new()
-///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
+///     .set_boundaries(&[Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT])
 ///     .set_pattern(Pattern::Camel)
 ///     .set_delim(".");
 /// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
@@ -101,6 +101,7 @@ impl Converter {
         T: AsRef<str>,
     {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
+        println!("{:?}", &self.boundaries);
         let words = boundary::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
@@ -141,7 +142,7 @@ impl Converter {
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
-    ///     .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
+    ///     .set_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER])
     ///     .to_case(Case::Lower);
     /// assert_eq!("panic attack dream theater", conv.convert("panicAttack_dreamTheater"))
     /// ```
@@ -155,7 +156,7 @@ impl Converter {
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Title)
-    ///     .add_boundary(Boundary::Hyphen)
+    ///     .add_boundary(Boundary::HYPHEN)
     ///     .to_case(Case::Snake);
     /// assert_eq!("my_biography_video_1", conv.convert("My Biography - Video 1"))
     /// ```
@@ -170,7 +171,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .from_case(Case::Kebab)
     ///     .to_case(Case::Title)
-    ///     .add_boundaries(&[Boundary::Underscore, Boundary::LowerUpper]);
+    ///     .add_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER]);
     /// assert_eq!("2020 10 First Day", conv.convert("2020-10_firstDay"));
     /// ```
     pub fn add_boundaries(mut self, bs: &[Boundary]) -> Self {
@@ -182,12 +183,17 @@ impl Converter {
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
-    ///     .remove_boundary(Boundary::Acronym)
+    ///     .remove_boundary(Boundary::ACRONYM)
     ///     .to_case(Case::Kebab);
     /// assert_eq!("httprequest-parser", conv.convert("HTTPRequest_parser"));
     /// ```
     pub fn remove_boundary(mut self, b: Boundary) -> Self {
+        println!("length: {}", self.boundaries.len());
+        for boundary in self.boundaries.iter() {
+            println!("{} {:?} {:?}", *boundary == b, boundary, b);
+        }
         self.boundaries.retain(|&x| x != b);
+        println!("length after: {}", self.boundaries.len());
         self
     }
 

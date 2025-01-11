@@ -128,7 +128,7 @@
 //!     "scale_2d",
 //!     "scale2D"
 //!         .from_case(Case::Camel)
-//!         .without_boundaries(&[Boundary::DigitUpper, Boundary::DigitLower])
+//!         .without_boundaries(&[Boundary::DIGIT_UPPER, Boundary::DIGIT_LOWER])
 //!         .to_case(Case::Snake)
 //! );
 //!
@@ -136,7 +136,7 @@
 //! assert_eq!(
 //!     "scale_2d",
 //!     "scale2D"
-//!         .with_boundaries(&[Boundary::LowerDigit])
+//!         .with_boundaries(&[Boundary::LOWER_DIGIT])
 //!         .to_case(Case::Snake)
 //! );
 //! ```
@@ -235,7 +235,7 @@ pub trait Casing<T: AsRef<str>> {
     /// assert_eq!(
     ///     "e1_m1_hangar",
     ///     "E1M1 Hangar"
-    ///         .with_boundaries(&[Boundary::DigitUpper, Boundary::Space])
+    ///         .with_boundaries(&[Boundary::DIGIT_UPPER, Boundary::SPACE])
     ///         .to_case(Case::Snake)
     /// );
     /// ```

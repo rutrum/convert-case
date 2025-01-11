@@ -12,31 +12,42 @@ fn grapheme_is_lowercase(c: &str) -> bool {
     c.to_uppercase() != c.to_lowercase() && c == c.to_lowercase()
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Eq, Hash, Clone, Copy)]
 pub struct Boundary {
+    name: &'static str,
     condition: fn(&str) -> bool,
     start: usize,
     len: usize,
 }
 
+impl PartialEq for Boundary {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
 impl Boundary {
     // TODO maybe use graphemes here
     pub const SPACE: Boundary = Boundary {
+        name: "Space",
         condition: |s| s.graphemes(true).next() == Some(" "),
         start: 0,
         len: 1,
     };
     pub const HYPHEN: Boundary = Boundary {
+        name: "Hyphen",
         condition: |s| s.graphemes(true).next() == Some("-"),
         start: 0,
         len: 1,
     };
     pub const UNDERSCORE: Boundary = Boundary {
+        name: "Underscore",
         condition: |s| s.graphemes(true).next() == Some("_"),
         start: 0,
         len: 1,
     };
     pub const LOWER_UPPER: Boundary = Boundary {
+        name: "LowerUpper",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_lowercase).unwrap_or(false)
@@ -46,6 +57,7 @@ impl Boundary {
         len: 0,
     };
     pub const ACRONYM: Boundary = Boundary {
+        name: "Acronym",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
@@ -58,6 +70,7 @@ impl Boundary {
 
     // less used
     pub const UPPER_LOWER: Boundary = Boundary {
+        name: "UpperLower",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
@@ -69,6 +82,7 @@ impl Boundary {
 
     // digits
     pub const LOWER_DIGIT: Boundary = Boundary {
+        name: "LowerDigit",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_lowercase).unwrap_or(false)
@@ -78,6 +92,7 @@ impl Boundary {
         len: 0,
     };
     pub const UPPER_DIGIT: Boundary = Boundary {
+        name: "UpperDigit",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
@@ -87,6 +102,7 @@ impl Boundary {
         len: 0,
     };
     pub const DIGIT_LOWER: Boundary = Boundary {
+        name: "DigitLower",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_digit).unwrap_or(false)
@@ -96,6 +112,7 @@ impl Boundary {
         len: 0,
     };
     pub const DIGIT_UPPER: Boundary = Boundary {
+        name: "DigitUpper",
         condition: |s| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_digit).unwrap_or(false)
@@ -104,11 +121,6 @@ impl Boundary {
         start: 1,
         len: 0,
     };
-
-    // todo remove?
-    pub const fn default_delimiters() -> [Boundary; 3] {
-        [Boundary::SPACE, Boundary::HYPHEN, Boundary::UNDERSCORE]
-    }
 
     pub const fn defaults() -> [Boundary; 9] {
         [
@@ -132,6 +144,17 @@ impl Boundary {
             Boundary::DIGIT_UPPER,
         ]
     }
+
+    pub fn list_from(pattern: &str) -> Vec<Boundary> {
+        let mut boundaries = Vec::new();
+        for boundary in Boundary::defaults() {
+            let parts = split(&pattern, &[boundary]);
+            if parts.len() > 1 || parts[0] != pattern {
+                boundaries.push(boundary);
+            }
+        }
+        boundaries
+    }
 }
 
 // another idea for this algorithm
@@ -146,33 +169,40 @@ where
 {
     let s = s.as_ref();
 
+    if s.len() == 0 {
+        return vec![];
+    }
+
     let mut words = Vec::new();
-    let mut last_end = 0;
+    let mut last_boundary_end = 0;
 
     let (indices, graphemes): (Vec<_>, Vec<_>) = s.grapheme_indices(true).unzip();
+    let grapheme_length = indices[graphemes.len() - 1] + graphemes[graphemes.len() - 1].len();
 
     for i in 0..graphemes.len() {
         for boundary in boundaries {
             let byte_index = indices[i];
 
             if (boundary.condition)(&s[byte_index..]) {
-                let boundary_byte_start: usize = *indices
-                    .get(i + boundary.start)
-                    .unwrap_or(&(graphemes.len()));
-                //let boundary_byte_end: usize = indices.get(i + boundary.start + boundary.len);
+                // What if we find a condition at the end of the array?
+                // Maybe we can stop early based on length
+                // To do this, need to switch the loops
+                // TODO
+                let boundary_byte_start: usize =
+                    *indices.get(i + boundary.start).unwrap_or(&grapheme_length);
                 let boundary_byte_end: usize = *indices
                     .get(i + boundary.start + boundary.len)
-                    .unwrap_or(&(graphemes.len()));
+                    .unwrap_or(&grapheme_length);
 
                 // todo clean this up a bit
-                words.push(&s[last_end..boundary_byte_start]);
-                last_end = boundary_byte_end;
+                words.push(&s[last_boundary_end..boundary_byte_start]);
+                last_boundary_end = boundary_byte_end;
                 break;
             }
         }
     }
-    words.push(&s[last_end..]);
-    words.into_iter().filter(|s| !s.is_empty()).collect()
+    words.push(&s[last_boundary_end..]);
+    words.into_iter().filter(|s| !s.is_empty()).collect() // this filter breaks boundary checking
 }
 
 // ascii version
@@ -225,7 +255,10 @@ mod tests {
     #[test]
     fn delimiters() {
         let s = "aaa-bbb_ccc ddd ddd-eee";
-        let v = split(&s, &Boundary::default_delimiters());
+        let v = split(
+            &s,
+            &[Boundary::SPACE, Boundary::UNDERSCORE, Boundary::HYPHEN],
+        );
         assert_eq!(v, vec!["aaa", "bbb", "ccc", "ddd", "ddd", "eee"]);
     }
 
@@ -241,5 +274,32 @@ mod tests {
         let s = "XMLRequest";
         let v = split(&s, &[Boundary::ACRONYM]);
         assert_eq!(v, vec!["XML", "Request"]);
+    }
+
+    // TODO: add tests for other boundaries
+
+    #[test]
+    fn boundaries_found_in_string() {
+        // upper lower is not longer a default
+        assert_eq!(Vec::<Boundary>::new(), Boundary::list_from(".Aaaa"));
+        assert_eq!(
+            vec![Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT,],
+            Boundary::list_from("a8.Aa.aA")
+        );
+        assert_eq!(Boundary::digits().to_vec(), Boundary::list_from("b1B1b"));
+        assert_eq!(
+            vec![
+                Boundary::SPACE,
+                Boundary::HYPHEN,
+                Boundary::UNDERSCORE,
+                Boundary::ACRONYM,
+            ],
+            Boundary::list_from("AAa -_")
+        );
+    }
+
+    #[test]
+    fn boundary_consts_same() {
+        assert_eq!(Boundary::SPACE, Boundary::SPACE);
     }
 }

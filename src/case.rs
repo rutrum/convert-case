@@ -322,7 +322,7 @@ impl Case {
             Kebab | Cobol | UpperKebab | Train => vec![Boundary::HYPHEN],
 
             #[cfg(feature = "random")]
-            Random | PseudoRandom => vec![Space],
+            Random | PseudoRandom => vec![Boundary::SPACE],
 
             UpperFlat | Flat => vec![],
             Camel | UpperCamel | Pascal => vec![
