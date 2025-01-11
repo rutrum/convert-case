@@ -1,7 +1,7 @@
 #[cfg(test)]
 use strum::EnumIter;
 
-use unicode_segmentation::UnicodeSegmentation; //, GraphemeCursor};
+use unicode_segmentation::UnicodeSegmentation;
 
 /// A boundary defines how a string is split into words.  Some boundaries, `Hyphen`, `Underscore`,
 /// and `Space`, consume the character they split on, whereas the other boundaries

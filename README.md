@@ -69,12 +69,13 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 Breaking changes:
 
 * Rename `Case::ScreamingSnake` to `Case::Constant`.
-* Add `Case::Sentence` (sentence pattern and space delimiter)
-* `Casing` trait implemented for `Arc<str>` and `Rc<str>` again
+* Add `Case::Sentence` (sentence pattern and space delimiter.)
+* `Casing` trait implemented for `Arc<str>` and `Rc<str>` again.
 
 Other changes:
 
 * Remove most imports from doc comments.
+* Remove loop over `str::chars` in favor of `graphemes` from `unicode-segmentation`.
 
 ## Other Projects
 

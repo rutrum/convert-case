@@ -3,7 +3,7 @@ use std::iter;
 #[cfg(feature = "random")]
 use rand::prelude::*;
 
-use unicode_segmentation::UnicodeSegmentation; //, GraphemeCursor};
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordCase {
