@@ -190,13 +190,11 @@ mod boundary;
 mod case;
 mod converter;
 mod pattern;
-mod segmentation;
 
-pub use boundary::Boundary as NewBoundary;
+pub use boundary::Boundary;
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
-pub use segmentation::Boundary;
 
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple
@@ -358,7 +356,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     ///
     /// let song = "theHumbling river-puscifer"
     ///     .from_case(Case::Kebab) // from Casing trait
-    ///     .with_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
+    ///     .with_boundaries(&[Boundary::SPACE, Boundary::LOWER_UPPER]) // overwrites `from_case`
     ///     .to_case(Case::Pascal);
     /// assert_eq!("TheHumblingRiver-puscifer", song);  // doesn't split on hyphen `-`
     /// ```
@@ -588,7 +586,7 @@ mod test {
             "m02_s05_binary_trees.pdf",
             "M02S05BinaryTrees.pdf"
                 .from_case(Case::Pascal)
-                .without_boundaries(&[Boundary::UpperDigit])
+                .without_boundaries(&[Boundary::UPPER_DIGIT])
                 .to_case(Case::Snake)
         );
     }
@@ -598,7 +596,7 @@ mod test {
         assert_eq!(
             "my-dumb-file-name",
             "my_dumbFileName"
-                .with_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
+                .with_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER])
                 .to_case(Case::Kebab)
         );
     }

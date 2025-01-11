@@ -1,5 +1,5 @@
-test:
-    cargo test
+test *FILTER:
+    cargo test {{FILTER}}
     cargo test --features random
 
 watch-test:

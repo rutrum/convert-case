@@ -1,8 +1,8 @@
 #[cfg(test)]
 use strum::EnumIter;
 
+use crate::boundary::Boundary;
 use crate::pattern::Pattern;
-use crate::Boundary;
 
 /// Defines the type of casing a string can be.
 ///
@@ -315,19 +315,23 @@ impl Case {
     /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronym |
     /// | UpperFlat, Flat | No boundaries |
     pub fn boundaries(&self) -> Vec<Boundary> {
-        use Boundary::*;
         use Case::*;
         match self {
-            Upper | Lower | Title | Sentence | Toggle | Alternating => vec![Space],
-            Snake | Constant | UpperSnake => vec![Underscore],
-            Kebab | Cobol | UpperKebab | Train => vec![Hyphen],
+            Upper | Lower | Title | Sentence | Toggle | Alternating => vec![Boundary::SPACE],
+            Snake | Constant | UpperSnake => vec![Boundary::UNDERSCORE],
+            Kebab | Cobol | UpperKebab | Train => vec![Boundary::HYPHEN],
 
             #[cfg(feature = "random")]
             Random | PseudoRandom => vec![Space],
 
             UpperFlat | Flat => vec![],
             Camel | UpperCamel | Pascal => vec![
-                LowerUpper, Acronym, LowerDigit, UpperDigit, DigitLower, DigitUpper,
+                Boundary::LOWER_UPPER,
+                Boundary::ACRONYM,
+                Boundary::LOWER_DIGIT,
+                Boundary::UPPER_DIGIT,
+                Boundary::DIGIT_LOWER,
+                Boundary::DIGIT_UPPER,
             ],
         }
     }

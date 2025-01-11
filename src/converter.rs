@@ -1,5 +1,5 @@
-use crate::segmentation;
-use crate::Boundary;
+use crate::boundary;
+use crate::boundary::Boundary;
 use crate::Case;
 use crate::Pattern;
 
@@ -69,7 +69,7 @@ pub struct Converter {
 impl Default for Converter {
     fn default() -> Self {
         Converter {
-            boundaries: Boundary::defaults(),
+            boundaries: Boundary::defaults().to_vec(),
             pattern: None,
             delim: String::new(),
         }
@@ -101,7 +101,7 @@ impl Converter {
         T: AsRef<str>,
     {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
-        let words = segmentation::split(&s, &self.boundaries);
+        let words = boundary::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
             p.mutate(&words).join(&self.delim)
@@ -330,7 +330,7 @@ mod test {
     #[test]
     fn remove_boundary() {
         let conv = Converter::new()
-            .remove_boundary(Boundary::DigitUpper)
+            .remove_boundary(Boundary::DIGIT_UPPER)
             .to_case(Case::Snake);
         assert_eq!("test_08bound", conv.convert("Test 08Bound"));
         assert_eq!("a_8_a_a_8a", conv.convert("a8aA8A"));
@@ -341,7 +341,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
-            .add_boundary(Boundary::LowerUpper);
+            .add_boundary(Boundary::LOWER_UPPER);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
     }
 
@@ -350,7 +350,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
-            .add_boundaries(&[Boundary::LowerUpper, Boundary::UpperLower]);
+            .add_boundaries(&[Boundary::LOWER_UPPER, Boundary::UPPER_LOWER]);
         assert_eq!("word-word-w-ord", conv.convert("word_wordWord"));
     }
 
@@ -359,7 +359,7 @@ mod test {
         let conv = Converter::new().from_case(Case::Snake).to_case(Case::Kebab);
         assert_eq!("word-wordword", conv.convert("word_wordWord"));
 
-        let conv = conv.add_boundary(Boundary::LowerUpper);
+        let conv = conv.add_boundary(Boundary::LOWER_UPPER);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
     }
 
@@ -367,9 +367,9 @@ mod test {
     fn explicit_boundaries() {
         let conv = Converter::new()
             .set_boundaries(&[
-                Boundary::DigitLower,
-                Boundary::DigitUpper,
-                Boundary::Acronym,
+                Boundary::DIGIT_LOWER,
+                Boundary::DIGIT_UPPER,
+                Boundary::ACRONYM,
             ])
             .to_case(Case::Snake);
         assert_eq!(
