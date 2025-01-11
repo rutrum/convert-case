@@ -28,7 +28,7 @@ use crate::pattern::Pattern;
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
-    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Uppercase](`Pattern::Uppercase`)
     /// * Delimeter: Space
     ///
@@ -39,7 +39,7 @@ pub enum Case {
     Upper,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
-    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Lowercase](`Pattern::Lowercase`)
     /// * Delimeter: Space
     ///
@@ -52,7 +52,7 @@ pub enum Case {
     /// Title case strings are delimited by spaces. Only the leading character of
     /// each word is uppercase.  No inferences are made about language, so words
     /// like "as", "to", and "for" will still be capitalized.
-    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Capital](`Pattern::Capital`)
     /// * Delimeter: Space
     ///
@@ -64,7 +64,7 @@ pub enum Case {
 
     /// Sentence case strings are delimited by spaces. Only the leading character of
     /// the first word is uppercase.
-    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Capital](`Pattern::Sentence`)
     /// * Delimeter: Space
     ///
@@ -76,7 +76,7 @@ pub enum Case {
 
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
-    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Toggle](`Pattern::Toggle`)
     /// * Delimeter: Space
     ///
@@ -88,9 +88,9 @@ pub enum Case {
 
     /// Camel case strings are lowercase, but for every word _except the first_ the
     /// first letter is capitalized.
-    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
-    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
-    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
+    ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
+    ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
     /// * Pattern: [Camel](`Pattern::Camel`)
     /// * Delimeter: No delimeter
     ///
@@ -102,9 +102,9 @@ pub enum Case {
 
     /// Pascal case strings are lowercase, but for every word the
     /// first letter is capitalized.
-    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
-    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
-    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
+    ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
+    ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
     /// * Pattern: [Capital](`Pattern::Capital`)
     /// * Delimeter: No delimeter
     ///
@@ -118,7 +118,7 @@ pub enum Case {
     UpperCamel,
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
-    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
     /// * Pattern: [Lowercase](Pattern::Lowercase)
     /// * Delimeter: Underscore `_`
     ///
@@ -129,7 +129,7 @@ pub enum Case {
     Snake,
 
     /// Constant case strings are delimited by underscores `_` and are all uppercase.
-    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
     /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Underscore `_`
     ///
@@ -143,7 +143,7 @@ pub enum Case {
     UpperSnake,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
-    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
     /// * Pattern: [Lowercase](Pattern::Lowercase)
     /// * Delimeter: Hyphen `-`
     ///
@@ -154,7 +154,7 @@ pub enum Case {
     Kebab,
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
-    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
     /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Hyphen `-`
     ///
@@ -169,7 +169,7 @@ pub enum Case {
 
     /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
     /// except for the leading character of each word.
-    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
     /// * Pattern: [Capital](Pattern::Capital)
     /// * Delimeter: Hyphen `-`
     ///
@@ -203,7 +203,7 @@ pub enum Case {
 
     /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
     /// and lowercase.
-    /// * Boundaries: [Space](Boundary::Space)
+    /// * Boundaries: [Space](Boundary::SPACE)
     /// * Pattern: [Alternating](Pattern::Alternating)
     /// * Delimeter: Space
     ///
@@ -216,7 +216,7 @@ pub enum Case {
     /// Random case strings are delimited by spaces and characters are
     /// randomly upper case or lower case.  This uses the `rand` crate
     /// and is only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::Space)
+    /// * Boundaries: [Space](Boundary::SPACE)
     /// * Pattern: [Random](Pattern::Random)
     /// * Delimeter: Space
     ///
@@ -234,7 +234,7 @@ pub enum Case {
     /// upper case or lower case, but there will never more than two consecutive lower
     /// case or upper case letters in a row.  This uses the `rand` crate and is
     /// only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::Space)
+    /// * Boundaries: [Space](Boundary::SPACE)
     /// * Pattern: [PseudoRandom](Pattern::PseudoRandom)
     /// * Delimeter: Space
     ///

@@ -14,10 +14,16 @@ fn grapheme_is_lowercase(c: &str) -> bool {
 
 #[derive(Debug, Eq, Hash, Clone, Copy)]
 pub struct Boundary {
-    name: &'static str,
-    condition: fn(&str) -> bool,
-    start: usize,
-    len: usize,
+    /// A unique name used for comparison.
+    pub name: &'static str,
+    /// A function that determines if this boundary is present at the start
+    /// of the string.
+    pub condition: fn(&str) -> bool,
+    /// Where the beginning of the boundary is.
+    pub start: usize,
+    /// The length of the boundary.  This is the number of graphemes that
+    /// are removed when splitting.
+    pub len: usize,
 }
 
 impl PartialEq for Boundary {
@@ -27,25 +33,58 @@ impl PartialEq for Boundary {
 }
 
 impl Boundary {
-    // TODO maybe use graphemes here
-    pub const SPACE: Boundary = Boundary {
-        name: "Space",
-        condition: |s| s.graphemes(true).next() == Some(" "),
-        start: 0,
-        len: 1,
-    };
-    pub const HYPHEN: Boundary = Boundary {
-        name: "Hyphen",
-        condition: |s| s.graphemes(true).next() == Some("-"),
-        start: 0,
-        len: 1,
-    };
+    /// Splits on `_`, consuming the character on segmentation.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::UNDERSCORE],
+    ///     Boundary::defaults_from("_")
+    /// );
+    /// ```
     pub const UNDERSCORE: Boundary = Boundary {
         name: "Underscore",
         condition: |s| s.graphemes(true).next() == Some("_"),
         start: 0,
         len: 1,
     };
+
+    /// Splits on `-`, consuming the character on segmentation.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::HYPHEN],
+    ///     Boundary::defaults_from("-")
+    /// );
+    /// ```
+    pub const HYPHEN: Boundary = Boundary {
+        name: "Hyphen",
+        condition: |s| s.graphemes(true).next() == Some("-"),
+        start: 0,
+        len: 1,
+    };
+    /// Splits on space, consuming the character on segmentation.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::SPACE],
+    ///     Boundary::defaults_from(" ")
+    /// );
+    /// ```
+    pub const SPACE: Boundary = Boundary {
+        name: "Space",
+        condition: |s| s.graphemes(true).next() == Some(" "),
+        start: 0,
+        len: 1,
+    };
+
+    /// Splits where a lowercase letter is followed by an uppercase letter.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::LOWER_UPPER],
+    ///     Boundary::defaults_from("aA")
+    /// );
+    /// ```
     pub const LOWER_UPPER: Boundary = Boundary {
         name: "LowerUpper",
         condition: |s| {
@@ -56,6 +95,35 @@ impl Boundary {
         start: 1,
         len: 0,
     };
+    /// Splits where an uppercase letter is followed by a lowercase letter.  This is seldom used,
+    /// and is **not** included in the [defaults](Boundary::defaults).
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert!(
+    ///     Boundary::defaults_from("Aa").len() == 0
+    /// );
+    /// ```
+    pub const UPPER_LOWER: Boundary = Boundary {
+        name: "UpperLower",
+        condition: |s| {
+            let mut chars = s.graphemes(true);
+            chars.next().map(grapheme_is_uppercase).unwrap_or(false)
+                && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
+        },
+        start: 1,
+        len: 0,
+    };
+
+    /// Acronyms are identified by two uppercase letters followed by a lowercase letter.
+    /// The word boundary is between the two uppercase letters.  For example, "HTTPRequest"
+    /// would have an acronym boundary identified at "PRe" and split into "HTTP" and "Request".
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::ACRONYM],
+    ///     Boundary::defaults_from("AAa")
+    /// );
+    /// ```
     pub const ACRONYM: Boundary = Boundary {
         name: "Acronym",
         condition: |s| {
@@ -68,19 +136,14 @@ impl Boundary {
         len: 0,
     };
 
-    // less used
-    pub const UPPER_LOWER: Boundary = Boundary {
-        name: "UpperLower",
-        condition: |s| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_uppercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
-        },
-        start: 1,
-        len: 0,
-    };
-
-    // digits
+    /// Splits where a lowercase letter is followed by a digit.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::LOWER_DIGIT],
+    ///     Boundary::defaults_from("a1")
+    /// );
+    /// ```
     pub const LOWER_DIGIT: Boundary = Boundary {
         name: "LowerDigit",
         condition: |s| {
@@ -91,6 +154,15 @@ impl Boundary {
         start: 1,
         len: 0,
     };
+
+    /// Splits where an uppercase letter is followed by a digit.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::UPPER_DIGIT],
+    ///     Boundary::defaults_from("A1")
+    /// );
+    /// ```
     pub const UPPER_DIGIT: Boundary = Boundary {
         name: "UpperDigit",
         condition: |s| {
@@ -101,6 +173,15 @@ impl Boundary {
         start: 1,
         len: 0,
     };
+
+    /// Splits where digit is followed by a lowercase letter.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::DIGIT_LOWER],
+    ///     Boundary::defaults_from("1a")
+    /// );
+    /// ```
     pub const DIGIT_LOWER: Boundary = Boundary {
         name: "DigitLower",
         condition: |s| {
@@ -111,6 +192,15 @@ impl Boundary {
         start: 1,
         len: 0,
     };
+
+    /// Splits where digit is followed by an uppercase letter.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![Boundary::DIGIT_UPPER],
+    ///     Boundary::defaults_from("1A")
+    /// );
+    /// ```
     pub const DIGIT_UPPER: Boundary = Boundary {
         name: "DigitUpper",
         condition: |s| {
@@ -122,11 +212,30 @@ impl Boundary {
         len: 0,
     };
 
+    /// The default list of boundaries used when `Casing::to_case` is called directly
+    /// and in a `Converter` generated from `Converter::new()`.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     [
+    ///         Boundary::UNDERSCORE,
+    ///         Boundary::HYPHEN,
+    ///         Boundary::SPACE,
+    ///         Boundary::LOWER_UPPER,
+    ///         Boundary::ACRONYM,
+    ///         Boundary::LOWER_DIGIT,
+    ///         Boundary::UPPER_DIGIT,
+    ///         Boundary::DIGIT_LOWER,
+    ///         Boundary::DIGIT_UPPER,
+    ///     ],
+    ///     Boundary::defaults()
+    /// );
+    /// ```
     pub const fn defaults() -> [Boundary; 9] {
         [
-            Boundary::SPACE,
-            Boundary::HYPHEN,
             Boundary::UNDERSCORE,
+            Boundary::HYPHEN,
+            Boundary::SPACE,
             Boundary::LOWER_UPPER,
             Boundary::ACRONYM,
             Boundary::LOWER_DIGIT,
@@ -136,6 +245,20 @@ impl Boundary {
         ]
     }
 
+    /// Returns the boundaries that involve digits.
+    /// `LowerDigit`.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     [
+    ///         Boundary::LOWER_DIGIT,
+    ///         Boundary::UPPER_DIGIT,
+    ///         Boundary::DIGIT_LOWER,
+    ///         Boundary::DIGIT_UPPER,
+    ///     ],
+    ///     Boundary::digits()
+    /// );
+    /// ```
     pub const fn digits() -> [Boundary; 4] {
         [
             Boundary::LOWER_DIGIT,
@@ -145,11 +268,69 @@ impl Boundary {
         ]
     }
 
-    pub fn list_from(pattern: &str) -> Vec<Boundary> {
+    /// Returns the boundaries that are letters followed by digits.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     [
+    ///         Boundary::LOWER_DIGIT,
+    ///         Boundary::UPPER_DIGIT,
+    ///     ],
+    ///     Boundary::letter_digit()
+    /// );
+    /// ```
+    pub const fn letter_digit() -> [Boundary; 2] {
+        [Boundary::LOWER_DIGIT, Boundary::UPPER_DIGIT]
+    }
+
+    /// Returns the boundaries that are digits followed by letters.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     [
+    ///         Boundary::DIGIT_LOWER,
+    ///         Boundary::DIGIT_UPPER
+    ///     ],
+    ///     Boundary::digit_letter()
+    /// );
+    /// ```
+    pub fn digit_letter() -> [Boundary; 2] {
+        [Boundary::DIGIT_LOWER, Boundary::DIGIT_UPPER]
+    }
+
+    /// Returns a list of all boundaries that are identified within the given string.
+    /// Could be a short of writing out all the boundaries in a list directly.  This will not
+    /// identify boundary `UpperLower` if it also used as part of `Acronym`.
+    ///
+    /// If you want to be very explicit and not overlap boundaries, it is recommended to use a colon
+    /// character.
+    /// ```
+    /// # use convert_case::Boundary;
+    /// assert_eq!(
+    ///     vec![
+    ///         Boundary::HYPHEN,
+    ///         Boundary::SPACE,
+    ///         Boundary::LOWER_UPPER,
+    ///         Boundary::UPPER_DIGIT,
+    ///         Boundary::DIGIT_LOWER,
+    ///     ],
+    ///     Boundary::defaults_from("aA8a -")
+    /// );
+    /// assert_eq!(
+    ///     vec![
+    ///         Boundary::UNDERSCORE,
+    ///         Boundary::LOWER_UPPER,
+    ///         Boundary::ACRONYM,
+    ///         Boundary::DIGIT_UPPER,
+    ///     ],
+    ///     Boundary::defaults_from("bD:0B:_:AAa")
+    /// );
+    /// ```
+    pub fn defaults_from(pattern: &str) -> Vec<Boundary> {
         let mut boundaries = Vec::new();
         for boundary in Boundary::defaults() {
             let parts = split(&pattern, &[boundary]);
-            if parts.len() > 1 || parts[0] != pattern {
+            if parts.len() > 1 || parts.len() == 0 || parts[0] != pattern {
                 boundaries.push(boundary);
             }
         }
@@ -202,7 +383,7 @@ where
         }
     }
     words.push(&s[last_boundary_end..]);
-    words.into_iter().filter(|s| !s.is_empty()).collect() // this filter breaks boundary checking
+    words.into_iter().filter(|s| !s.is_empty()).collect()
 }
 
 // ascii version
@@ -281,12 +462,15 @@ mod tests {
     #[test]
     fn boundaries_found_in_string() {
         // upper lower is not longer a default
-        assert_eq!(Vec::<Boundary>::new(), Boundary::list_from(".Aaaa"));
+        assert_eq!(Vec::<Boundary>::new(), Boundary::defaults_from(".Aaaa"));
         assert_eq!(
             vec![Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT,],
-            Boundary::list_from("a8.Aa.aA")
+            Boundary::defaults_from("a8.Aa.aA")
         );
-        assert_eq!(Boundary::digits().to_vec(), Boundary::list_from("b1B1b"));
+        assert_eq!(
+            Boundary::digits().to_vec(),
+            Boundary::defaults_from("b1B1b")
+        );
         assert_eq!(
             vec![
                 Boundary::SPACE,
@@ -294,7 +478,7 @@ mod tests {
                 Boundary::UNDERSCORE,
                 Boundary::ACRONYM,
             ],
-            Boundary::list_from("AAa -_")
+            Boundary::defaults_from("AAa -_")
         );
     }
 
