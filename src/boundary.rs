@@ -161,10 +161,6 @@ impl Boundary {
     pub const ACRONYM: Boundary = Boundary {
         name: "Acronym",
         condition: |s, _| {
-            println!("{s:?}");
-            println!("{:?}", s.get(0));
-            println!("{:?}", s.get(0).map(grapheme_is_uppercase));
-            println!("{:?}", s.get(0).map(grapheme_is_uppercase) == Some(true));
             s.get(0).map(grapheme_is_uppercase) == Some(true)
                 && s.get(1).map(grapheme_is_uppercase) == Some(true)
                 && s.get(2).map(grapheme_is_lowercase) == Some(true)

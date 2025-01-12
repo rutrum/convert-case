@@ -64,6 +64,10 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
+### 0.7.1
+
+* Removed debug print statement.
+
 ### 0.7.0: Custom Boundaries
 
 Boundary is no longer an enum.  It now is a struct, and each enum variant cooresponds to an associated constant.  For upgrading this just means changing `Boundary::LowerUpper` to just `Boundary::LOWER_UPPER`.

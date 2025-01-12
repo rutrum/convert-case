@@ -694,7 +694,6 @@ mod test {
         for case in Case::deterministic_cases() {
             let new_s = s.from_case(case).to_case(case);
             let possible = possible_cases(&new_s);
-            println!("{} {:?} {:?}", new_s, case, possible);
             assert!(possible.iter().any(|c| c == &case));
         }
     }
