@@ -1,15 +1,15 @@
 use unicode_segmentation::UnicodeSegmentation;
 
-fn grapheme_is_digit(c: &str) -> bool {
+fn grapheme_is_digit(c: &&str) -> bool {
     c.chars().all(|c| c.is_ascii_digit())
 }
 
-fn grapheme_is_uppercase(c: &str) -> bool {
-    c.to_uppercase() != c.to_lowercase() && c == c.to_uppercase()
+fn grapheme_is_uppercase(c: &&str) -> bool {
+    c.to_uppercase() != c.to_lowercase() && *c == c.to_uppercase()
 }
 
-fn grapheme_is_lowercase(c: &str) -> bool {
-    c.to_uppercase() != c.to_lowercase() && c == c.to_lowercase()
+fn grapheme_is_lowercase(c: &&str) -> bool {
+    c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
 }
 
 /// A boundary defines how an identifier is split into words.  Some boundaries, `HYPHEN`,
@@ -43,9 +43,10 @@ pub struct Boundary {
     /// A unique name used for comparison.
     pub name: &'static str,
     /// A function that determines if this boundary is present at the start
-    /// of the string.  As a second argument contains the `arg` field.
-    pub condition: fn(&str, Option<&'static str>) -> bool,
-    /// An optional string passed to `condition` at runtime.
+    /// of the string.  Second argument is the `arg` field.
+    pub condition: fn(&[&str], Option<&'static str>) -> bool,
+    /// An optional string passed to `condition` at runtime.  Used
+    /// internally for `from_delim`` method.
     pub arg: Option<&'static str>,
     /// Where the beginning of the boundary is.
     pub start: usize,
@@ -71,7 +72,7 @@ impl Boundary {
     /// ```
     pub const SPACE: Boundary = Boundary {
         name: "Space",
-        condition: |s, _| s.graphemes(true).next() == Some(" "),
+        condition: |s, _| s.get(0) == Some(&" "),
         arg: None,
         start: 0,
         len: 1,
@@ -87,7 +88,7 @@ impl Boundary {
     /// ```
     pub const HYPHEN: Boundary = Boundary {
         name: "Hyphen",
-        condition: |s, _| s.graphemes(true).next() == Some("-"),
+        condition: |s, _| s.get(0) == Some(&"-"),
         arg: None,
         start: 0,
         len: 1,
@@ -103,7 +104,7 @@ impl Boundary {
     /// ```
     pub const UNDERSCORE: Boundary = Boundary {
         name: "Underscore",
-        condition: |s, _| s.graphemes(true).next() == Some("_"),
+        condition: |s, _| s.get(0) == Some(&"_"),
         arg: None,
         start: 0,
         len: 1,
@@ -120,9 +121,8 @@ impl Boundary {
     pub const LOWER_UPPER: Boundary = Boundary {
         name: "LowerUpper",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_lowercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
+            s.get(0).map(grapheme_is_lowercase) == Some(true)
+                && s.get(1).map(grapheme_is_uppercase) == Some(true)
         },
         arg: None,
         start: 1,
@@ -139,9 +139,8 @@ impl Boundary {
     pub const UPPER_LOWER: Boundary = Boundary {
         name: "UpperLower",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_uppercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
+            s.get(0).map(grapheme_is_uppercase) == Some(true)
+                && s.get(1).map(grapheme_is_lowercase) == Some(true)
         },
         arg: None,
         start: 1,
@@ -161,10 +160,13 @@ impl Boundary {
     pub const ACRONYM: Boundary = Boundary {
         name: "Acronym",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_uppercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
+            println!("{s:?}");
+            println!("{:?}", s.get(0));
+            println!("{:?}", s.get(0).map(grapheme_is_uppercase));
+            println!("{:?}", s.get(0).map(grapheme_is_uppercase) == Some(true));
+            s.get(0).map(grapheme_is_uppercase) == Some(true)
+                && s.get(1).map(grapheme_is_uppercase) == Some(true)
+                && s.get(2).map(grapheme_is_lowercase) == Some(true)
         },
         arg: None,
         start: 1,
@@ -182,9 +184,8 @@ impl Boundary {
     pub const LOWER_DIGIT: Boundary = Boundary {
         name: "LowerDigit",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_lowercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_digit).unwrap_or(false)
+            s.get(0).map(grapheme_is_lowercase) == Some(true)
+                && s.get(1).map(grapheme_is_digit) == Some(true)
         },
         arg: None,
         start: 1,
@@ -202,9 +203,8 @@ impl Boundary {
     pub const UPPER_DIGIT: Boundary = Boundary {
         name: "UpperDigit",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_uppercase).unwrap_or(false)
-                && chars.next().map(grapheme_is_digit).unwrap_or(false)
+            s.get(0).map(grapheme_is_uppercase) == Some(true)
+                && s.get(1).map(grapheme_is_digit) == Some(true)
         },
         arg: None,
         start: 1,
@@ -222,9 +222,8 @@ impl Boundary {
     pub const DIGIT_LOWER: Boundary = Boundary {
         name: "DigitLower",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_digit).unwrap_or(false)
-                && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
+            s.get(0).map(grapheme_is_digit) == Some(true)
+                && s.get(1).map(grapheme_is_lowercase) == Some(true)
         },
         arg: None,
         start: 1,
@@ -242,9 +241,8 @@ impl Boundary {
     pub const DIGIT_UPPER: Boundary = Boundary {
         name: "DigitUpper",
         condition: |s, _| {
-            let mut chars = s.graphemes(true);
-            chars.next().map(grapheme_is_digit).unwrap_or(false)
-                && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
+            s.get(0).map(grapheme_is_digit) == Some(true)
+                && s.get(1).map(grapheme_is_uppercase) == Some(true)
         },
         arg: None,
         start: 1,
@@ -266,7 +264,7 @@ impl Boundary {
         Boundary {
             name: delim,
             arg: Some(delim),
-            condition: |s, arg| s.starts_with(arg.unwrap()),
+            condition: |s, arg| s.join("").starts_with(arg.unwrap()),
             start: 0,
             len: delim.len(),
         }
@@ -422,9 +420,9 @@ where
 
     for i in 0..graphemes.len() {
         for boundary in boundaries {
-            let byte_index = indices[i];
+            //let byte_index = indices[i];
 
-            if (boundary.condition)(&s[byte_index..], boundary.arg) {
+            if (boundary.condition)(&graphemes[i..], boundary.arg) {
                 // What if we find a condition at the end of the array?
                 // Maybe we can stop early based on length
                 // To do this, need to switch the loops
@@ -552,7 +550,7 @@ mod tests {
         let boundary = Boundary::from_delim(".");
         let s = "lower.Upper.Upper";
         let v = split(&s, &[boundary]);
-        assert_eq!(v, vec!["lower", "Upper", "Upper"])
+        assert_eq!(vec!["lower", "Upper", "Upper"], v)
     }
 
     #[test]
@@ -560,6 +558,6 @@ mod tests {
         let boundary = Boundary::from_delim("::");
         let s = "lower::lowerUpper::Upper";
         let v = split(&s, &[boundary]);
-        assert_eq!(v, vec!["lower", "lowerUpper", "Upper"])
+        assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
     }
 }
