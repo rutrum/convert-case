@@ -12,9 +12,10 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
     c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
 }
 
-/// A boundary defines how an identifier is split into words.  Some boundaries, `HYPHEN`,
-/// `UNDERSCORE`, and `SPACE`, consume the character they split on, whereas the other boundaries
-/// do not.
+/// How an identifier is split into words.  
+///
+/// Some boundaries, `HYPHEN`, `UNDERSCORE`, and `SPACE`, consume the character they
+/// split on, whereas the other boundaries do not.
 ///
 /// `Boundary` includes methods that return useful groups of boundaries.  It also
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
@@ -46,7 +47,7 @@ pub struct Boundary {
     /// of the string.  Second argument is the `arg` field.
     pub condition: fn(&[&str], Option<&'static str>) -> bool,
     /// An optional string passed to `condition` at runtime.  Used
-    /// internally for `from_delim`` method.
+    /// internally for [`Boundary::from_delim`] method.
     pub arg: Option<&'static str>,
     /// Where the beginning of the boundary is.
     pub start: usize,
@@ -396,12 +397,17 @@ impl Boundary {
     }
 }
 
-// another idea for this algorithm
-// build an array of integers where
-// 0 means no split
-// 1 means the split is left of this char
-// 2 means this character is removed
-// then I can build the word at the end
+/// Split an identifier into a list of words using the list of boundaries.
+///
+/// This is used internally for splitting an identifier before mutating by
+/// a pattern and joining again with a delimiter.
+/// ```
+/// use convert_case::{Boundary, split};
+/// assert_eq!(
+///     vec!["one", "two", "three.four"],
+///     split(&"one_two-three.four", &[Boundary::UNDERSCORE, Boundary::HYPHEN]),
+/// )
+/// ```
 pub fn split<'s, T>(s: &'s T, boundaries: &[Boundary]) -> Vec<&'s str>
 where
     T: AsRef<str>,

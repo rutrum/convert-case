@@ -108,10 +108,10 @@
 //! provides the [`from_case`](Casing::from_case) functionality, but sometimes that isn't enough
 //! to meet a specific use case.
 //!
-//! Take an identifier has the word `2D`, such as `scale2D`.  No exclusive usage of `from_case` will
+//! Say an identifier has the word `2D`, such as `scale2D`.  No exclusive usage of `from_case` will
 //! be enough to solve the problem.  In this case we can further specify which boundaries to split
 //! the string on.  `convert_case` provides some patterns for achieving this specificity.
-//! We can specify what boundaries we want to split on using the [`Boundary` enum](Boundary).
+//! We can specify what boundaries we want to split on using instances the [`Boundary` struct](Boundary).
 //! ```
 //! use convert_case::{Boundary, Case, Casing};
 //!
@@ -143,6 +143,47 @@
 //!
 //! The `Casing` trait provides initial methods, but any subsequent methods that do not resolve
 //! the conversion return a [`StateConverter`] struct.  It contains similar methods as `Casing`.
+//!
+//! ## Custom Boundaries
+//!
+//! `convert_case` provides a number of constants for boundaries associated with common cases.
+//! But you can create your own boundary to split on other criteria.  For simple, delimiter
+//! based splits, use [`Boundary::from_delim`].
+//!
+//! ```
+//! # use convert_case::{Boundary, Case, Casing};
+//! assert_eq!(
+//!     "Coolers Revenge",
+//!     "coolers.revenge"
+//!         .with_boundaries(&[Boundary::from_delim(".")])
+//!         .to_case(Case::Title)
+//! )
+//! ```
+//!
+//! For more complex boundaries, such as splitting based on the first character being a certain
+//! symbol and the second is lowercase, you can instantiate a boundary directly.
+//!
+//! ```
+//! # use convert_case::{Boundary, Case, Casing};
+//! let at_then_letter = Boundary {
+//!     name: "AtLetter",
+//!     condition: |s, _| {
+//!         s.get(0).map(|c| *c == "@") == Some(true)
+//!             && s.get(1).map(|c| *c == c.to_lowercase()) == Some(true)
+//!     },
+//!     arg: None,
+//!     start: 1,
+//!     len: 0,
+//! };
+//! assert_eq!(
+//!     "Name@ Domain",
+//!     "name@domain"
+//!         .with_boundaries(&[at_then_letter])
+//!         .to_case(Case::Title)
+//! )
+//! ```
+//!
+//! To learn more about building a boundary from scratch, read the [`Boundary`] struct.
 //!
 //! # Custom Cases
 //!
@@ -191,7 +232,7 @@ mod case;
 mod converter;
 mod pattern;
 
-pub use boundary::Boundary;
+pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
