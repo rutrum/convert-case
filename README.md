@@ -64,19 +64,16 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
-### 0.7.0
+### 0.7.0: Custom Boundaries
 
-Boundary Reimplementation [Breaking]:
+Boundary is no longer an enum.  It now is a struct, and each enum variant cooresponds to an associated constant.  For upgrading this just means changing `Boundary::LowerUpper` to just `Boundary::LOWER_UPPER`.
 
-Boundary is no longer an enum.  It now is a struct, and each enum variant cooresponds to an associated constant.  Practically, this means changing `Boundary::LowerUpper` to just `Boundary::LOWER_UPPER`.
-
-The benefit of this is that you can make your boundary conditions now, by instantiating the `Boundary` struct.  Now you can split on newlines, periods, double-colons, emojis, or a more complex case like a symbol followed by a digit.  You also define which characters, if any, are removed during segmentation, and where the split happens.
+The benefit of this is that you can make your boundary conditions now, by instantiating the `Boundary` struct, or using `Boundary::from_delim()`.  Now you can split on newlines, periods, double-colons, emojis, or a more complex case like a symbol followed by a digit.  You also define which characters, if any, are removed during segmentation, and where the split happens.
 
 Changes from this feature:
 * Previous `Boundary::PascalName` enum variants now much refered to as `Boundary::CONSTANT_NAME` constants.
 * All functions that returned groups of boundaries (such as `Boundary::defaults()`, `Boundary::digit_letter()`, etc) now are const and return fixed-sized arrays `[Boundary; N]`, not `Vec<Boundary>`.
 * `Boundary::all()` was removed, since there's no longer a sense of "all" boundaries, since you can create your own.
-* `Boundary` is compared via the `name` field.
 * `Boundary::list_from()` has been renamed to `Boundary::defaults_from()` and no longer outputs `Boundary::UPPER_LOWER`, since this function now only checks default boundaries.
 * Create custom delimiter boundaries using `Boundary::from_delim()`.
 
