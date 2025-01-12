@@ -12,13 +12,41 @@ fn grapheme_is_lowercase(c: &str) -> bool {
     c.to_uppercase() != c.to_lowercase() && c == c.to_lowercase()
 }
 
+/// A boundary defines how an identifier is split into words.  Some boundaries, `HYPHEN`,
+/// `UNDERSCORE`, and `SPACE`, consume the character they split on, whereas the other boundaries
+/// do not.
+///
+/// `Boundary` includes methods that return useful groups of boundaries.  It also
+/// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
+/// of default boundaries based on the boundaries present in a string.
+///
+/// You can also create custom delimiter boundaries using the [`from_delim`](Boundary::from_delim)
+/// method or directly instantiate Boundary for complex boundary conditions.
+/// ```
+/// use convert_case::{Boundary, Case, Casing, Converter};
+///
+/// assert_eq!(
+///     "transformations_in_3d",
+///     "TransformationsIn3D"
+///         .from_case(Case::Camel)
+///         .without_boundaries(&Boundary::digit_letter())
+///         .to_case(Case::Snake)
+/// );
+///
+/// let conv = Converter::new()
+///     .set_boundaries(&Boundary::defaults_from("aA "))
+///     .to_case(Case::Title);
+/// assert_eq!("7empest By Tool", conv.convert("7empest byTool"));
+/// ```
 #[derive(Debug, Eq, Hash, Clone, Copy)]
 pub struct Boundary {
     /// A unique name used for comparison.
     pub name: &'static str,
     /// A function that determines if this boundary is present at the start
-    /// of the string.
-    pub condition: fn(&str) -> bool,
+    /// of the string.  As a second argument contains the `arg` field.
+    pub condition: fn(&str, Option<&'static str>) -> bool,
+    /// An optional string passed to `condition` at runtime.
+    pub arg: Option<&'static str>,
     /// Where the beginning of the boundary is.
     pub start: usize,
     /// The length of the boundary.  This is the number of graphemes that
@@ -33,17 +61,18 @@ impl PartialEq for Boundary {
 }
 
 impl Boundary {
-    /// Splits on `_`, consuming the character on segmentation.
+    /// Splits on space, consuming the character on segmentation.
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
-    ///     vec![Boundary::UNDERSCORE],
-    ///     Boundary::defaults_from("_")
+    ///     vec![Boundary::SPACE],
+    ///     Boundary::defaults_from(" ")
     /// );
     /// ```
-    pub const UNDERSCORE: Boundary = Boundary {
-        name: "Underscore",
-        condition: |s| s.graphemes(true).next() == Some("_"),
+    pub const SPACE: Boundary = Boundary {
+        name: "Space",
+        condition: |s, _| s.graphemes(true).next() == Some(" "),
+        arg: None,
         start: 0,
         len: 1,
     };
@@ -58,21 +87,24 @@ impl Boundary {
     /// ```
     pub const HYPHEN: Boundary = Boundary {
         name: "Hyphen",
-        condition: |s| s.graphemes(true).next() == Some("-"),
+        condition: |s, _| s.graphemes(true).next() == Some("-"),
+        arg: None,
         start: 0,
         len: 1,
     };
-    /// Splits on space, consuming the character on segmentation.
+
+    /// Splits on `_`, consuming the character on segmentation.
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
-    ///     vec![Boundary::SPACE],
-    ///     Boundary::defaults_from(" ")
+    ///     vec![Boundary::UNDERSCORE],
+    ///     Boundary::defaults_from("_")
     /// );
     /// ```
-    pub const SPACE: Boundary = Boundary {
-        name: "Space",
-        condition: |s| s.graphemes(true).next() == Some(" "),
+    pub const UNDERSCORE: Boundary = Boundary {
+        name: "Underscore",
+        condition: |s, _| s.graphemes(true).next() == Some("_"),
+        arg: None,
         start: 0,
         len: 1,
     };
@@ -87,11 +119,12 @@ impl Boundary {
     /// ```
     pub const LOWER_UPPER: Boundary = Boundary {
         name: "LowerUpper",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_lowercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -105,11 +138,12 @@ impl Boundary {
     /// ```
     pub const UPPER_LOWER: Boundary = Boundary {
         name: "UpperLower",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -126,12 +160,13 @@ impl Boundary {
     /// ```
     pub const ACRONYM: Boundary = Boundary {
         name: "Acronym",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -146,11 +181,12 @@ impl Boundary {
     /// ```
     pub const LOWER_DIGIT: Boundary = Boundary {
         name: "LowerDigit",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_lowercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_digit).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -165,11 +201,12 @@ impl Boundary {
     /// ```
     pub const UPPER_DIGIT: Boundary = Boundary {
         name: "UpperDigit",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_uppercase).unwrap_or(false)
                 && chars.next().map(grapheme_is_digit).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -184,11 +221,12 @@ impl Boundary {
     /// ```
     pub const DIGIT_LOWER: Boundary = Boundary {
         name: "DigitLower",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_digit).unwrap_or(false)
                 && chars.next().map(grapheme_is_lowercase).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
@@ -203,14 +241,36 @@ impl Boundary {
     /// ```
     pub const DIGIT_UPPER: Boundary = Boundary {
         name: "DigitUpper",
-        condition: |s| {
+        condition: |s, _| {
             let mut chars = s.graphemes(true);
             chars.next().map(grapheme_is_digit).unwrap_or(false)
                 && chars.next().map(grapheme_is_uppercase).unwrap_or(false)
         },
+        arg: None,
         start: 1,
         len: 0,
     };
+
+    /// Create a new boundary based on a delimiter.
+    /// ```
+    /// # use convert_case::{Case, Converter, Boundary};
+    /// let conv = Converter::new()
+    ///     .set_boundaries(&[Boundary::from_delim("::")])
+    ///     .to_case(Case::Camel);
+    /// assert_eq!(
+    ///     "myVarName",
+    ///     conv.convert("my::var::name")
+    /// )
+    /// ```
+    pub const fn from_delim(delim: &'static str) -> Boundary {
+        Boundary {
+            name: delim,
+            arg: Some(delim),
+            condition: |s, arg| s.starts_with(arg.unwrap()),
+            start: 0,
+            len: delim.len(),
+        }
+    }
 
     /// The default list of boundaries used when `Casing::to_case` is called directly
     /// and in a `Converter` generated from `Converter::new()`.
@@ -218,9 +278,9 @@ impl Boundary {
     /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     [
-    ///         Boundary::UNDERSCORE,
-    ///         Boundary::HYPHEN,
     ///         Boundary::SPACE,
+    ///         Boundary::HYPHEN,
+    ///         Boundary::UNDERSCORE,
     ///         Boundary::LOWER_UPPER,
     ///         Boundary::ACRONYM,
     ///         Boundary::LOWER_DIGIT,
@@ -233,9 +293,9 @@ impl Boundary {
     /// ```
     pub const fn defaults() -> [Boundary; 9] {
         [
-            Boundary::UNDERSCORE,
-            Boundary::HYPHEN,
             Boundary::SPACE,
+            Boundary::HYPHEN,
+            Boundary::UNDERSCORE,
             Boundary::LOWER_UPPER,
             Boundary::ACRONYM,
             Boundary::LOWER_DIGIT,
@@ -308,8 +368,8 @@ impl Boundary {
     /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![
-    ///         Boundary::HYPHEN,
     ///         Boundary::SPACE,
+    ///         Boundary::HYPHEN,
     ///         Boundary::LOWER_UPPER,
     ///         Boundary::UPPER_DIGIT,
     ///         Boundary::DIGIT_LOWER,
@@ -364,7 +424,7 @@ where
         for boundary in boundaries {
             let byte_index = indices[i];
 
-            if (boundary.condition)(&s[byte_index..]) {
+            if (boundary.condition)(&s[byte_index..], boundary.arg) {
                 // What if we find a condition at the end of the array?
                 // Maybe we can stop early based on length
                 // To do this, need to switch the loops
@@ -485,5 +545,21 @@ mod tests {
     #[test]
     fn boundary_consts_same() {
         assert_eq!(Boundary::SPACE, Boundary::SPACE);
+    }
+
+    #[test]
+    fn from_delim_dot() {
+        let boundary = Boundary::from_delim(".");
+        let s = "lower.Upper.Upper";
+        let v = split(&s, &[boundary]);
+        assert_eq!(v, vec!["lower", "Upper", "Upper"])
+    }
+
+    #[test]
+    fn from_delim_double_colon() {
+        let boundary = Boundary::from_delim("::");
+        let s = "lower::lowerUpper::Upper";
+        let v = split(&s, &[boundary]);
+        assert_eq!(v, vec!["lower", "lowerUpper", "Upper"])
     }
 }

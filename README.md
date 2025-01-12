@@ -41,7 +41,7 @@ convertToCamel
 
 ## Cases
 
-This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature, and are automatically provided in the `ccase` binary.
+This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature.
 
 | Case | Example |
 | ---- | ------- |
@@ -78,6 +78,7 @@ Changes from this feature:
 * `Boundary::all()` was removed, since there's no longer a sense of "all" boundaries, since you can create your own.
 * `Boundary` is compared via the `name` field.
 * `Boundary::list_from()` has been renamed to `Boundary::defaults_from()` and no longer outputs `Boundary::UPPER_LOWER`, since this function now only checks default boundaries.
+* Create custom delimiter boundaries using `Boundary::from_delim()`.
 
 Other breaking changes:
 

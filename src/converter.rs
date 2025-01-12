@@ -101,7 +101,6 @@ impl Converter {
         T: AsRef<str>,
     {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
-        println!("{:?}", &self.boundaries);
         let words = boundary::split(&s, &self.boundaries);
         if let Some(p) = self.pattern {
             let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
@@ -188,12 +187,7 @@ impl Converter {
     /// assert_eq!("httprequest-parser", conv.convert("HTTPRequest_parser"));
     /// ```
     pub fn remove_boundary(mut self, b: Boundary) -> Self {
-        println!("length: {}", self.boundaries.len());
-        for boundary in self.boundaries.iter() {
-            println!("{} {:?} {:?}", *boundary == b, boundary, b);
-        }
         self.boundaries.retain(|&x| x != b);
-        println!("length after: {}", self.boundaries.len());
         self
     }
 
