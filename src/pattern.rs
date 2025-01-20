@@ -3,7 +3,7 @@ use std::iter;
 #[cfg(feature = "random")]
 use rand::prelude::*;
 
-use unicode_segmentation::UnicodeSegmentation;
+use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordCase {
@@ -17,24 +17,41 @@ impl WordCase {
     fn mutate(&self, word: &str) -> String {
         use WordCase::*;
         match self {
-            Lower => word.to_lowercase(),
-            Upper => word.to_uppercase(),
-            Capital => {
-                let mut chars = word.graphemes(true);
-                if let Some(c) = chars.next() {
-                    [c.to_uppercase(), chars.as_str().to_lowercase()].concat()
-                } else {
-                    String::new()
-                }
-            }
-            Toggle => {
-                let mut chars = word.graphemes(true);
-                if let Some(c) = chars.next() {
-                    [c.to_lowercase(), chars.as_str().to_uppercase()].concat()
-                } else {
-                    String::new()
-                }
-            }
+            Lower => WordPattern::LOWER.mutate(word),
+            Upper => WordPattern::UPPER.mutate(word),
+            Capital => WordPattern::CAPITAL.mutate(word),
+            Toggle => WordPattern::TOGGLE.mutate(word),
+        }
+    }
+}
+
+enum WordPattern {
+    Graphemes(fn(Graphemes) -> String),
+    Str(fn(&str) -> String),
+}
+
+impl WordPattern {
+    const LOWER: Self = WordPattern::Str(|word| word.to_lowercase());
+    const UPPER: Self = WordPattern::Str(|word| word.to_uppercase());
+    const CAPITAL: Self = WordPattern::Graphemes(|mut graphemes| {
+        if let Some(c) = graphemes.next() {
+            [c.to_uppercase(), graphemes.as_str().to_lowercase()].concat()
+        } else {
+            String::new()
+        }
+    });
+    const TOGGLE: Self = WordPattern::Graphemes(|mut graphemes| {
+        if let Some(c) = graphemes.next() {
+            [c.to_lowercase(), graphemes.as_str().to_uppercase()].concat()
+        } else {
+            String::new()
+        }
+    });
+
+    fn mutate(&self, words: &str) -> String {
+        match self {
+            Self::Graphemes(f) => f(words.graphemes(true)),
+            Self::Str(f) => f(words),
         }
     }
 }
