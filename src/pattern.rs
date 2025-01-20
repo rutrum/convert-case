@@ -57,6 +57,7 @@ impl WordPattern {
     }
 }
 
+/*
 /// A pattern is how a set of words is mutated before joining with
 /// a delimeter.
 ///
@@ -69,17 +70,17 @@ pub enum OldPattern {
     /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["case", "conversion", "library"],
-    ///     Pattern::Lowercase.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Lowercase.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Lowercase,
 
     /// Uppercase patterns make all words uppercase.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["CASE", "CONVERSION", "LIBRARY"],
-    ///     Pattern::Uppercase.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Uppercase.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Uppercase,
@@ -87,10 +88,10 @@ pub enum OldPattern {
     /// Capital patterns makes the first letter of each word uppercase
     /// and the remaining letters of each word lowercase.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["Case", "Conversion", "Library"],
-    ///     Pattern::Capital.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Capital.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Capital,
@@ -98,10 +99,10 @@ pub enum OldPattern {
     /// Capital patterns make the first word capitalized and the
     /// remaining lowercase.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["Case", "conversion", "library"],
-    ///     Pattern::Sentence.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Sentence.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Sentence,
@@ -109,10 +110,10 @@ pub enum OldPattern {
     /// Camel patterns make the first word lowercase and the remaining
     /// capitalized.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["case", "Conversion", "Library"],
-    ///     Pattern::Camel.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Camel.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Camel,
@@ -122,14 +123,14 @@ pub enum OldPattern {
     /// which means the last letter of one word and the first letter of the
     /// next will not be the same letter casing.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["cAsE", "cOnVeRsIoN", "lIbRaRy"],
-    ///     Pattern::Alternating.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Alternating.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// assert_eq!(
     ///     vec!["aNoThEr", "ExAmPlE"],
-    ///     Pattern::Alternating.mutate(&["Another", "Example"]),
+    ///     OldPattern::Alternating.mutate(&["Another", "Example"]),
     /// );
     /// ```
     Alternating,
@@ -137,10 +138,10 @@ pub enum OldPattern {
     /// Toggle patterns have the first letter of each word uppercase
     /// and the remaining letters of each word uppercase.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["cASE", "cONVERSION", "lIBRARY"],
-    ///     Pattern::Toggle.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Toggle.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     Toggle,
@@ -150,11 +151,11 @@ pub enum OldPattern {
     /// feature.  This example will not pass the assertion due to randomness, but it used as an
     /// example of what output is possible.
     /// ```should_panic
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["Case", "coNVeRSiOn", "lIBraRY"],
-    ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"])
+    ///     OldPattern::Random.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
     #[cfg(any(doc, feature = "random"))]
@@ -170,11 +171,11 @@ pub enum OldPattern {
     /// feature.  This example will not pass the assertion due to randomness, but it used as an
     /// example of what output is possible.
     /// ```should_panic
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["cAsE", "cONveRSioN", "lIBrAry"],
-    ///     Pattern::Random.mutate(&["Case", "CONVERSION", "library"]),
+    ///     OldPattern::Random.mutate(&["Case", "CONVERSION", "library"]),
     /// );
     /// ```
     #[cfg(any(doc, feature = "random"))]
@@ -189,7 +190,7 @@ impl OldPattern {
     /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["crack", "the", "skye"],
-    ///     Pattern::Lowercase.mutate(&vec!["CRACK", "the", "Skye"]),
+    ///     OldPattern::Lowercase.mutate(&vec!["CRACK", "the", "Skye"]),
     /// )
     /// ```
     pub fn mutate(&self, words: &[&str]) -> Vec<String> {
@@ -237,6 +238,7 @@ impl OldPattern {
         }
     }
 }
+    */
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct Pattern(fn(&[&str]) -> Vec<String>);
@@ -422,13 +424,13 @@ mod test {
 
     #[test]
     fn mutate_empty_strings() {
-        for wcase in [
-            WordCase::Lower,
-            WordCase::Upper,
-            WordCase::Capital,
-            WordCase::Toggle,
+        for word_pattern in [
+            WordPattern::LOWER,
+            WordPattern::UPPER,
+            WordPattern::CAPITAL,
+            WordPattern::TOGGLE,
         ] {
-            assert_eq!(String::new(), wcase.mutate(&String::new()))
+            assert_eq!(String::new(), word_pattern.mutate(&String::new()))
         }
     }
 }

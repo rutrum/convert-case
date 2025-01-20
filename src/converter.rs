@@ -37,7 +37,7 @@ use crate::Pattern;
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::HYPHEN])
-///     .set_pattern(Pattern::Lowercase)
+///     .set_pattern(Pattern::LOWERCASE)
 ///     .set_delim("_");
 /// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
 /// ```
@@ -49,7 +49,7 @@ use crate::Pattern;
 /// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT])
-///     .set_pattern(Pattern::Camel)
+///     .set_pattern(Pattern::CAMEL)
 ///     .set_delim(".");
 /// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
 /// ```
@@ -240,7 +240,7 @@ impl Converter {
     /// # use convert_case::{Case, Converter, Pattern};
     /// let conv = Converter::new()
     ///     .set_delim("_")
-    ///     .set_pattern(Pattern::Sentence);
+    ///     .set_pattern(Pattern::SENTENCE);
     /// assert_eq!("Bjarne_case", conv.convert("BJARNE CASE"));
     /// ```
     pub fn set_pattern(mut self, p: Pattern) -> Self {

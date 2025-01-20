@@ -199,7 +199,7 @@
 //! use convert_case::{Case, Casing, Converter, Pattern};
 //!
 //! let conv = Converter::new()
-//!     .set_pattern(Pattern::Camel)
+//!     .set_pattern(Pattern::CAMEL)
 //!     .set_delim("_");
 //!
 //! assert_eq!(
