@@ -25,6 +25,7 @@ impl WordCase {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordPattern {
     Graphemes(fn(Graphemes) -> String),
     Str(fn(&str) -> String),
@@ -62,7 +63,7 @@ impl WordPattern {
 /// The `Random` and `PseudoRandom` patterns are used for their respective cases
 /// and are only available in the "random" feature.
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub enum Pattern {
+pub enum OldPattern {
     /// Lowercase patterns make all words lowercase.
     /// ```
     /// # use convert_case::Pattern;
@@ -181,18 +182,18 @@ pub enum Pattern {
     PseudoRandom,
 }
 
-impl Pattern {
+impl OldPattern {
     /// Generates a vector of new `String`s in the right pattern given
     /// the input strings.
     /// ```
-    /// # use convert_case::Pattern;
+    /// # use convert_case::OldPattern;
     /// assert_eq!(
     ///     vec!["crack", "the", "skye"],
     ///     Pattern::Lowercase.mutate(&vec!["CRACK", "the", "Skye"]),
     /// )
     /// ```
     pub fn mutate(&self, words: &[&str]) -> Vec<String> {
-        use Pattern::*;
+        use OldPattern::*;
         match self {
             Lowercase => words
                 .iter()
@@ -235,6 +236,68 @@ impl Pattern {
             PseudoRandom => pseudo_randomize(words),
         }
     }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub struct Pattern(fn(&[&str]) -> Vec<String>);
+
+impl Pattern {
+    pub const LOWERCASE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::LOWER.mutate(&word))
+            .collect()
+    });
+    pub const UPPERCASE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::UPPER.mutate(&word))
+            .collect()
+    });
+    pub const CAPITAL: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::CAPITAL.mutate(&word))
+            .collect()
+    });
+    pub const TOGGLE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::TOGGLE.mutate(&word))
+            .collect()
+    });
+    pub const SENTENCE: Self = Pattern(|words| {
+        let word_patterns =
+            iter::once(WordPattern::CAPITAL).chain(iter::once(WordPattern::LOWER).cycle());
+        words
+            .iter()
+            .zip(word_patterns)
+            .map(|(word, pattern)| pattern.mutate(word))
+            .collect()
+    });
+    pub const CAMEL: Self = Pattern(|words| {
+        let word_patterns =
+            iter::once(WordPattern::LOWER).chain(iter::once(WordPattern::CAPITAL).cycle());
+        words
+            .iter()
+            .zip(word_patterns)
+            .map(|(word, pattern)| pattern.mutate(word))
+            .collect()
+    });
+    pub const ALTERNATING: Self = Pattern(|words| alternating(words));
+
+    #[cfg(feature = "random")]
+    pub const RANDOM: Self = Pattern(|words| randomize(words));
+    #[cfg(feature = "random")]
+    pub const PSEUDO_RANDOM: Self = Pattern(|words| pseudo_randomize(words));
+
+    pub fn mutate(self, words: &[&str]) -> Vec<String> {
+        self.0(words)
+    }
+
+    // constructor
+    // from iterator of word patterns
+    // like camel and sentence
 }
 
 fn alternating(words: &[&str]) -> Vec<String> {

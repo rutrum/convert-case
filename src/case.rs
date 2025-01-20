@@ -288,18 +288,18 @@ impl Case {
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
-            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => Pattern::Uppercase,
-            Lower | Snake | Kebab | Flat => Pattern::Lowercase,
-            Title | Pascal | UpperCamel | Train => Pattern::Capital,
-            Camel => Pattern::Camel,
-            Toggle => Pattern::Toggle,
-            Alternating => Pattern::Alternating,
-            Sentence => Pattern::Sentence,
+            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => Pattern::UPPERCASE,
+            Lower | Snake | Kebab | Flat => Pattern::LOWERCASE,
+            Title | Pascal | UpperCamel | Train => Pattern::CAPITAL,
+            Camel => Pattern::CAMEL,
+            Toggle => Pattern::TOGGLE,
+            Alternating => Pattern::ALTERNATING,
+            Sentence => Pattern::SENTENCE,
 
             #[cfg(feature = "random")]
-            Random => Pattern::Random,
+            Random => Pattern::RANDOM,
             #[cfg(feature = "random")]
-            PseudoRandom => Pattern::PseudoRandom,
+            PseudoRandom => Pattern::PSEUDO_RANDOM,
         }
     }
 

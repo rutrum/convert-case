@@ -281,7 +281,7 @@ mod test {
     fn snake_converter_from_scratch() {
         let conv = Converter::new()
             .set_delim("_")
-            .set_pattern(Pattern::Lowercase);
+            .set_pattern(Pattern::LOWERCASE);
         let s = String::from("my var name");
         assert_eq!(s.to_case(Case::Snake), conv.convert(s));
     }
@@ -290,7 +290,7 @@ mod test {
     fn custom_pattern() {
         let conv = Converter::new()
             .to_case(Case::Snake)
-            .set_pattern(Pattern::Sentence);
+            .set_pattern(Pattern::SENTENCE);
         assert_eq!("Bjarne_case", conv.convert("bjarne case"));
     }
 
