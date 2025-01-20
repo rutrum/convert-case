@@ -349,7 +349,7 @@ impl Boundary {
     ///     Boundary::digit_letter()
     /// );
     /// ```
-    pub fn digit_letter() -> [Boundary; 2] {
+    pub const fn digit_letter() -> [Boundary; 2] {
         [Boundary::DIGIT_LOWER, Boundary::DIGIT_UPPER]
     }
 
