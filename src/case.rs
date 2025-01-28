@@ -9,6 +9,7 @@ pub struct CaseDef {
 }
 
 impl CaseDef {
+    // TODO: move docs here
     pub const UPPER: CaseDef = CaseDef {
         pattern: Pattern::UPPERCASE,
         delim: " ",

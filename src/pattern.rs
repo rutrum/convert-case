@@ -5,28 +5,6 @@ use rand::prelude::*;
 
 use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
-/*
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-enum WordCase {
-    Lower,
-    Upper,
-    Capital,
-    Toggle,
-}
-
-impl WordCase {
-    fn mutate(&self, word: &str) -> String {
-        use WordCase::*;
-        match self {
-            Lower => WordPattern::LOWER.mutate(word),
-            Upper => WordPattern::UPPER.mutate(word),
-            Capital => WordPattern::CAPITAL.mutate(word),
-            Toggle => WordPattern::TOGGLE.mutate(word),
-        }
-    }
-}
-*/
-
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordPattern {
     Graphemes(fn(Graphemes) -> String),
@@ -59,110 +37,152 @@ impl WordPattern {
     }
 }
 
-/*
-/// A pattern is how a set of words is mutated before joining with
-/// a delimeter.
-///
-/// The `Random` and `PseudoRandom` patterns are used for their respective cases
-/// and are only available in the "random" feature.
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub enum OldPattern {
+#[derive(Debug, Eq, PartialEq, Clone, Hash, Copy)]
+/// Patterns mutate the case of a series of words.
+pub struct Pattern(fn(&[&str]) -> Vec<String>);
+
+impl Pattern {
+    /// The no-op pattern performs no mutations.
+    /// ```
+    /// # use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["Case", "CONVERSION", "library"],
+    ///     Pattern::NOOP.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
+    pub const NOOP: Self = Pattern(|words| words.iter().map(ToString::to_string).collect());
+
     /// Lowercase patterns make all words lowercase.
     /// ```
     /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["case", "conversion", "library"],
-    ///     OldPattern::Lowercase.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::LOWERCASE.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    Lowercase,
+    pub const LOWERCASE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::LOWER.mutate(&word))
+            .collect()
+    });
 
     /// Uppercase patterns make all words uppercase.
     /// ```
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["CASE", "CONVERSION", "LIBRARY"],
-    ///     OldPattern::Uppercase.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::UPPERCASE.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    Uppercase,
+    pub const UPPERCASE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::UPPER.mutate(&word))
+            .collect()
+    });
 
     /// Capital patterns makes the first letter of each word uppercase
     /// and the remaining letters of each word lowercase.
     /// ```
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["Case", "Conversion", "Library"],
-    ///     OldPattern::Capital.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::CAPITAL.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    Capital,
+    pub const CAPITAL: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::CAPITAL.mutate(&word))
+            .collect()
+    });
+
+    /// Toggle patterns have the first letter of each word uppercase
+    /// and the remaining letters of each word uppercase.
+    /// ```
+    /// # use convert_case::Pattern;
+    /// assert_eq!(
+    ///     vec!["cASE", "cONVERSION", "lIBRARY"],
+    ///     Pattern::TOGGLE.mutate(&["Case", "CONVERSION", "library"])
+    /// );
+    /// ```
+    pub const TOGGLE: Self = Pattern(|words| {
+        words
+            .iter()
+            .map(|word| WordPattern::TOGGLE.mutate(&word))
+            .collect()
+    });
 
     /// Capital patterns make the first word capitalized and the
     /// remaining lowercase.
     /// ```
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["Case", "conversion", "library"],
-    ///     OldPattern::Sentence.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::SENTENCE.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    Sentence,
+    pub const SENTENCE: Self = Pattern(|words| {
+        let word_patterns =
+            iter::once(WordPattern::CAPITAL).chain(iter::once(WordPattern::LOWER).cycle());
+        words
+            .iter()
+            .zip(word_patterns)
+            .map(|(word, pattern)| pattern.mutate(word))
+            .collect()
+    });
 
     /// Camel patterns make the first word lowercase and the remaining
     /// capitalized.
     /// ```
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["case", "Conversion", "Library"],
-    ///     OldPattern::Camel.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::CAMEL.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    Camel,
+    pub const CAMEL: Self = Pattern(|words| {
+        let word_patterns =
+            iter::once(WordPattern::LOWER).chain(iter::once(WordPattern::CAPITAL).cycle());
+        words
+            .iter()
+            .zip(word_patterns)
+            .map(|(word, pattern)| pattern.mutate(word))
+            .collect()
+    });
 
     /// Alternating patterns make each letter of each word alternate
     /// between lowercase and uppercase.  They alternate across words,
     /// which means the last letter of one word and the first letter of the
     /// next will not be the same letter casing.
     /// ```
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// assert_eq!(
     ///     vec!["cAsE", "cOnVeRsIoN", "lIbRaRy"],
-    ///     OldPattern::Alternating.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::ALTERNATING.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// assert_eq!(
     ///     vec!["aNoThEr", "ExAmPlE"],
-    ///     OldPattern::Alternating.mutate(&["Another", "Example"]),
+    ///     Pattern::ALTERNATING.mutate(&["Another", "Example"]),
     /// );
     /// ```
-    Alternating,
-
-    /// Toggle patterns have the first letter of each word uppercase
-    /// and the remaining letters of each word uppercase.
-    /// ```
-    /// # use convert_case::OldPattern;
-    /// assert_eq!(
-    ///     vec!["cASE", "cONVERSION", "lIBRARY"],
-    ///     OldPattern::Toggle.mutate(&["Case", "CONVERSION", "library"])
-    /// );
-    /// ```
-    Toggle,
+    pub const ALTERNATING: Self = Pattern(|words| alternating(words));
 
     /// Random patterns will lowercase or uppercase each letter
     /// uniformly randomly.  This uses the `rand` crate and is only available with the "random"
     /// feature.  This example will not pass the assertion due to randomness, but it used as an
     /// example of what output is possible.
     /// ```should_panic
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["Case", "coNVeRSiOn", "lIBraRY"],
-    ///     OldPattern::Random.mutate(&["Case", "CONVERSION", "library"])
+    ///     Pattern::RANDOM.mutate(&["Case", "CONVERSION", "library"])
     /// );
     /// ```
-    #[cfg(any(doc, feature = "random"))]
     #[cfg(feature = "random")]
-    Random,
+    pub const RANDOM: Self = Pattern(|words| randomize(words));
 
     /// PseudoRandom patterns are random-like patterns.  Instead of randomizing
     /// each letter individually, it mutates each pair of characters
@@ -173,126 +193,13 @@ pub enum OldPattern {
     /// feature.  This example will not pass the assertion due to randomness, but it used as an
     /// example of what output is possible.
     /// ```should_panic
-    /// # use convert_case::OldPattern;
+    /// # use convert_case::Pattern;
     /// # #[cfg(any(doc, feature = "random"))]
     /// assert_eq!(
     ///     vec!["cAsE", "cONveRSioN", "lIBrAry"],
-    ///     OldPattern::Random.mutate(&["Case", "CONVERSION", "library"]),
+    ///     Pattern::PSEUDO_RANDOM.mutate(&["Case", "CONVERSION", "library"]),
     /// );
     /// ```
-    #[cfg(any(doc, feature = "random"))]
-    #[cfg(feature = "random")]
-    PseudoRandom,
-}
-
-impl OldPattern {
-    /// Generates a vector of new `String`s in the right pattern given
-    /// the input strings.
-    /// ```
-    /// # use convert_case::OldPattern;
-    /// assert_eq!(
-    ///     vec!["crack", "the", "skye"],
-    ///     OldPattern::Lowercase.mutate(&vec!["CRACK", "the", "Skye"]),
-    /// )
-    /// ```
-    pub fn mutate(&self, words: &[&str]) -> Vec<String> {
-        use OldPattern::*;
-        match self {
-            Lowercase => words
-                .iter()
-                .map(|word| WordCase::Lower.mutate(word))
-                .collect(),
-            Uppercase => words
-                .iter()
-                .map(|word| WordCase::Upper.mutate(word))
-                .collect(),
-            Capital => words
-                .iter()
-                .map(|word| WordCase::Capital.mutate(word))
-                .collect(),
-            Toggle => words
-                .iter()
-                .map(|word| WordCase::Toggle.mutate(word))
-                .collect(),
-            Sentence => {
-                let word_cases =
-                    iter::once(WordCase::Capital).chain(iter::once(WordCase::Lower).cycle());
-                words
-                    .iter()
-                    .zip(word_cases)
-                    .map(|(word, word_case)| word_case.mutate(word))
-                    .collect()
-            }
-            Camel => {
-                let word_cases =
-                    iter::once(WordCase::Lower).chain(iter::once(WordCase::Capital).cycle());
-                words
-                    .iter()
-                    .zip(word_cases)
-                    .map(|(word, word_case)| word_case.mutate(word))
-                    .collect()
-            }
-            Alternating => alternating(words),
-            #[cfg(feature = "random")]
-            Random => randomize(words),
-            #[cfg(feature = "random")]
-            PseudoRandom => pseudo_randomize(words),
-        }
-    }
-}
-    */
-
-#[derive(Debug, Eq, PartialEq, Clone, Hash, Copy)]
-pub struct Pattern(fn(&[&str]) -> Vec<String>);
-
-impl Pattern {
-    pub const NOOP: Self = Pattern(|words| words.iter().map(ToString::to_string).collect());
-    pub const LOWERCASE: Self = Pattern(|words| {
-        words
-            .iter()
-            .map(|word| WordPattern::LOWER.mutate(&word))
-            .collect()
-    });
-    pub const UPPERCASE: Self = Pattern(|words| {
-        words
-            .iter()
-            .map(|word| WordPattern::UPPER.mutate(&word))
-            .collect()
-    });
-    pub const CAPITAL: Self = Pattern(|words| {
-        words
-            .iter()
-            .map(|word| WordPattern::CAPITAL.mutate(&word))
-            .collect()
-    });
-    pub const TOGGLE: Self = Pattern(|words| {
-        words
-            .iter()
-            .map(|word| WordPattern::TOGGLE.mutate(&word))
-            .collect()
-    });
-    pub const SENTENCE: Self = Pattern(|words| {
-        let word_patterns =
-            iter::once(WordPattern::CAPITAL).chain(iter::once(WordPattern::LOWER).cycle());
-        words
-            .iter()
-            .zip(word_patterns)
-            .map(|(word, pattern)| pattern.mutate(word))
-            .collect()
-    });
-    pub const CAMEL: Self = Pattern(|words| {
-        let word_patterns =
-            iter::once(WordPattern::LOWER).chain(iter::once(WordPattern::CAPITAL).cycle());
-        words
-            .iter()
-            .zip(word_patterns)
-            .map(|(word, pattern)| pattern.mutate(word))
-            .collect()
-    });
-    pub const ALTERNATING: Self = Pattern(|words| alternating(words));
-
-    #[cfg(feature = "random")]
-    pub const RANDOM: Self = Pattern(|words| randomize(words));
     #[cfg(feature = "random")]
     pub const PSEUDO_RANDOM: Self = Pattern(|words| pseudo_randomize(words));
 

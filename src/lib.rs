@@ -222,7 +222,7 @@
 //! following in your `Cargo.toml`.
 //! ```{toml}
 //! [dependencies]
-//! convert_case = { version = "^0.3.0", features = ["random"] }
+//! convert_case = { version = "^0.7.1", features = ["random"] }
 //! ```
 //! This will add two additional cases: Random and PseudoRandom.  You can read about their
 //! construction in the [Case enum](enum.Case.html).
@@ -233,7 +233,7 @@ mod converter;
 mod pattern;
 
 pub use boundary::{split, Boundary};
-pub use case::Case;
+pub use case::{Case, CaseDef};
 pub use converter::Converter;
 pub use pattern::Pattern;
 
