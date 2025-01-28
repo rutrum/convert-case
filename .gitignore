@@ -3,3 +3,4 @@
 cobertura.xml
 /result
 .vscode
+.direnv
