@@ -133,7 +133,7 @@ impl Converter {
     /// assert_eq!("Dot Productvalue", conv.convert("dot_productValue"))
     /// ```
     pub fn from_case(mut self, case: Case) -> Self {
-        self.boundaries = case.boundaries();
+        self.boundaries = case.boundaries().to_vec();
         self
     }
 

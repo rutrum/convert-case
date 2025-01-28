@@ -1,8 +1,89 @@
-#[cfg(test)]
-use strum::EnumIter;
-
 use crate::boundary::Boundary;
 use crate::pattern::Pattern;
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
+pub struct CaseDef {
+    pattern: Pattern,
+    delim: &'static str,
+    boundaries: &'static [Boundary],
+}
+
+impl CaseDef {
+    pub const UPPER: CaseDef = CaseDef {
+        pattern: Pattern::UPPERCASE,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+    pub const LOWER: CaseDef = CaseDef {
+        pattern: Pattern::LOWERCASE,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+    pub const TITLE: CaseDef = CaseDef {
+        pattern: Pattern::CAPITAL,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+
+    pub const SNAKE: CaseDef = CaseDef {
+        pattern: Pattern::LOWERCASE,
+        delim: "_",
+        boundaries: &[Boundary::UNDERSCORE],
+    };
+    pub const CONST: CaseDef = CaseDef {
+        pattern: Pattern::UPPERCASE,
+        delim: "_",
+        boundaries: &[Boundary::UNDERSCORE],
+    };
+    pub const ADA: CaseDef = CaseDef {
+        pattern: Pattern::CAPITAL,
+        delim: "_",
+        boundaries: &[Boundary::UNDERSCORE],
+    };
+
+    pub const KEBAB: CaseDef = CaseDef {
+        pattern: Pattern::LOWERCASE,
+        delim: "-",
+        boundaries: &[Boundary::HYPHEN],
+    };
+    pub const COBOL: CaseDef = CaseDef {
+        pattern: Pattern::UPPERCASE,
+        delim: "-",
+        boundaries: &[Boundary::HYPHEN],
+    };
+    pub const TRAIN: CaseDef = CaseDef {
+        pattern: Pattern::CAPITAL,
+        delim: "-",
+        boundaries: &[Boundary::HYPHEN],
+    };
+
+    pub const CAMEL: CaseDef = CaseDef {
+        pattern: Pattern::CAMEL,
+        delim: "",
+        boundaries: &[Boundary::ACRONYM, Boundary::LOWER_UPPER],
+    };
+    pub const PASCAL: CaseDef = CaseDef {
+        pattern: Pattern::CAPITAL,
+        delim: "",
+        boundaries: &[Boundary::ACRONYM, Boundary::LOWER_UPPER],
+    };
+    pub const FLAT: CaseDef = CaseDef {
+        pattern: Pattern::LOWERCASE,
+        delim: "",
+        boundaries: &[],
+    };
+    pub const UPPERFLAT: CaseDef = CaseDef {
+        pattern: Pattern::UPPERCASE,
+        delim: "",
+        boundaries: &[],
+    };
+
+    pub const SENTENCE: CaseDef = CaseDef {
+        pattern: Pattern::SENTENCE,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+}
 
 /// Defines the type of casing a string can be.
 ///
@@ -24,9 +105,12 @@ use crate::pattern::Pattern;
 /// camel case identifier `myVarName` is split where a lowercase letter is followed by an
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
 /// converting "from" a particular case.
-#[cfg_attr(test, derive(EnumIter))]
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 pub enum Case {
+    /// Custom Case
+    /// Just make a CaseDef and you're good to go.
+    Custom(CaseDef),
+
     /// Uppercase strings are delimited by spaces and all characters are uppercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Uppercase](`Pattern::Uppercase`)
@@ -270,6 +354,7 @@ impl Case {
             Random | PseudoRandom => " ",
 
             UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
+            Custom(c) => c.delim,
         }
     }
 
@@ -300,6 +385,8 @@ impl Case {
             Random => Pattern::RANDOM,
             #[cfg(feature = "random")]
             PseudoRandom => Pattern::PSEUDO_RANDOM,
+
+            Custom(c) => c.pattern,
         }
     }
 
@@ -314,18 +401,18 @@ impl Case {
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
     /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronym |
     /// | UpperFlat, Flat | No boundaries |
-    pub fn boundaries(&self) -> Vec<Boundary> {
+    pub fn boundaries(&self) -> &[Boundary] {
         use Case::*;
         match self {
-            Upper | Lower | Title | Sentence | Toggle | Alternating => vec![Boundary::SPACE],
-            Snake | Constant | UpperSnake => vec![Boundary::UNDERSCORE],
-            Kebab | Cobol | UpperKebab | Train => vec![Boundary::HYPHEN],
+            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::SPACE],
+            Snake | Constant | UpperSnake => &[Boundary::UNDERSCORE],
+            Kebab | Cobol | UpperKebab | Train => &[Boundary::HYPHEN],
 
             #[cfg(feature = "random")]
-            Random | PseudoRandom => vec![Boundary::SPACE],
+            Random | PseudoRandom => &[Boundary::SPACE],
 
-            UpperFlat | Flat => vec![],
-            Camel | UpperCamel | Pascal => vec![
+            UpperFlat | Flat => &[],
+            Camel | UpperCamel | Pascal => &[
                 Boundary::LOWER_UPPER,
                 Boundary::ACRONYM,
                 Boundary::LOWER_DIGIT,
@@ -333,6 +420,7 @@ impl Case {
                 Boundary::DIGIT_LOWER,
                 Boundary::DIGIT_UPPER,
             ],
+            Custom(c) => c.boundaries,
         }
     }
 
@@ -400,20 +488,5 @@ impl Case {
             UpperFlat,
             Alternating,
         ]
-    }
-}
-
-#[cfg(test)]
-mod test {
-
-    use super::*;
-    use strum::IntoEnumIterator;
-
-    #[test]
-    fn all_cases_in_iter() {
-        let all = Case::all_cases();
-        for case in Case::iter() {
-            assert!(all.contains(&case));
-        }
     }
 }

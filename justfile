@@ -2,8 +2,8 @@ test *FILTER:
     cargo test {{FILTER}}
     cargo test --features random
 
-watch-test:
-    watchexec -e rs -rc reset -- just test
+watch *FILTER:
+    watchexec -e rs -rc reset -- just test {{FILTER}}
 
 build:
     cargo build --all

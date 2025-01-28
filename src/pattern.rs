@@ -5,6 +5,7 @@ use rand::prelude::*;
 
 use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
+/*
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordCase {
     Lower,
@@ -24,6 +25,7 @@ impl WordCase {
         }
     }
 }
+*/
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordPattern {
@@ -240,10 +242,11 @@ impl OldPattern {
 }
     */
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash, Copy)]
 pub struct Pattern(fn(&[&str]) -> Vec<String>);
 
 impl Pattern {
+    pub const NOOP: Self = Pattern(|words| words.iter().map(ToString::to_string).collect());
     pub const LOWERCASE: Self = Pattern(|words| {
         words
             .iter()

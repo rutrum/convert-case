@@ -446,7 +446,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use strum::IntoEnumIterator;
 
     fn possible_cases(s: &str) -> Vec<Case> {
         Case::deterministic_cases()
@@ -473,8 +472,8 @@ mod test {
             (Case::Alternating, "mY vArIaBlE 22 nAmE"),
         ];
 
-        for (case_a, str_a) in examples.iter() {
-            for (case_b, str_b) in examples.iter() {
+        for (case_a, str_a) in &examples {
+            for (case_b, str_b) in &examples {
                 assert_eq!(*str_a, str_b.from_case(*case_b).to_case(*case_a))
             }
         }
@@ -583,7 +582,10 @@ mod test {
 
     #[test]
     fn empty_string() {
-        for (case_a, case_b) in Case::iter().zip(Case::iter()) {
+        for (case_a, case_b) in Case::all_cases()
+            .into_iter()
+            .zip(Case::all_cases().into_iter())
+        {
             assert_eq!("", "".from_case(case_a).to_case(case_b));
         }
     }
