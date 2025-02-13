@@ -14,6 +14,9 @@ watch-build:
 doc:
     cargo doc --all-features
 
+open-doc:
+    xdg-open target/doc/convert_case/index.html
+
 watch-doc:
     watchexec -- "just doc && cargo test --all-features --doc"
 

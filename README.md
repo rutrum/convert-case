@@ -64,6 +64,10 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
+### 0.8.0
+
+* Add `Case::Ada` (capital pattern with underscore delimiter.)
+
 ### 0.7.1
 
 * Removed debug print statement.

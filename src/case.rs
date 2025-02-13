@@ -2,10 +2,10 @@ use crate::boundary::{self, Boundary};
 use crate::pattern;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub struct CaseDef {
-    pattern: pattern::Pattern,
-    delim: &'static str,
-    boundaries: &'static [Boundary],
+struct CaseDef {
+    pub pattern: pattern::Pattern,
+    pub delim: &'static str,
+    pub boundaries: &'static [Boundary],
 }
 
 impl CaseDef {
@@ -193,7 +193,11 @@ impl CaseDef {
 pub enum Case {
     /// Custom Case
     /// Just make a CaseDef and you're good to go.
-    Custom(CaseDef),
+    Custom {
+        pattern: pattern::Pattern,
+        delim: &'static str,
+        boundaries: &'static [Boundary],
+    },
 
     Upper,
 
@@ -300,6 +304,18 @@ pub enum Case {
 
     /// Upper snake case is an alternative name for [constant case](Case::Constant).
     UpperSnake,
+
+    /// Ada case strings are delimited by underscores `_`.  The leading letter of
+    /// each word is uppercase, while the rest is lowercase.
+    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
+    /// * Pattern: [Capital](Pattern::Capital)
+    /// * Delimeter: Underscore `_`
+    ///
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// assert_eq!("My_Variable_Name", "My variable NAME".to_case(Case::Ada))
+    /// ```
+    Ada,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
@@ -409,6 +425,7 @@ pub enum Case {
 }
 
 impl Case {
+    /*
     pub const fn def(&self) -> CaseDef {
         match self {
             Case::Lower => CaseDef::LOWER,
@@ -441,7 +458,7 @@ impl Case {
             #[cfg(feature = "random")]
             Case::PseudoRandom => CaseDef::PSEUDO_RANDOM,
         }
-    }
+    } */
 
     /// Returns the delimiter used in the corresponding case.  The following
     /// table outlines which cases use which delimeter.
@@ -456,10 +473,10 @@ impl Case {
         use Case::*;
         match self {
             Upper | Lower | Title | Sentence | Toggle | Alternating => " ",
-            Snake | Constant | UpperSnake => "_",
+            Snake | Constant | UpperSnake | Ada => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
             UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
-            Custom(c) => c.delim,
+            Custom { delim, .. } => delim,
 
             #[cfg(feature = "random")]
             Random | PseudoRandom => " ",
@@ -483,12 +500,12 @@ impl Case {
         match self {
             Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => pattern::uppercase,
             Lower | Snake | Kebab | Flat => pattern::lowercase,
-            Title | Pascal | UpperCamel | Train => pattern::capital,
+            Title | Pascal | UpperCamel | Train | Ada => pattern::capital,
             Camel => pattern::camel,
             Toggle => pattern::toggle,
             Alternating => pattern::alternating,
             Sentence => pattern::sentence,
-            Custom(c) => c.pattern,
+            Custom { pattern, .. } => *pattern,
 
             #[cfg(feature = "random")]
             Random => pattern::random,
@@ -512,7 +529,7 @@ impl Case {
         use Case::*;
         match self {
             Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::SPACE],
-            Snake | Constant | UpperSnake => &[Boundary::UNDERSCORE],
+            Snake | Constant | UpperSnake | Ada => &[Boundary::UNDERSCORE],
             Kebab | Cobol | UpperKebab | Train => &[Boundary::HYPHEN],
             UpperFlat | Flat => &[],
             Camel | UpperCamel | Pascal => &[
@@ -523,7 +540,7 @@ impl Case {
                 Boundary::DIGIT_LOWER,
                 Boundary::DIGIT_UPPER,
             ],
-            Custom(c) => c.boundaries,
+            Custom { boundaries, .. } => boundaries,
 
             #[cfg(feature = "random")]
             Random | PseudoRandom => &[Boundary::SPACE],
@@ -548,6 +565,7 @@ impl Case {
             UpperCamel,
             Snake,
             Constant,
+            Ada,
             UpperSnake,
             Kebab,
             Cobol,
@@ -586,6 +604,7 @@ impl Case {
             UpperCamel,
             Snake,
             Constant,
+            Ada,
             UpperSnake,
             Kebab,
             Cobol,

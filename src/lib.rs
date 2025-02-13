@@ -233,7 +233,7 @@ mod converter;
 pub mod pattern;
 
 pub use boundary::{split, Boundary};
-pub use case::{Case, CaseDef};
+pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
 

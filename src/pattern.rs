@@ -5,6 +5,7 @@ use rand::prelude::*;
 
 use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
+/*
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 enum WordPattern {
     Graphemes(fn(Graphemes) -> String),
@@ -36,13 +37,11 @@ impl WordPattern {
         }
     }
 }
-
+*/
 // if it's in a module, it would be easier
 
-pub mod word_pattern {
+mod word_pattern {
     use super::*;
-
-    pub type WordPattern = fn(&str) -> String;
 
     pub fn lowercase(word: &str) -> String {
         word.to_lowercase()
@@ -72,10 +71,10 @@ pub mod word_pattern {
             String::new()
         }
     }
-
-    // this feels better than Pattern as a enum, definitely better than struct
-    // oh no...is the same true for boundary?
 }
+
+// this feels better than Pattern as a enum, definitely better than struct
+// oh no...is the same true for boundary?
 
 // used like this
 
@@ -454,12 +453,12 @@ mod test {
     #[test]
     fn mutate_empty_strings() {
         for word_pattern in [
-            WordPattern::LOWER,
-            WordPattern::UPPER,
-            WordPattern::CAPITAL,
-            WordPattern::TOGGLE,
+            word_pattern::lowercase,
+            word_pattern::uppercase,
+            word_pattern::capital,
+            word_pattern::toggle,
         ] {
-            assert_eq!(String::new(), word_pattern.mutate(&String::new()))
+            assert_eq!(String::new(), word_pattern(&String::new()))
         }
     }
 }
