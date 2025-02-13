@@ -1,89 +1,172 @@
-use crate::boundary::Boundary;
-use crate::pattern::Pattern;
+use crate::boundary::{self, Boundary};
+use crate::pattern;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub struct CaseDef {
-    pattern: Pattern,
+    pattern: pattern::Pattern,
     delim: &'static str,
     boundaries: &'static [Boundary],
 }
 
 impl CaseDef {
-    // TODO: move docs here
+    // 1. rename casedef to case
+    // 2. resolve tests
+    // 3. move docs and resolve tests
     pub const UPPER: CaseDef = CaseDef {
-        pattern: Pattern::UPPERCASE,
+        pattern: pattern::uppercase,
         delim: " ",
         boundaries: &[Boundary::SPACE],
     };
     pub const LOWER: CaseDef = CaseDef {
-        pattern: Pattern::LOWERCASE,
+        pattern: pattern::lowercase,
         delim: " ",
         boundaries: &[Boundary::SPACE],
     };
     pub const TITLE: CaseDef = CaseDef {
-        pattern: Pattern::CAPITAL,
+        pattern: pattern::capital,
         delim: " ",
         boundaries: &[Boundary::SPACE],
     };
 
     pub const SNAKE: CaseDef = CaseDef {
-        pattern: Pattern::LOWERCASE,
+        pattern: pattern::lowercase,
         delim: "_",
         boundaries: &[Boundary::UNDERSCORE],
     };
-    pub const CONST: CaseDef = CaseDef {
-        pattern: Pattern::UPPERCASE,
+    pub const CONSTANT: CaseDef = CaseDef {
+        pattern: pattern::uppercase,
         delim: "_",
         boundaries: &[Boundary::UNDERSCORE],
     };
+    pub const UPPER_SNAKE: CaseDef = CaseDef::CONSTANT;
     pub const ADA: CaseDef = CaseDef {
-        pattern: Pattern::CAPITAL,
+        pattern: pattern::capital,
         delim: "_",
         boundaries: &[Boundary::UNDERSCORE],
     };
 
     pub const KEBAB: CaseDef = CaseDef {
-        pattern: Pattern::LOWERCASE,
+        pattern: pattern::lowercase,
         delim: "-",
         boundaries: &[Boundary::HYPHEN],
     };
     pub const COBOL: CaseDef = CaseDef {
-        pattern: Pattern::UPPERCASE,
+        pattern: pattern::uppercase,
         delim: "-",
         boundaries: &[Boundary::HYPHEN],
     };
+    pub const UPPER_KEBAB: CaseDef = CaseDef::COBOL;
     pub const TRAIN: CaseDef = CaseDef {
-        pattern: Pattern::CAPITAL,
+        pattern: pattern::capital,
         delim: "-",
         boundaries: &[Boundary::HYPHEN],
     };
 
     pub const CAMEL: CaseDef = CaseDef {
-        pattern: Pattern::CAMEL,
+        pattern: pattern::camel,
         delim: "",
-        boundaries: &[Boundary::ACRONYM, Boundary::LOWER_UPPER],
+        boundaries: &[
+            Boundary::ACRONYM,
+            Boundary::LOWER_UPPER,
+            Boundary::LOWER_DIGIT,
+            Boundary::UPPER_DIGIT,
+            Boundary::DIGIT_LOWER,
+            Boundary::DIGIT_UPPER,
+        ],
     };
     pub const PASCAL: CaseDef = CaseDef {
-        pattern: Pattern::CAPITAL,
+        pattern: pattern::capital,
         delim: "",
-        boundaries: &[Boundary::ACRONYM, Boundary::LOWER_UPPER],
+        boundaries: &[
+            Boundary::ACRONYM,
+            Boundary::LOWER_UPPER,
+            Boundary::LOWER_DIGIT,
+            Boundary::UPPER_DIGIT,
+            Boundary::DIGIT_LOWER,
+            Boundary::DIGIT_UPPER,
+        ],
     };
+    pub const UPPER_CAMEL: CaseDef = CaseDef::PASCAL;
     pub const FLAT: CaseDef = CaseDef {
-        pattern: Pattern::LOWERCASE,
+        pattern: pattern::lowercase,
         delim: "",
         boundaries: &[],
     };
-    pub const UPPERFLAT: CaseDef = CaseDef {
-        pattern: Pattern::UPPERCASE,
+    pub const UPPER_FLAT: CaseDef = CaseDef {
+        pattern: pattern::uppercase,
         delim: "",
         boundaries: &[],
     };
 
     pub const SENTENCE: CaseDef = CaseDef {
-        pattern: Pattern::SENTENCE,
+        pattern: pattern::sentence,
         delim: " ",
         boundaries: &[Boundary::SPACE],
     };
+
+    pub const ALTERNATING: CaseDef = CaseDef {
+        pattern: pattern::alternating,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+
+    pub const TOGGLE: CaseDef = CaseDef {
+        pattern: pattern::toggle,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+
+    #[cfg(any(doc, feature = "random"))]
+    #[cfg(feature = "random")]
+    pub const RANDOM: CaseDef = CaseDef {
+        pattern: pattern::random,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+
+    #[cfg(any(doc, feature = "random"))]
+    #[cfg(feature = "random")]
+    pub const PSEUDO_RANDOM: CaseDef = CaseDef {
+        pattern: pattern::pseudo_random,
+        delim: " ",
+        boundaries: &[Boundary::SPACE],
+    };
+}
+
+impl CaseDef {
+    // This is combining from/to
+    // TODO: figure out this API.  Can I remove the need for StateConverter?
+    // Just add methods like with_boundaries, without_bouadaries,
+    // and all the things fron converter
+    // Then you can adhoc just build cases from there...why even use .to_case and .from_case?
+    // you could just compose the cases together and apply it once
+    fn compose(self, other: &CaseDef) -> CaseDef {
+        return CaseDef {
+            pattern: self.pattern,
+            delim: self.delim,
+            boundaries: other.boundaries,
+        };
+    }
+
+    // at the very least
+    // fn split(self, &s: AsRef<str>) -> &[&s] {}
+    /// Split an identifier into words based on the boundaries of this case.
+    pub fn split<T>(self, s: &T) -> Vec<&str>
+    where
+        T: AsRef<str>,
+    {
+        boundary::split(s, self.boundaries)
+    }
+
+    /// Mutate a list of words based on the pattern of this case.
+    pub fn mutate(self, words: &[&str]) -> Vec<String> {
+        (self.pattern)(words)
+    }
+
+    /// Join a list of words into a single identifier using the delimiter of this case.
+    pub fn join(self, words: &[String]) -> String {
+        words.join(self.delim)
+    }
 }
 
 /// Defines the type of casing a string can be.
@@ -112,15 +195,6 @@ pub enum Case {
     /// Just make a CaseDef and you're good to go.
     Custom(CaseDef),
 
-    /// Uppercase strings are delimited by spaces and all characters are uppercase.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [Uppercase](`Pattern::Uppercase`)
-    /// * Delimeter: Space
-    ///
-    /// ```
-    /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY VARIABLE NAME", "My variable NAME".to_case(Case::Upper))
-    /// ```
     Upper,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
@@ -335,6 +409,40 @@ pub enum Case {
 }
 
 impl Case {
+    pub const fn def(&self) -> CaseDef {
+        match self {
+            Case::Lower => CaseDef::LOWER,
+            Case::Title => CaseDef::TITLE,
+            Case::Upper => CaseDef::UPPER,
+
+            Case::Snake => CaseDef::SNAKE,
+            Case::Constant => CaseDef::CONSTANT,
+            Case::UpperSnake => CaseDef::UPPER_SNAKE,
+            //Case::Ada => CaseDef::ADA,
+            Case::Kebab => CaseDef::KEBAB,
+            Case::Cobol => CaseDef::COBOL,
+            Case::UpperKebab => CaseDef::UPPER_KEBAB,
+            Case::Train => CaseDef::TRAIN,
+
+            Case::Flat => CaseDef::FLAT,
+            Case::UpperFlat => CaseDef::UPPER_FLAT,
+            Case::Pascal => CaseDef::PASCAL,
+            Case::UpperCamel => CaseDef::UPPER_CAMEL,
+            Case::Camel => CaseDef::CAMEL,
+
+            Case::Sentence => CaseDef::SENTENCE,
+            Case::Toggle => CaseDef::TOGGLE,
+            Case::Alternating => CaseDef::ALTERNATING,
+
+            Case::Custom(d) => *d,
+
+            #[cfg(feature = "random")]
+            Case::Random => CaseDef::RANDOM,
+            #[cfg(feature = "random")]
+            Case::PseudoRandom => CaseDef::PSEUDO_RANDOM,
+        }
+    }
+
     /// Returns the delimiter used in the corresponding case.  The following
     /// table outlines which cases use which delimeter.
     ///
@@ -350,12 +458,11 @@ impl Case {
             Upper | Lower | Title | Sentence | Toggle | Alternating => " ",
             Snake | Constant | UpperSnake => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
+            UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
+            Custom(c) => c.delim,
 
             #[cfg(feature = "random")]
             Random | PseudoRandom => " ",
-
-            UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
-            Custom(c) => c.delim,
         }
     }
 
@@ -371,23 +478,22 @@ impl Case {
     /// | Alternating | Alternating |
     /// | Random | Random |
     /// | PseudoRandom | PseudoRandom |
-    pub const fn pattern(&self) -> Pattern {
+    pub const fn pattern(&self) -> pattern::Pattern {
         use Case::*;
         match self {
-            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => Pattern::UPPERCASE,
-            Lower | Snake | Kebab | Flat => Pattern::LOWERCASE,
-            Title | Pascal | UpperCamel | Train => Pattern::CAPITAL,
-            Camel => Pattern::CAMEL,
-            Toggle => Pattern::TOGGLE,
-            Alternating => Pattern::ALTERNATING,
-            Sentence => Pattern::SENTENCE,
-
-            #[cfg(feature = "random")]
-            Random => Pattern::RANDOM,
-            #[cfg(feature = "random")]
-            PseudoRandom => Pattern::PSEUDO_RANDOM,
-
+            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => pattern::uppercase,
+            Lower | Snake | Kebab | Flat => pattern::lowercase,
+            Title | Pascal | UpperCamel | Train => pattern::capital,
+            Camel => pattern::camel,
+            Toggle => pattern::toggle,
+            Alternating => pattern::alternating,
+            Sentence => pattern::sentence,
             Custom(c) => c.pattern,
+
+            #[cfg(feature = "random")]
+            Random => pattern::random,
+            #[cfg(feature = "random")]
+            PseudoRandom => pattern::pseudo_random,
         }
     }
 
@@ -408,10 +514,6 @@ impl Case {
             Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::SPACE],
             Snake | Constant | UpperSnake => &[Boundary::UNDERSCORE],
             Kebab | Cobol | UpperKebab | Train => &[Boundary::HYPHEN],
-
-            #[cfg(feature = "random")]
-            Random | PseudoRandom => &[Boundary::SPACE],
-
             UpperFlat | Flat => &[],
             Camel | UpperCamel | Pascal => &[
                 Boundary::LOWER_UPPER,
@@ -422,6 +524,9 @@ impl Case {
                 Boundary::DIGIT_UPPER,
             ],
             Custom(c) => c.boundaries,
+
+            #[cfg(feature = "random")]
+            Random | PseudoRandom => &[Boundary::SPACE],
         }
     }
 
@@ -430,6 +535,7 @@ impl Case {
     // Why is this needed?  If it's only for ccase then I don't see why it's here.
     /// Returns a vector with all case enum variants in no particular order.
     pub fn all_cases() -> Vec<Case> {
+        // TODO: move for testing only
         use Case::*;
         vec![
             Upper,

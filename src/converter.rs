@@ -1,5 +1,6 @@
 use crate::boundary;
 use crate::boundary::Boundary;
+use crate::pattern;
 use crate::Case;
 use crate::Pattern;
 
@@ -18,7 +19,7 @@ use crate::Pattern;
 /// than those provided in `Casing`, or if it is simply more convenient or explicit.
 ///
 /// ```
-/// use convert_case::{Boundary, Case, Casing, Converter, Pattern};
+/// use convert_case::{Boundary, Case, Casing, Converter, pattern};
 ///
 /// let s = "DialogueBox-border-shadow";
 ///
@@ -37,7 +38,7 @@ use crate::Pattern;
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::HYPHEN])
-///     .set_pattern(Pattern::LOWERCASE)
+///     .set_pattern(pattern::lowercase)
 ///     .set_delim("_");
 /// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
 /// ```
@@ -46,10 +47,10 @@ use crate::Pattern;
 /// not provided as a variant of `Case`.
 ///
 /// ```
-/// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
+/// # use convert_case::{Boundary, Case, Casing, Converter, pattern};
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT])
-///     .set_pattern(Pattern::CAMEL)
+///     .set_pattern(pattern::camel)
 ///     .set_delim(".");
 /// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
 /// ```
@@ -60,7 +61,7 @@ pub struct Converter {
     /// How each word is mutated before joining.  In the case that there is no pattern, none of the
     /// words will be mutated before joining and will maintain whatever case they were in the
     /// original string.
-    pub pattern: Option<Pattern>,
+    pub pattern: Pattern,
 
     /// The string used to join mutated words together.
     pub delim: String,
@@ -70,7 +71,7 @@ impl Default for Converter {
     fn default() -> Self {
         Converter {
             boundaries: Boundary::defaults().to_vec(),
-            pattern: None,
+            pattern: pattern::noop,
             delim: String::new(),
         }
     }
@@ -102,12 +103,8 @@ impl Converter {
     {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = boundary::split(&s, &self.boundaries);
-        if let Some(p) = self.pattern {
-            let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
-            p.mutate(&words).join(&self.delim)
-        } else {
-            words.join(&self.delim)
-        }
+        let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
+        (self.pattern)(&words).join(&self.delim)
     }
 
     /// Set the pattern and delimiter to those associated with the given case.
@@ -118,7 +115,7 @@ impl Converter {
     /// assert_eq!("VariableName", conv.convert("variable name"))
     /// ```
     pub fn to_case(mut self, case: Case) -> Self {
-        self.pattern = Some(case.pattern());
+        self.pattern = case.pattern();
         self.delim = case.delim().to_string();
         self
     }
@@ -237,14 +234,14 @@ impl Converter {
 
     /// Sets the pattern.
     /// ```
-    /// # use convert_case::{Case, Converter, Pattern};
+    /// # use convert_case::{Case, Converter, pattern};
     /// let conv = Converter::new()
     ///     .set_delim("_")
-    ///     .set_pattern(Pattern::SENTENCE);
+    ///     .set_pattern(pattern::sentence);
     /// assert_eq!("Bjarne_case", conv.convert("BJARNE CASE"));
     /// ```
     pub fn set_pattern(mut self, p: Pattern) -> Self {
-        self.pattern = Some(p);
+        self.pattern = p;
         self
     }
 
@@ -259,7 +256,7 @@ impl Converter {
     /// assert_eq!("KoRn_Alone_I_Break", conv.convert("KoRn Alone I Break"));
     /// ```
     pub fn remove_pattern(mut self) -> Self {
-        self.pattern = None;
+        self.pattern = pattern::noop;
         self
     }
 }
@@ -268,7 +265,6 @@ impl Converter {
 mod test {
     use super::*;
     use crate::Casing;
-    use crate::Pattern;
 
     #[test]
     fn snake_converter_from_case() {
@@ -281,7 +277,7 @@ mod test {
     fn snake_converter_from_scratch() {
         let conv = Converter::new()
             .set_delim("_")
-            .set_pattern(Pattern::LOWERCASE);
+            .set_pattern(pattern::lowercase);
         let s = String::from("my var name");
         assert_eq!(s.to_case(Case::Snake), conv.convert(s));
     }
@@ -290,7 +286,7 @@ mod test {
     fn custom_pattern() {
         let conv = Converter::new()
             .to_case(Case::Snake)
-            .set_pattern(Pattern::SENTENCE);
+            .set_pattern(pattern::sentence);
         assert_eq!("Bjarne_case", conv.convert("bjarne case"));
     }
 

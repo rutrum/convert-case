@@ -196,10 +196,10 @@
 //! available as a `Case` variant, but you can create it by constructing the parameters of the
 //! `Converter`.
 //! ```
-//! use convert_case::{Case, Casing, Converter, Pattern};
+//! use convert_case::{Case, Casing, Converter, pattern};
 //!
 //! let conv = Converter::new()
-//!     .set_pattern(Pattern::CAMEL)
+//!     .set_pattern(pattern::camel)
 //!     .set_delim("_");
 //!
 //! assert_eq!(
@@ -230,7 +230,7 @@
 mod boundary;
 mod case;
 mod converter;
-mod pattern;
+pub mod pattern;
 
 pub use boundary::{split, Boundary};
 pub use case::{Case, CaseDef};
@@ -327,7 +327,7 @@ where
     }
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
-        StateConverter::new_from_case(self, case)
+        StateConverter::new(self).from_case(case)
     }
 
     fn is_case(&self, case: Case) -> bool {
@@ -359,14 +359,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         Self {
             s,
             conv: Converter::new(),
-        }
-    }
-
-    /// Only called by Casing function from_case()
-    fn new_from_case(s: &'a T, case: Case) -> Self {
-        Self {
-            s,
-            conv: Converter::new().from_case(case),
         }
     }
 
