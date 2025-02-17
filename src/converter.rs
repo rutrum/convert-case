@@ -1,8 +1,8 @@
 use crate::boundary;
 use crate::boundary::Boundary;
 use crate::pattern;
+use crate::pattern::Pattern;
 use crate::Case;
-use crate::Pattern;
 
 /// The parameters for performing a case conversion.
 ///

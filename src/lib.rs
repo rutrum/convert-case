@@ -8,8 +8,8 @@
 //!
 //! # Rust Library
 //!
-//! Provides a [`Case`](enum.Case.html) enum which defines a variety of cases to convert into.
-//! Strings have implemented the [`Casing`](trait.Casing.html) trait, which adds methods for
+//! Provides a [`Case`] enum which defines a variety of cases to convert into.
+//! Strings have implemented the [`Casing`] trait, which adds methods for
 //! case conversion.
 //!
 //! You can convert strings into a case using the [`to_case`](Casing::to_case) method.
@@ -22,14 +22,14 @@
 //! ```
 //!
 //! By default, `to_case` will split along a set of default word boundaries, that is
-//! * space characters ` `,
+//! * spaces ` `,
 //! * underscores `_`,
 //! * hyphens `-`,
 //! * changes in capitalization from lowercase to uppercase `aA`,
 //! * adjacent digits and letters `a1`, `1a`, `A1`, `1A`,
 //! * and acroynms `AAa` (as in `HTTPRequest`).
 //!
-//! For more accuracy, the `from_case` method splits based on the word boundaries
+//! For more precision, the `from_case` method splits based on the word boundaries
 //! of a particular case.  For example, splitting from snake case will only use
 //! underscores as word boundaries.
 //! ```
@@ -44,7 +44,7 @@
 //! );
 //! ```
 //!
-//! Case conversion can detect acronyms for camel-like strings.  It also ignores any leading,
+//! This library can detect acronyms in camel-like strings.  It also ignores any leading,
 //! trailing, or duplicate delimiters.
 //! ```
 //! # use convert_case::{Case, Casing};
@@ -111,7 +111,7 @@
 //! Say an identifier has the word `2D`, such as `scale2D`.  No exclusive usage of `from_case` will
 //! be enough to solve the problem.  In this case we can further specify which boundaries to split
 //! the string on.  `convert_case` provides some patterns for achieving this specificity.
-//! We can specify what boundaries we want to split on using instances the [`Boundary` struct](Boundary).
+//! We can specify what boundaries we want to split on using instances of the [`Boundary`] struct.
 //! ```
 //! use convert_case::{Boundary, Case, Casing};
 //!
@@ -187,14 +187,14 @@
 //!
 //! # Custom Cases
 //!
-//! Because `Case` is an enum, you can't create your own variant for your use case.  However
+//! Because [`Case`] is an enum, you can't create your own variant for your use case.  However
 //! the parameters for case conversion have been encapsulated into the [`Converter`] struct
 //! which can be used for specific use cases.
 //!
 //! Suppose you wanted to format a word like camel case, where the first word is lower case and the
 //! rest are capitalized.  But you want to include a delimeter like underscore.  This case isn't
-//! available as a `Case` variant, but you can create it by constructing the parameters of the
-//! `Converter`.
+//! available as a [`Case`] variant, but you can create it by constructing the parameters of the
+//! [`Converter`].
 //! ```
 //! use convert_case::{Case, Casing, Converter, pattern};
 //!
@@ -207,9 +207,8 @@
 //!     conv.convert("My Special Case")
 //! )
 //! ```
-//! Just as with the `Casing` trait, you can also manually set the boundaries strings are split
-//! on.  You can use any of the [`Pattern`] variants available.  This even includes [`Pattern::Sentence`]
-//! which isn't used in any `Case` variant.  You can also set no pattern at all, which will
+//! Just as with the [`Casing`] trait, you can also manually set the boundaries strings are split
+//! on.  You can use any of the [`pattern`] variants available.  You can also set no pattern at all, which will
 //! maintain the casing of each letter in the input string.  You can also, of course, set any string as your
 //! delimeter.
 //!
@@ -217,25 +216,23 @@
 //!
 //! # Random Feature
 //!
-//! To ensure this library had zero dependencies, randomness was moved to the _random_ feature,
-//! which requires the `rand` crate. You can enable this feature by including the
-//! following in your `Cargo.toml`.
+//! This feature adds two additional cases: [`Case::Random`] and [`Case::PseudoRandom`].
+//! The `random` feature depends on the [`rand`](https://docs.rs/rand) crate.
+//!
+//! You can enable this feature by including the following in your `Cargo.toml`.
 //! ```{toml}
 //! [dependencies]
-//! convert_case = { version = "^0.7.1", features = ["random"] }
+//! convert_case = { version = "^0.8.0", features = ["random"] }
 //! ```
-//! This will add two additional cases: Random and PseudoRandom.  You can read about their
-//! construction in the [Case enum](enum.Case.html).
 
 mod boundary;
 mod case;
 mod converter;
-pub mod pattern;
 
+pub mod pattern;
 pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
-pub use pattern::Pattern;
 
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple

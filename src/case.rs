@@ -133,42 +133,6 @@ impl CaseDef {
     };
 }
 
-impl CaseDef {
-    // This is combining from/to
-    // TODO: figure out this API.  Can I remove the need for StateConverter?
-    // Just add methods like with_boundaries, without_bouadaries,
-    // and all the things fron converter
-    // Then you can adhoc just build cases from there...why even use .to_case and .from_case?
-    // you could just compose the cases together and apply it once
-    fn compose(self, other: &CaseDef) -> CaseDef {
-        return CaseDef {
-            pattern: self.pattern,
-            delim: self.delim,
-            boundaries: other.boundaries,
-        };
-    }
-
-    // at the very least
-    // fn split(self, &s: AsRef<str>) -> &[&s] {}
-    /// Split an identifier into words based on the boundaries of this case.
-    pub fn split<T>(self, s: &T) -> Vec<&str>
-    where
-        T: AsRef<str>,
-    {
-        boundary::split(s, self.boundaries)
-    }
-
-    /// Mutate a list of words based on the pattern of this case.
-    pub fn mutate(self, words: &[&str]) -> Vec<String> {
-        (self.pattern)(words)
-    }
-
-    /// Join a list of words into a single identifier using the delimiter of this case.
-    pub fn join(self, words: &[String]) -> String {
-        words.join(self.delim)
-    }
-}
-
 /// Defines the type of casing a string can be.
 ///
 /// ```
@@ -190,20 +154,50 @@ impl CaseDef {
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
 /// converting "from" a particular case.
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub enum Case {
-    /// Custom Case
-    /// Just make a CaseDef and you're good to go.
+pub enum Case<'a> {
+    /// Custom cases can be delimited by any static string slice and mutate words
+    /// using any pattern.  Further, they can use any list of boundaries for
+    /// splitting identifiers into words.
+    ///
+    /// This flexibility can create cases not present as another variant of the
+    /// Case enum.  For instance, you could create a "dot case" like so.
+    /// ```
+    /// use convert_case::{Case, Casing, Boundary, pattern};
+    /// let dot_case = Case::Custom {
+    ///     boundaries: &[Boundary::from_delim(".")],
+    ///     pattern: pattern::lowercase,
+    ///     delim: ".",
+    /// };
+    ///
+    /// assert_eq!(
+    ///     "my.new.case",
+    ///     "myNewCase".to_case(dot_case),
+    /// );
+    /// assert_eq!(
+    ///     "My New Case",
+    ///     "my.new.case".from_case(dot_case).to_case(Case::Title),
+    /// );
+    /// ```
     Custom {
-        pattern: pattern::Pattern,
+        boundaries: &'a [Boundary],
+        pattern: fn(&[&str]) -> Vec<String>,
         delim: &'static str,
-        boundaries: &'static [Boundary],
     },
 
+    /// Lowercase strings are delimited by spaces and all characters are lowercase.
+    /// * Boundaries: [Space](`Boundary::SPACE`)
+    /// * Pattern: [uppercase](`pattern::uppercase`)
+    /// * Delimeter: Space
+    ///
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// assert_eq!("MY VARIABLE NAME", "My variable NAME".to_case(Case::Upper))
+    /// ```
     Upper,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [Lowercase](`Pattern::Lowercase`)
+    /// * Pattern: [lowercase](`pattern::lowercase`)
     /// * Delimeter: Space
     ///
     /// ```
@@ -216,7 +210,7 @@ pub enum Case {
     /// each word is uppercase.  No inferences are made about language, so words
     /// like "as", "to", and "for" will still be capitalized.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [Capital](`Pattern::Capital`)
+    /// * Pattern: [capital](`pattern::capital`)
     /// * Delimeter: Space
     ///
     /// ```
@@ -228,7 +222,7 @@ pub enum Case {
     /// Sentence case strings are delimited by spaces. Only the leading character of
     /// the first word is uppercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [Capital](`Pattern::Sentence`)
+    /// * Pattern: [sentence](`pattern::sentence`)
     /// * Delimeter: Space
     ///
     /// ```
@@ -240,7 +234,7 @@ pub enum Case {
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [Toggle](`Pattern::Toggle`)
+    /// * Pattern: [toggle](`pattern::toggle`)
     /// * Delimeter: Space
     ///
     /// ```
@@ -254,7 +248,7 @@ pub enum Case {
     /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
     ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
     ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [Camel](`Pattern::Camel`)
+    /// * Pattern: [camel](`pattern::camel`)
     /// * Delimeter: No delimeter
     ///
     /// ```
@@ -268,7 +262,7 @@ pub enum Case {
     /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
     ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
     ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [Capital](`Pattern::Capital`)
+    /// * Pattern: [capital](`pattern::capital`)
     /// * Delimeter: No delimeter
     ///
     /// ```
@@ -282,7 +276,7 @@ pub enum Case {
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
     /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Pattern: [lowercase](pattern::lowercase)
     /// * Delimeter: Underscore `_`
     ///
     /// ```
@@ -293,7 +287,7 @@ pub enum Case {
 
     /// Constant case strings are delimited by underscores `_` and are all uppercase.
     /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Pattern: [uppercase](pattern::uppercase)
     /// * Delimeter: Underscore `_`
     ///
     /// ```
@@ -308,7 +302,7 @@ pub enum Case {
     /// Ada case strings are delimited by underscores `_`.  The leading letter of
     /// each word is uppercase, while the rest is lowercase.
     /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [Capital](Pattern::Capital)
+    /// * Pattern: [capital](pattern::capital)
     /// * Delimeter: Underscore `_`
     ///
     /// ```
@@ -319,7 +313,7 @@ pub enum Case {
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Pattern: [lowercase](pattern::lowercase)
     /// * Delimeter: Hyphen `-`
     ///
     /// ```
@@ -330,7 +324,7 @@ pub enum Case {
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Pattern: [uppercase](pattern::uppercase)
     /// * Delimeter: Hyphen `-`
     ///
     /// ```
@@ -345,7 +339,7 @@ pub enum Case {
     /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
     /// except for the leading character of each word.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [Capital](Pattern::Capital)
+    /// * Pattern: [capital](pattern::capital)
     /// * Delimeter: Hyphen `-`
     ///
     /// ```
@@ -356,7 +350,7 @@ pub enum Case {
 
     /// Flat case strings are all lowercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [Lowercase](Pattern::Lowercase)
+    /// * Pattern: [lowercase](pattern::lowercase)
     /// * Delimeter: No delimeter
     ///
     /// ```
@@ -367,7 +361,7 @@ pub enum Case {
 
     /// Upper flat case strings are all uppercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [Uppercase](Pattern::Uppercase)
+    /// * Pattern: [uppercase](pattern::uppercase)
     /// * Delimeter: No delimeter
     ///
     /// ```
@@ -379,7 +373,7 @@ pub enum Case {
     /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
     /// and lowercase.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [Alternating](Pattern::Alternating)
+    /// * Pattern: [alternating](pattern::alternating)
     /// * Delimeter: Space
     ///
     /// ```
@@ -389,10 +383,12 @@ pub enum Case {
     Alternating,
 
     /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.  This uses the `rand` crate
+    /// randomly upper case or lower case.  
+    ///
+    /// This uses the `rand` crate
     /// and is only available with the "random" feature.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [Random](Pattern::Random)
+    /// * Pattern: [random](pattern::random)
     /// * Delimeter: Space
     ///
     /// ```
@@ -407,10 +403,12 @@ pub enum Case {
 
     /// Pseudo-random case strings are delimited by spaces and characters are randomly
     /// upper case or lower case, but there will never more than two consecutive lower
-    /// case or upper case letters in a row.  This uses the `rand` crate and is
+    /// case or upper case letters in a row.  
+    ///
+    /// This uses the `rand` crate and is
     /// only available with the "random" feature.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [PseudoRandom](Pattern::PseudoRandom)
+    /// * Pattern: [pseudo_random](pattern::pseudo_random)
     /// * Delimeter: Space
     ///
     /// ```
@@ -424,7 +422,7 @@ pub enum Case {
     PseudoRandom,
 }
 
-impl Case {
+impl Case<'_> {
     /*
     pub const fn def(&self) -> CaseDef {
         match self {
@@ -460,60 +458,6 @@ impl Case {
         }
     } */
 
-    /// Returns the delimiter used in the corresponding case.  The following
-    /// table outlines which cases use which delimeter.
-    ///
-    /// | Cases | Delimeter |
-    /// | --- | --- |
-    /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
-    /// | Snake, Constant, UpperSnake | Underscore `_` |
-    /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
-    /// | UpperFlat, Flat, Camel, UpperCamel, Pascal | Empty string, no delimeter |
-    pub const fn delim(&self) -> &'static str {
-        use Case::*;
-        match self {
-            Upper | Lower | Title | Sentence | Toggle | Alternating => " ",
-            Snake | Constant | UpperSnake | Ada => "_",
-            Kebab | Cobol | UpperKebab | Train => "-",
-            UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
-            Custom { delim, .. } => delim,
-
-            #[cfg(feature = "random")]
-            Random | PseudoRandom => " ",
-        }
-    }
-
-    /// Returns the pattern used in the corresponding case.  The following
-    /// table outlines which cases use which pattern.
-    ///
-    /// | Cases | Pattern |
-    /// | --- | --- |
-    /// | Upper, Constant, UpperSnake, UpperFlat, Cobol, UpperKebab | Uppercase |
-    /// | Lower, Snake, Kebab, Flat | Lowercase |
-    /// | Title, Pascal, UpperCamel, Train | Capital |
-    /// | Camel | Camel |
-    /// | Alternating | Alternating |
-    /// | Random | Random |
-    /// | PseudoRandom | PseudoRandom |
-    pub const fn pattern(&self) -> pattern::Pattern {
-        use Case::*;
-        match self {
-            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => pattern::uppercase,
-            Lower | Snake | Kebab | Flat => pattern::lowercase,
-            Title | Pascal | UpperCamel | Train | Ada => pattern::capital,
-            Camel => pattern::camel,
-            Toggle => pattern::toggle,
-            Alternating => pattern::alternating,
-            Sentence => pattern::sentence,
-            Custom { pattern, .. } => *pattern,
-
-            #[cfg(feature = "random")]
-            Random => pattern::random,
-            #[cfg(feature = "random")]
-            PseudoRandom => pattern::pseudo_random,
-        }
-    }
-
     /// Returns the boundaries used in the corresponding case.  That is, where can word boundaries
     /// be distinguished in a string of the given case.  The table outlines which cases use which
     /// set of boundaries.
@@ -521,7 +465,7 @@ impl Case {
     /// | Cases | Boundaries |
     /// | --- | --- |
     /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
-    /// | Snake, Constant, UpperSnake | Underscore `_` |
+    /// | Snake, Constant, UpperSnake, Ada | Underscore `_` |
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
     /// | Camel, UpperCamel, Pascal | LowerUpper, LowerDigit, UpperDigit, DigitLower, DigitUpper, Acronym |
     /// | UpperFlat, Flat | No boundaries |
@@ -547,12 +491,105 @@ impl Case {
         }
     }
 
-    // Created to avoid using the EnumIter trait from strum in
-    // final library.  A test confirms that all cases are listed here.
-    // Why is this needed?  If it's only for ccase then I don't see why it's here.
-    /// Returns a vector with all case enum variants in no particular order.
-    pub fn all_cases() -> Vec<Case> {
-        // TODO: move for testing only
+    /// Returns the delimiter used in the corresponding case.  The following
+    /// table outlines which cases use which delimeter.
+    ///
+    /// | Cases | Delimeter |
+    /// | --- | --- |
+    /// | Upper, Lower, Title, Toggle, Alternating, Random, PseudoRandom | Space |
+    /// | Snake, Constant, UpperSnake, Ada | Underscore `_` |
+    /// | Kebab, Cobol, UpperKebab, Train | Hyphen `-` |
+    /// | UpperFlat, Flat, Camel, UpperCamel, Pascal | Empty string, no delimeter |
+    pub const fn delim(&self) -> &'static str {
+        use Case::*;
+        match self {
+            Upper | Lower | Title | Sentence | Toggle | Alternating => " ",
+            Snake | Constant | UpperSnake | Ada => "_",
+            Kebab | Cobol | UpperKebab | Train => "-",
+            UpperFlat | Flat | Camel | UpperCamel | Pascal => "",
+            Custom { delim, .. } => delim,
+
+            #[cfg(feature = "random")]
+            Random | PseudoRandom => " ",
+        }
+    }
+
+    /// Returns the pattern used in the corresponding case.  The following
+    /// table outlines which cases use which pattern.
+    ///
+    /// | Cases | Pattern |
+    /// | --- | --- |
+    /// | Upper, Constant, UpperSnake, UpperFlat, Cobol, UpperKebab | [uppercase](pattern::uppercase) |
+    /// | Lower, Snake, Kebab, Flat | [lowercase](pattern::lowercase) |
+    /// | Title, Pascal, UpperCamel, Train, Ada | [capital](pattern::capital) |
+    /// | Camel | [camel](pattern::camel) |
+    /// | Alternating | [alternating](pattern::alternating) |
+    /// | Random | [random](pattern::random) |
+    /// | PseudoRandom | [pseudo_random](pattern::pseudo_random) |
+    pub const fn pattern(&self) -> pattern::Pattern {
+        use Case::*;
+        match self {
+            Upper | Constant | UpperSnake | UpperFlat | Cobol | UpperKebab => pattern::uppercase,
+            Lower | Snake | Kebab | Flat => pattern::lowercase,
+            Title | Pascal | UpperCamel | Train | Ada => pattern::capital,
+            Camel => pattern::camel,
+            Toggle => pattern::toggle,
+            Alternating => pattern::alternating,
+            Sentence => pattern::sentence,
+            Custom { pattern, .. } => *pattern,
+
+            #[cfg(feature = "random")]
+            Random => pattern::random,
+            #[cfg(feature = "random")]
+            PseudoRandom => pattern::pseudo_random,
+        }
+    }
+
+    /// Split an identifier into words based on the boundaries of this case.
+    /// ```
+    /// use convert_case::Case;
+    /// assert_eq!(
+    ///     vec!["get", "Total", "Length"],
+    ///     Case::Pascal.split(&"getTotalLength"),
+    /// );
+    /// ```
+    pub fn split<T>(self, s: &T) -> Vec<&str>
+    where
+        T: AsRef<str>,
+    {
+        boundary::split(s, self.boundaries())
+    }
+
+    /// Mutate a list of words based on the pattern of this case.
+    /// ```
+    /// use convert_case::Case;
+    /// assert_eq!(
+    ///     vec!["get", "total", "length"],
+    ///     Case::Snake.mutate(&["get", "Total", "Length"]),
+    /// );
+    /// ```
+    pub fn mutate(self, words: &[&str]) -> Vec<String> {
+        (self.pattern())(words)
+    }
+
+    /// Join a list of words into a single identifier using the delimiter of this case.
+    /// ```
+    /// use convert_case::Case;
+    /// assert_eq!(
+    ///     String::from("get_total_length"),
+    ///     Case::Snake.join(&[
+    ///         String::from("get"),
+    ///         String::from("total"),
+    ///         String::from("length")
+    ///     ]),
+    /// );
+    /// ```
+    pub fn join(self, words: &[String]) -> String {
+        words.join(self.delim())
+    }
+
+    /// Returns a vector with all case enum variants.
+    pub fn all_cases() -> Vec<Case<'static>> {
         use Case::*;
         vec![
             Upper,
@@ -584,14 +621,14 @@ impl Case {
     /// Returns a vector with the two "random" feature cases `Random` and `PseudoRandom`.  Only
     /// defined in the "random" feature.
     #[cfg(feature = "random")]
-    pub fn random_cases() -> Vec<Case> {
+    pub fn random_cases() -> Vec<Case<'static>> {
         use Case::*;
         vec![Random, PseudoRandom]
     }
 
     /// Returns a vector with all the cases that do not depend on randomness.  This is all
     /// the cases not in the "random" feature.
-    pub fn deterministic_cases() -> Vec<Case> {
+    pub fn deterministic_cases() -> Vec<Case<'static>> {
         use Case::*;
         vec![
             Upper,

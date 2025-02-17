@@ -12,7 +12,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
     c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
 }
 
-/// How an identifier is split into words.  
+/// Conditions for splitting an identifier into words.
 ///
 /// Some boundaries, `HYPHEN`, `UNDERSCORE`, and `SPACE`, consume the character they
 /// split on, whereas the other boundaries do not.
