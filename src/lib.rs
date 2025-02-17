@@ -22,9 +22,9 @@
 //! ```
 //!
 //! By default, `to_case` will split along a set of default word boundaries, that is
-//! * spaces ` `,
 //! * underscores `_`,
 //! * hyphens `-`,
+//! * spaces ` `,
 //! * changes in capitalization from lowercase to uppercase `aA`,
 //! * adjacent digits and letters `a1`, `1a`, `A1`, `1A`,
 //! * and acroynms `AAa` (as in `HTTPRequest`).
@@ -438,8 +438,9 @@ mod test {
 
     fn possible_cases(s: &str) -> Vec<Case> {
         Case::deterministic_cases()
-            .into_iter()
-            .filter(|case| s.from_case(*case).to_case(*case) == s)
+            .iter()
+            .filter(|&case| s.from_case(*case).to_case(*case) == s)
+            .map(|c| *c)
             .collect()
     }
 
@@ -575,7 +576,7 @@ mod test {
             .into_iter()
             .zip(Case::all_cases().into_iter())
         {
-            assert_eq!("", "".from_case(case_a).to_case(case_b));
+            assert_eq!("", "".from_case(*case_a).to_case(*case_b));
         }
     }
 
@@ -636,7 +637,7 @@ mod test {
     #[cfg(feature = "random")]
     #[test]
     fn random_case_boundaries() {
-        for random_case in Case::random_cases() {
+        for &random_case in Case::random_cases() {
             assert_eq!(
                 "split_by_spaces",
                 "Split By Spaces"
@@ -682,7 +683,7 @@ mod test {
     #[test]
     fn detect_each_case() {
         let s = "My String Identifier".to_string();
-        for case in Case::deterministic_cases() {
+        for &case in Case::deterministic_cases() {
             let new_s = s.from_case(case).to_case(case);
             let possible = possible_cases(&new_s);
             assert!(possible.iter().any(|c| c == &case));

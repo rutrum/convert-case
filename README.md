@@ -76,6 +76,7 @@ Other breaking changes:
     * pattern with type `Pattern`
     * delim with type `&static str`, and
     * boundaries with type `&'static [Boundary]`.
+* `Case::deterministic_cases`, `Case::all_cases`, and `Case::random_cases` now return static arrays instead of vecs
 
 Other changes:
 * Added `Case::split`, `Case::mutate`, and `Case::join` which expose operations related to the boundaries, pattern, and delimiter of a case
