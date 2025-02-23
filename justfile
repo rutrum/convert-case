@@ -2,8 +2,8 @@ test *FILTER:
     cargo test {{FILTER}}
     cargo test --features random
 
-watch-test:
-    watchexec -e rs -rc reset -- just test
+watch *FILTER:
+    watchexec -e rs -rc reset -- just test {{FILTER}}
 
 build:
     cargo build --all
@@ -13,6 +13,9 @@ watch-build:
 
 doc:
     cargo doc --all-features
+
+open-doc:
+    xdg-open target/doc/convert_case/index.html
 
 watch-doc:
     watchexec -- "just doc && cargo test --all-features --doc"

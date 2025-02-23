@@ -12,7 +12,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
     c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
 }
 
-/// How an identifier is split into words.  
+/// Conditions for splitting an identifier into words.
 ///
 /// Some boundaries, `HYPHEN`, `UNDERSCORE`, and `SPACE`, consume the character they
 /// split on, whereas the other boundaries do not.
@@ -63,17 +63,17 @@ impl PartialEq for Boundary {
 }
 
 impl Boundary {
-    /// Splits on space, consuming the character on segmentation.
+    /// Splits on `_`, consuming the character on segmentation.
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
-    ///     vec![Boundary::SPACE],
-    ///     Boundary::defaults_from(" ")
+    ///     vec![Boundary::UNDERSCORE],
+    ///     Boundary::defaults_from("_")
     /// );
     /// ```
-    pub const SPACE: Boundary = Boundary {
-        name: "Space",
-        condition: |s, _| s.get(0) == Some(&" "),
+    pub const UNDERSCORE: Boundary = Boundary {
+        name: "Underscore",
+        condition: |s, _| s.get(0) == Some(&"_"),
         arg: None,
         start: 0,
         len: 1,
@@ -95,17 +95,17 @@ impl Boundary {
         len: 1,
     };
 
-    /// Splits on `_`, consuming the character on segmentation.
+    /// Splits on space, consuming the character on segmentation.
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
-    ///     vec![Boundary::UNDERSCORE],
-    ///     Boundary::defaults_from("_")
+    ///     vec![Boundary::SPACE],
+    ///     Boundary::defaults_from(" ")
     /// );
     /// ```
-    pub const UNDERSCORE: Boundary = Boundary {
-        name: "Underscore",
-        condition: |s, _| s.get(0) == Some(&"_"),
+    pub const SPACE: Boundary = Boundary {
+        name: "Space",
+        condition: |s, _| s.get(0) == Some(&" "),
         arg: None,
         start: 0,
         len: 1,
@@ -273,9 +273,9 @@ impl Boundary {
     /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     [
-    ///         Boundary::SPACE,
-    ///         Boundary::HYPHEN,
     ///         Boundary::UNDERSCORE,
+    ///         Boundary::HYPHEN,
+    ///         Boundary::SPACE,
     ///         Boundary::LOWER_UPPER,
     ///         Boundary::ACRONYM,
     ///         Boundary::LOWER_DIGIT,
@@ -288,9 +288,9 @@ impl Boundary {
     /// ```
     pub const fn defaults() -> [Boundary; 9] {
         [
-            Boundary::SPACE,
-            Boundary::HYPHEN,
             Boundary::UNDERSCORE,
+            Boundary::HYPHEN,
+            Boundary::SPACE,
             Boundary::LOWER_UPPER,
             Boundary::ACRONYM,
             Boundary::LOWER_DIGIT,
@@ -363,8 +363,8 @@ impl Boundary {
     /// # use convert_case::Boundary;
     /// assert_eq!(
     ///     vec![
-    ///         Boundary::SPACE,
     ///         Boundary::HYPHEN,
+    ///         Boundary::SPACE,
     ///         Boundary::LOWER_UPPER,
     ///         Boundary::UPPER_DIGIT,
     ///         Boundary::DIGIT_LOWER,

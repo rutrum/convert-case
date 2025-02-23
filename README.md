@@ -64,6 +64,23 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
+### 0.8.0: Pattern Overhaul, Custom Case
+
+Pattern is no longer an enum.  It is now a type alias for `fn(&[&str]) -> Vec<String>`.  The variants of Pattern can now be referenced as functions inside the `pattern` module.  For upgrading this means changing `Pattern::Lowercase` to `pattern::lowercase`, and calling the function directly instead of invoking the `mutate` method on the enum.
+
+Inside the pattern module is also the type alias `Pattern` itself.
+
+Other breaking changes:
+* Add `Case::Ada` (capital pattern with underscore delimiter.)
+* Add `Case::Custom` variant.  It is a struct variant that takes three parameters:
+    * pattern with type `Pattern`
+    * delim with type `&static str`, and
+    * boundaries with type `&'static [Boundary]`.
+* `Case::deterministic_cases`, `Case::all_cases`, and `Case::random_cases` now return static arrays instead of vecs
+
+Other changes:
+* Added `Case::split`, `Case::mutate`, and `Case::join` which expose operations related to the boundaries, pattern, and delimiter of a case
+
 ### 0.7.1
 
 * Removed debug print statement.
