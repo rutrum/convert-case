@@ -4,6 +4,9 @@ use crate::pattern;
 use crate::pattern::Pattern;
 use crate::Case;
 
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
 /// The parameters for performing a case conversion.
 ///
 /// A `Converter` stores three fields needed for case conversion.

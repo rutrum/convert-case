@@ -1,6 +1,6 @@
 [package]
 name = "convert_case"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["rutrum <dave@rutrum.net>"]
 edition = "2021"
 description = "Convert strings into any case"

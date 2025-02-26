@@ -185,18 +185,54 @@
 //!
 //! To learn more about building a boundary from scratch, read the [`Boundary`] struct.
 //!
-//! # Custom Cases
+//! # Custom Case
 //!
-//! Because [`Case`] is an enum, you can't create your own variant for your use case.  However
-//! the parameters for case conversion have been encapsulated into the [`Converter`] struct
-//! which can be used for specific use cases.
+//! Case has a special variant [`Case::Custom`] that exposes the three components necessary
+//! for case conversion.  This allows you to define a custom case that behaves appropriately
+//! in the `.to_case` and `.from_case` methods.
 //!
-//! Suppose you wanted to format a word like camel case, where the first word is lower case and the
-//! rest are capitalized.  But you want to include a delimeter like underscore.  This case isn't
-//! available as a [`Case`] variant, but you can create it by constructing the parameters of the
-//! [`Converter`].
+//! A common example might be a "dot case" that has lowercase letters and is delimited by
+//! periods.  We could define this as follows.
 //! ```
-//! use convert_case::{Case, Casing, Converter, pattern};
+//! use convert_case::{Case, Casing, pattern, Boundary};
+//!
+//! let dot_case = Case::Custom {
+//!     boundaries: &[Boundary::from_delim(".")],
+//!     pattern: pattern::lowercase,
+//!     delim: ".",
+//! };
+//!
+//! assert_eq!(
+//!     "dot.case.var",
+//!     "Dot case var".to_case(dot_case)
+//! )
+//! ```
+//! And because we defined boundary conditions, this means `.from_case` should also behave as expected.
+//! ```
+//! # use convert_case::{Case, Casing, pattern, Boundary};
+//! # let dot_case = Case::Custom {
+//! #     boundaries: &[Boundary::from_delim(".")],
+//! #     pattern: pattern::lowercase,
+//! #     delim: ".",
+//! # };
+//! assert_eq!(
+//!     "dotCaseVar",
+//!     "dot.case.var".from_case(dot_case).to_case(Case::Camel)
+//! )
+//! ```
+//!
+//! # Converter Struct
+//!
+//! Case conversion takes place in two parts.  The first splits an identifier into a series of words,
+//! and the second joins the words back together.  Each of these are steps are defined using the
+//! `.from_case` and `.to_case` methods respectively.
+//!
+//! [`Converter`] is a struct that encapsulates the boundaries used for splitting and the pattern
+//! and delimiter for mutating and joining.  The [`convert`](Converter::convert) method will
+//! apply the boundaries, pattern, and delimiter appropriately.  This lets you define the
+//! parameters for case conversion upfront.
+//! ```
+//! use convert_case::{Converter, pattern};
 //!
 //! let conv = Converter::new()
 //!     .set_pattern(pattern::camel)
@@ -207,11 +243,6 @@
 //!     conv.convert("My Special Case")
 //! )
 //! ```
-//! Just as with the [`Casing`] trait, you can also manually set the boundaries strings are split
-//! on.  You can use any of the [`pattern`] variants available.  You can also set no pattern at all, which will
-//! maintain the casing of each letter in the input string.  You can also, of course, set any string as your
-//! delimeter.
-//!
 //! For more details on how strings are converted, see the docs for [`Converter`].
 //!
 //! # Random Feature
@@ -224,6 +255,11 @@
 //! [dependencies]
 //! convert_case = { version = "^0.8.0", features = ["random"] }
 //! ```
+
+#![cfg_attr(not(test), no_std)]
+extern crate alloc;
+
+use alloc::string::{String, ToString};
 
 mod boundary;
 mod case;
@@ -435,6 +471,9 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     fn possible_cases(s: &str) -> Vec<Case> {
         Case::deterministic_cases()

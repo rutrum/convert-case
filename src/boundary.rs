@@ -1,5 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
 
+use alloc::vec::Vec;
+
 fn grapheme_is_digit(c: &&str) -> bool {
     c.chars().all(|c| c.is_ascii_digit())
 }
@@ -14,15 +16,15 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 
 /// Conditions for splitting an identifier into words.
 ///
-/// Some boundaries, `HYPHEN`, `UNDERSCORE`, and `SPACE`, consume the character they
-/// split on, whereas the other boundaries do not.
+/// Some boundaries, [`HYPHEN`](Boundary::HYPHEN), [`UNDERSCORE`](Boundary::UNDERSCORE), and [`SPACE`](Boundary::SPACE),
+/// consume the character they split on, whereas the other boundaries do not.
 ///
 /// `Boundary` includes methods that return useful groups of boundaries.  It also
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
 /// of default boundaries based on the boundaries present in a string.
 ///
 /// You can also create custom delimiter boundaries using the [`from_delim`](Boundary::from_delim)
-/// method or directly instantiate Boundary for complex boundary conditions.
+/// method or directly instantiate `Boundary` for complex boundary conditions.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
 ///
@@ -277,11 +279,11 @@ impl Boundary {
     ///         Boundary::HYPHEN,
     ///         Boundary::SPACE,
     ///         Boundary::LOWER_UPPER,
-    ///         Boundary::ACRONYM,
     ///         Boundary::LOWER_DIGIT,
     ///         Boundary::UPPER_DIGIT,
     ///         Boundary::DIGIT_LOWER,
     ///         Boundary::DIGIT_UPPER,
+    ///         Boundary::ACRONYM,
     ///     ],
     ///     Boundary::defaults()
     /// );
@@ -292,16 +294,15 @@ impl Boundary {
             Boundary::HYPHEN,
             Boundary::SPACE,
             Boundary::LOWER_UPPER,
-            Boundary::ACRONYM,
             Boundary::LOWER_DIGIT,
             Boundary::UPPER_DIGIT,
             Boundary::DIGIT_LOWER,
             Boundary::DIGIT_UPPER,
+            Boundary::ACRONYM,
         ]
     }
 
     /// Returns the boundaries that involve digits.
-    /// `LowerDigit`.
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
@@ -375,8 +376,8 @@ impl Boundary {
     ///     vec![
     ///         Boundary::UNDERSCORE,
     ///         Boundary::LOWER_UPPER,
-    ///         Boundary::ACRONYM,
     ///         Boundary::DIGIT_UPPER,
+    ///         Boundary::ACRONYM,
     ///     ],
     ///     Boundary::defaults_from("bD:0B:_:AAa")
     /// );
@@ -411,7 +412,7 @@ where
     let s = s.as_ref();
 
     if s.len() == 0 {
-        return vec![];
+        return Vec::new();
     }
 
     let mut words = Vec::new();
@@ -533,9 +534,9 @@ mod tests {
         );
         assert_eq!(
             vec![
-                Boundary::SPACE,
-                Boundary::HYPHEN,
                 Boundary::UNDERSCORE,
+                Boundary::HYPHEN,
+                Boundary::SPACE,
                 Boundary::ACRONYM,
             ],
             Boundary::defaults_from("AAa -_")

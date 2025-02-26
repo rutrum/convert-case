@@ -22,3 +22,6 @@ watch-doc:
 
 tree:
     tree -I target
+
+verify-nostd:
+    cargo build --target thumbv6m-none-eabi

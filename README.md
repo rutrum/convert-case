@@ -45,20 +45,22 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 | Case | Example |
 | ---- | ------- |
-| Upper | MY VARIABLE NAME |
-| Lower | my variable name |
-| Title | My Variable Name |
-| Toggle | mY vARIABLE nAME |
-| Alternating | mY vArIaBlE nAmE |
-| Camel | myVariableName |
-| Pascal<br />UpperCamel | MyVariableName |
 | Snake | my\_variable\_name |
 | Constant<br />UpperSnake | MY\_VARIABLE\_NAME |
+| Ada | My\_Variable\_Name |
 | Kebab | my-variable-name |
-| Cobol | MY-VARIABLE-NAME |
+| Cobol<br />UpperKebab | MY-VARIABLE-NAME |
 | Train | My-Variable-Name |
 | Flat | myvariablename |
 | UpperFlat | MYVARIABLENAME |
+| Pascal<br />UpperCamel | MyVariableName |
+| Camel | myVariableName |
+| Upper | MY VARIABLE NAME |
+| Lower | my variable name |
+| Title | My Variable Name |
+| Sentence | My variable name |
+| Alternating | mY vArIaBlE nAmE |
+| Toggle | mY vARIABLE nAME |
 | Random | MY vaRiabLe nAME |
 | PseudoRandom | mY VaRiAblE nAMe |
 
@@ -76,10 +78,12 @@ Other breaking changes:
     * pattern with type `Pattern`
     * delim with type `&static str`, and
     * boundaries with type `&'static [Boundary]`.
+* Because of the new `pattern::noop` function, `Converter` attribute `pattern` is now of type `Pattern` and not `Option<Pattern>`
 * `Case::deterministic_cases`, `Case::all_cases`, and `Case::random_cases` now return static arrays instead of vecs
 
 Other changes:
 * Added `Case::split`, `Case::mutate`, and `Case::join` which expose operations related to the boundaries, pattern, and delimiter of a case
+* Is now `no_std` compatible
 
 ### 0.7.1
 

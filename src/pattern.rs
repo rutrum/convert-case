@@ -7,6 +7,9 @@
 #[cfg(feature = "random")]
 use rand::prelude::*;
 
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
 use unicode_segmentation::UnicodeSegmentation;
 
 mod word_pattern {
