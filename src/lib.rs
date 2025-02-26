@@ -468,6 +468,20 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     }
 }
 
+#[macro_export]
+macro_rules! ccase {
+    (snake, $e:expr) => {
+        convert_case::Converter::new()
+            .to_case(convert_case::Case::Snake)
+            .convert($e)
+    };
+    (kebab, $e:expr) => {
+        convert_case::Converter::new()
+            .to_case(convert_case::Case::Kebab)
+            .convert($e)
+    };
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
