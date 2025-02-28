@@ -44,6 +44,110 @@ mod word_pattern {
     }
 }
 
+use ascii::{AsciiStr, AsciiString};
+
+mod ascii_word_pattern {
+    use super::*;
+
+    pub fn lowercase(word: &AsciiStr) -> AsciiString {
+        word.to_ascii_lowercase()
+    }
+
+    pub fn uppercase(word: &AsciiStr) -> AsciiString {
+        word.to_ascii_uppercase()
+    }
+
+    pub fn capital(word: &AsciiStr) -> AsciiString {
+        let mut chars = word.chars();
+        if let Some(char) = chars.next() {
+            let mut s = AsciiString::with_capacity(word.len());
+            s.push(char.to_ascii_uppercase());
+            s.push_str(&chars.as_str().to_ascii_lowercase());
+            s
+        } else {
+            AsciiString::new()
+        }
+    }
+
+    pub fn toggle(word: &AsciiStr) -> AsciiString {
+        let mut chars = word.chars();
+        if let Some(char) = chars.next() {
+            let mut s = AsciiString::with_capacity(word.len());
+            s.push(char.to_ascii_lowercase());
+            s.push_str(&chars.as_str().to_ascii_uppercase());
+            s
+        } else {
+            AsciiString::new()
+        }
+    }
+}
+
+pub type AsciiPattern = fn(&[AsciiStr]) -> Vec<AsciiString>;
+
+pub fn ascii_noop(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words.iter().map(|word| word.to_ascii_string()).collect()
+}
+
+pub fn ascii_lowercase(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .map(|word| ascii_word_pattern::lowercase(word))
+        .collect()
+}
+
+pub fn ascii_uppercase(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .map(|word| ascii_word_pattern::uppercase(word))
+        .collect()
+}
+
+pub fn ascii_capital(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .map(|word| ascii_word_pattern::capital(word))
+        .collect()
+}
+
+pub fn ascii_camel(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .enumerate()
+        .map(|(i, &word)| {
+            if i == 0 {
+                ascii_word_pattern::lowercase(&word)
+            } else {
+                ascii_word_pattern::capital(&word)
+            }
+        })
+        .collect()
+}
+
+pub fn ascii_sentence(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .enumerate()
+        .map(|(i, &word)| {
+            if i == 0 {
+                ascii_word_pattern::capital(&word)
+            } else {
+                ascii_word_pattern::lowercase(&word)
+            }
+        })
+        .collect()
+}
+
+pub fn ascii_toggle(words: &[&AsciiStr]) -> Vec<AsciiString> {
+    words
+        .iter()
+        .map(|word| ascii_word_pattern::toggle(word))
+        .collect()
+}
+
+// can I make a single word_pattern::uppercase that
+// can take either an AsciiStr or a str and return the appropriate
+// type?
+
 pub type Pattern = fn(&[&str]) -> Vec<String>;
 
 /// The no-op pattern performs no mutations.

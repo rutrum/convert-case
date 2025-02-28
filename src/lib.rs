@@ -334,8 +334,8 @@ pub trait Casing<T: AsRef<str>> {
     /// ```
     /// use convert_case::{Case, Casing};
     ///
-    /// assert!( "kebab-case-string".is_case(Case::Kebab));
-    /// assert!( "Train-Case-String".is_case(Case::Train));
+    /// assert!("kebab-case-string".is_case(Case::Kebab));
+    /// assert!("Train-Case-String".is_case(Case::Train));
     ///
     /// assert!(!"kebab-case-string".is_case(Case::Snake));
     /// assert!(!"kebab-case-string".is_case(Case::Train));
@@ -468,7 +468,16 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     }
 }
 
-#[cfg(not(feature = "random"))]
+/// Converts a token into its corresponding [`Case`] variant.
+///
+/// The appropriate token is the [`Case`] variant written in snake case.
+/// ```
+/// # use convert_case::{Case, case};
+/// assert_eq!(Case::Snake, case!(snake))
+/// ```
+/// While this could be used directly, it's prefered to just use
+/// [`ccase`] to perform conversions or import [`Casing`] and [`Case`]
+/// if more granularity is explicity is needed.
 #[macro_export]
 macro_rules! case {
     (snake) => {
@@ -533,63 +542,6 @@ macro_rules! case {
 #[cfg(feature = "random")]
 #[macro_export]
 macro_rules! case {
-    (snake) => {
-        convert_case::Case::Snake
-    };
-    (constant) => {
-        convert_case::Case::Constant
-    };
-    (upper_snake) => {
-        convert_case::Case::UpperSnake
-    };
-    (ada) => {
-        convert_case::Case::Ada;
-    };
-    (kebab) => {
-        convert_case::Case::Kebab
-    };
-    (cobol) => {
-        convert_case::Case::Cobol
-    };
-    (upper_kebab) => {
-        convert_case::Case::UpperKebab
-    };
-    (train) => {
-        convert_case::Case::Train
-    };
-    (flat) => {
-        convert_case::Case::Flat
-    };
-    (upper_flat) => {
-        convert_case::Case::UpperFlat
-    };
-    (pascal) => {
-        convert_case::Case::Pascal
-    };
-    (upper_camel) => {
-        convert_case::Case::UpperCamel
-    };
-    (camel) => {
-        convert_case::Case::Camel
-    };
-    (lower) => {
-        convert_case::Case::Lower
-    };
-    (upper) => {
-        convert_case::Case::Upper
-    };
-    (title) => {
-        convert_case::Case::Title
-    };
-    (sentence) => {
-        convert_case::Case::Sentence
-    };
-    (alternating) => {
-        convert_case::Case::Alternating
-    };
-    (toggle) => {
-        convert_case::Case::Toggle
-    };
     (random) => {
         convert_case::Case::Random
     };
@@ -598,6 +550,20 @@ macro_rules! case {
     };
 }
 
+/// Transforms a script into a certain case.
+///
+/// This is shorthand for importing the [`Casing`] trait and
+/// defining the [`Case`] variant directly.
+/// ```
+/// use convert_case::ccase;
+/// assert_eq!("my_var", ccase!(snake, "myVar"));
+/// ```
+/// The macro also allows you to define the [`.from_case`](Casing::from_case) as well.
+/// ```
+/// use convert_case::ccase;
+/// assert_eq!("myVar-name", ccase!(snake -> camel, "my_var-Name"));
+/// assert_eq!("myVar-name", ccase!(snake, camel, "my_var-Name"));
+/// ```
 #[macro_export]
 macro_rules! ccase {
     ($case:ident, $e:expr) => {

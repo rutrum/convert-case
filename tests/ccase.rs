@@ -31,3 +31,33 @@ fn ccase_random() {
     assert_ne!("my-var-name", ccase!(random, "my_Var_Name"))
 }
 */
+
+use convert_case::{AsciiCase, Case, Casing};
+
+fn main() {
+    assert_eq!("my-var", "my_var".to_case(Case::Kebab));
+
+    assert_eq!(
+        "Registration Names 2024 10 22",
+        "registration_names_2024-10-22".to_case(Case::Title)
+    );
+
+    assert_eq!(
+        "Registration Names 2024-10-22",
+        "registration_names_2024-10-22"
+            .from_case(Case::Snake)
+            .to_case(Case::Title)
+    );
+
+    let s: &str = "my_var_name";
+    let ascii_s: &ascii_str = AsciiStr::try_new(s).unwrap();
+    ascii_s.to_case(Case::Camel);
+
+    assert_eq!(
+        "Registration Names 2024-10-22",
+        "registration_names_2024-10-22"
+            .from_ascii_case(Case::Snake)
+            .to_ascii_case(Case::Title)
+    );
+    // to_ascii_lowercase still parses as unicode, just ignores non-ascii characters
+}

@@ -392,6 +392,8 @@ impl Case<'_> {
         }
     }
 
+    pub const fn ascii_pattern(&self) -> pattern::AsciiPattern {}
+
     /// Split an identifier into words based on the boundaries of this case.
     /// ```
     /// use convert_case::Case;
