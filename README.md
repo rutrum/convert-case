@@ -66,6 +66,14 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
+### 0.9.0
+
+New features:
+* `ccase!` macro that performs case conversion on a string _without needing to import `Case` or `Casing`_.  It has two forms:
+    * `ccase!(snake, "string")` is equivalent to `"string".to_case(Case::Snake)`
+    * `ccase!(kebab -> snake, "string")` is equivalent to `"string".from_case(Case::Kebab).to_case(Case::Snake)`
+* While not intended to be used directly, the new `case!` macro returns a `Case` variant from the snake case version of the variant.  For instance, `case!(snake)` returns `Case::Snake` and `case!(upper_flat)` returns `Case::UpperFlat`.
+
 ### 0.8.0: Pattern Overhaul, Custom Case
 
 Pattern is no longer an enum.  It is now a type alias for `fn(&[&str]) -> Vec<String>`.  The variants of Pattern can now be referenced as functions inside the `pattern` module.  For upgrading this means changing `Pattern::Lowercase` to `pattern::lowercase`, and calling the function directly instead of invoking the `mutate` method on the enum.
