@@ -605,12 +605,6 @@ macro_rules! ccase {
             .to_case(convert_case::case!($case))
             .convert($e)
     };
-    ($from:ident, $to:ident, $e:expr) => {
-        convert_case::Converter::new()
-            .from_case(convert_case::case!($from))
-            .to_case(convert_case::case!($to))
-            .convert($e)
-    };
     ($from:ident -> $to:ident, $e:expr) => {
         convert_case::Converter::new()
             .from_case(convert_case::case!($from))
@@ -637,18 +631,19 @@ mod test {
     #[test]
     fn lossless_against_lossless() {
         let examples = vec![
+            (Case::Snake, "my_variable_22_name"),
+            (Case::Constant, "MY_VARIABLE_22_NAME"),
+            (Case::Ada, "My_Variable_22_Name"),
+            (Case::Kebab, "my-variable-22-name"),
+            (Case::Cobol, "MY-VARIABLE-22-NAME"),
+            (Case::Train, "My-Variable-22-Name"),
+            (Case::Pascal, "MyVariable22Name"),
+            (Case::Camel, "myVariable22Name"),
             (Case::Lower, "my variable 22 name"),
             (Case::Upper, "MY VARIABLE 22 NAME"),
             (Case::Title, "My Variable 22 Name"),
             (Case::Sentence, "My variable 22 name"),
-            (Case::Camel, "myVariable22Name"),
-            (Case::Pascal, "MyVariable22Name"),
-            (Case::Snake, "my_variable_22_name"),
-            (Case::UpperSnake, "MY_VARIABLE_22_NAME"),
-            (Case::Kebab, "my-variable-22-name"),
-            (Case::Cobol, "MY-VARIABLE-22-NAME"),
             (Case::Toggle, "mY vARIABLE 22 nAME"),
-            (Case::Train, "My-Variable-22-Name"),
             (Case::Alternating, "mY vArIaBlE 22 nAmE"),
         ];
 
@@ -726,6 +721,12 @@ mod test {
                 .from_case(Case::Kebab)
                 .to_case(Case::Snake)
         );
+        assert_eq!(
+            "tailing_hyphens",
+            "tailing-hyphens-----"
+                .from_case(Case::Kebab)
+                .to_case(Case::Snake)
+        );
     }
 
     #[test]
@@ -771,19 +772,12 @@ mod test {
     }
 
     #[test]
-    fn owned_string() {
-        assert_eq!(
-            "test_variable",
-            String::from("TestVariable").to_case(Case::Snake)
-        )
-    }
-
-    #[test]
     fn default_all_boundaries() {
         assert_eq!(
             "abc_abc_abc_abc_abc_abc",
             "ABC-abc_abcAbc ABCAbc".to_case(Case::Snake)
         );
+        assert_eq!("8_a_8_a_8", "8a8A8".to_case(Case::Snake));
     }
 
     #[test]

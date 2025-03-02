@@ -22,12 +22,18 @@ fn ccase_kebab_string() {
 
 #[test]
 fn ccase_from_kebab_to_camel() {
-    assert_eq!("myvarName_var", ccase!(kebab, camel, "myVar-name_var"));
     assert_eq!("myvarName_var", ccase!(kebab -> camel, "myVar-name_var"));
 }
-/*
+
+#[test]
+fn ccase_from_snake_to_pascal() {
+    assert_eq!("My-varName-var", ccase!(snake -> pascal, "my-var_name-var"));
+}
+
+#[cfg(feature = "random")]
 #[test]
 fn ccase_random() {
-    assert_ne!("my-var-name", ccase!(random, "my_Var_Name"))
+    assert!((0..10)
+        .map(|_| "my-var-name" != ccase!(random, "my_Var_Name"))
+        .fold(false, |acc, x| acc || x))
 }
-*/
