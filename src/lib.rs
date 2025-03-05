@@ -251,7 +251,8 @@
 //! The `random` feature depends on the [`rand`](https://docs.rs/rand) crate.
 //!
 //! You can enable this feature by including the following in your `Cargo.toml`.
-//! ```{toml}
+//!
+//! ```toml
 //! [dependencies]
 //! convert_case = { version = "^0.8.0", features = ["random"] }
 //! ```
@@ -364,9 +365,26 @@ where
     }
 
     fn is_case(&self, case: Case) -> bool {
-        // TODO: rewrite
-        //&self.to_case(case) == self
-        self.to_case(case) == self.to_string()
+        // drop all digits first
+        let digitless = self
+            .as_ref()
+            .chars()
+            .filter(|x| !x.is_ascii_digit())
+            .collect::<String>();
+
+        // split on everything
+        //let parts = boundary::split(&digitless, &Boundary::defaults());
+
+        // drop the digits
+        //let words = parts
+        //    .into_iter()
+        //    .filter(|x| !x.chars().all(|x| x.is_ascii_digit()))
+        //    .collect::<alloc::vec::Vec<&str>>();
+
+        // iterate over characters and remove digits
+        //let converted = case.join(&case.mutate(&parts));
+
+        digitless == digitless.to_case(case)
     }
 }
 
@@ -785,16 +803,77 @@ mod test {
         assert_eq!("tHaT's", "that's".to_case(Case::Alternating));
     }
 
-    #[test]
-    fn string_is_snake() {
-        assert!("im_snake_case".is_case(Case::Snake));
-        assert!(!"im_NOTsnake_case".is_case(Case::Snake));
-    }
+    mod is_case {
+        use super::*;
 
-    #[test]
-    fn string_is_kebab() {
-        assert!("im-kebab-case".is_case(Case::Kebab));
-        assert!(!"im_not_kebab".is_case(Case::Kebab));
+        #[test]
+        fn snake() {
+            assert!("im_snake_case".is_case(Case::Snake));
+            assert!(!"im_NOTsnake_case".is_case(Case::Snake));
+        }
+
+        #[test]
+        fn kebab() {
+            assert!("im-kebab-case".is_case(Case::Kebab));
+            assert!(!"im_not_kebab".is_case(Case::Kebab));
+        }
+
+        #[test]
+        fn lowercase_word() {
+            for lower_case in [
+                Case::Snake,
+                Case::Kebab,
+                Case::Flat,
+                Case::Lower,
+                Case::Camel,
+            ] {
+                assert!("lowercase".is_case(lower_case));
+            }
+        }
+
+        #[test]
+        fn uppercase_word() {
+            for upper_case in [Case::Constant, Case::Cobol, Case::UpperFlat, Case::Upper] {
+                assert!("UPPERCASE".is_case(upper_case));
+            }
+        }
+
+        #[test]
+        fn capital_word() {
+            for capital_case in [
+                Case::Ada,
+                Case::Train,
+                Case::Pascal,
+                Case::Title,
+                Case::Sentence,
+            ] {
+                assert!("Capitalcase".is_case(capital_case));
+            }
+        }
+
+        #[test]
+        fn underscores_not_kebab() {
+            assert!(!"kebab-case".is_case(Case::Snake));
+        }
+
+        #[test]
+        fn multiple_delimiters() {
+            assert!(!"kebab-snake_case".is_case(Case::Snake));
+            assert!(!"kebab-snake_case".is_case(Case::Kebab));
+            assert!(!"kebab-snake_case".is_case(Case::Lower));
+        }
+
+        #[test]
+        fn digits_ignored() {
+            assert!("UPPER_CASE_WITH_DIGIT1".is_case(Case::Constant));
+
+            assert!("transformation_2d".is_case(Case::Snake));
+
+            assert!("Transformation2d".is_case(Case::Pascal));
+            assert!("Transformation2D".is_case(Case::Pascal));
+
+            assert!("transformation2D".is_case(Case::Camel));
+        }
     }
 
     #[test]

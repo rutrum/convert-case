@@ -66,13 +66,15 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
-### 0.9.0
+### 1.0.0
+
+Most features have been implemented.  The final, large scale change would be adding support to ascii string via the ascii crate, likely a 2.0.0 release.  But the recent breakthrough in redesigning the `Boundary` and `Pattern` types allowed the flexibility to fix a variety of known limitations of the API.  This 1.0.0 release adds a final touch, that adds the new suggested default way of using the library.  This method can work for 99% of the crates usage patterns, and require less code to do so.  Further, the documentation has been cleaned and updated to reflect the first stable release.
 
 New features:
 * `ccase!` macro that performs case conversion on a string _without needing to import `Case` or `Casing`_.  It has two forms:
     * `ccase!(snake, "string")` is equivalent to `"string".to_case(Case::Snake)`
     * `ccase!(kebab -> snake, "string")` is equivalent to `"string".from_case(Case::Kebab).to_case(Case::Snake)`
-* While not intended to be used directly, the new `case!` macro returns a `Case` variant from the snake case version of the variant.  For instance, `case!(snake)` returns `Case::Snake` and `case!(upper_flat)` returns `Case::UpperFlat`.
+* While not intended to be used directly, the new `case!` macro returns a `Case` variant from the snake case version of the variant.  For instance, `case!(snake)` is substituted for `Case::Snake` and `case!(upper_flat)` for `Case::UpperFlat`.
 
 ### 0.8.0: Pattern Overhaul, Custom Case
 
