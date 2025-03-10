@@ -28,7 +28,6 @@
           just
           watchexec
           rustup
-          #cargo-tarpaulin
         ];
       };
     };

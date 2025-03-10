@@ -260,7 +260,7 @@
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
 
-use alloc::string::{String, ToString};
+use alloc::string::String;
 
 mod boundary;
 mod case;
@@ -344,10 +344,7 @@ pub trait Casing<T: AsRef<str>> {
     fn is_case(&self, case: Case) -> bool;
 }
 
-impl<T: AsRef<str>> Casing<T> for T
-where
-    T: ToString,
-{
+impl<T: AsRef<str>> Casing<T> for T {
     fn to_case(&self, case: Case) -> String {
         StateConverter::new(self).to_case(case)
     }
@@ -873,6 +870,17 @@ mod test {
             assert!("Transformation2D".is_case(Case::Pascal));
 
             assert!("transformation2D".is_case(Case::Camel));
+
+            assert!(!"5isntPascal".is_case(Case::Pascal))
+        }
+
+        #[test]
+        fn not_a_case() {
+            for c in Case::all_cases() {
+                assert!(!"hyphen-and_underscore".is_case(*c));
+                assert!(!"Sentence-with-hyphens".is_case(*c));
+                assert!(!"Sentence_with_underscores".is_case(*c));
+            }
         }
     }
 
