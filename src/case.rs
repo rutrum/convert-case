@@ -313,7 +313,7 @@ impl Case<'_> {
     /// | --- | --- |
     /// | Snake, Constant, UpperSnake, Ada | [UNDERSCORE](Boundary::UNDERSCORE)  |
     /// | Kebab, Cobol, UpperKebab, Train | [HYPHEN](Boundary::HYPHEN) |
-    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [SPACE](Boundary::Space) |
+    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [SPACE](Boundary::SPACE) |
     /// | Pascal, UpperCamel, Camel | [LOWER_UPPER](Boundary::LOWER_UPPER), [LOWER_DIGIT](Boundary::LOWER_DIGIT), [UPPER_DIGIT](Boundary::UPPER_DIGIT), [DIGIT_LOWER](Boundary::DIGIT_LOWER), [DIGIT_UPPER](Boundary::DIGIT_UPPER), [ACRONYM](Boundary::ACRONYM) |
     /// | Flat, UpperFlat | No boundaries |
     pub fn boundaries(&self) -> &[Boundary] {

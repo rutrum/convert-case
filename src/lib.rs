@@ -1,12 +1,35 @@
 //! Converts to and from various cases.
 //!
-//! # Command Line Utility `ccase`
+//! # Basic Usage
 //!
-//! This library was developed for the purposes of a command line utility for converting
-//! the case of strings and filenames.  You can check out
-//! [`ccase` on Github](https://github.com/rutrum/ccase).
+//! The most common use of this crate is to just convert a string into a
+//! particular case, like snake, camel, or kebab.  You can use the [`ccase`]
+//! macro to convert most string types into the new case.
+//! ```
+//! use convert_case::ccase;
 //!
-//! # Rust Library
+//! let s = "myVarName";
+//! assert_eq!(ccase!(snake, s),  "my_var_name");
+//! assert_eq!(ccase!(kebab, s),  "my-var-name");
+//! assert_eq!(ccase!(pascal, s), "MyVarName");
+//! assert_eq!(ccase!(title, s),  "My Var Name");
+//! ```
+//!
+//! For more explicit conversion, import the [`Casing`] trait which adds methods
+//! to string types that perform the conversion based on a variant of the [`Case`] enum.
+//! ```
+//! use convert_case::{Case, Casing};
+//!
+//! let s = "myVarName";
+//! assert_eq!(s.to_case(Case::Snake),  "my_var_name");
+//! assert_eq!(s.to_case(Case::Kebab),  "my-var-name");
+//! assert_eq!(s.to_case(Case::Pascal), "MyVarName");
+//! assert_eq!(s.to_case(Case::Title),  "My Var Name");
+//! ```
+//!
+//! For a full list of cases, see [`Case`].
+//!
+//! ## Old
 //!
 //! Provides a [`Case`] enum which defines a variety of cases to convert into.
 //! Strings have implemented the [`Casing`] trait, which adds methods for
@@ -256,11 +279,22 @@
 //! [dependencies]
 //! convert_case = { version = "^0.8.0", features = ["random"] }
 //! ```
+//!
+//! # Associated Projects
+//!
+//! ## stringcase.org
+//!
+//! ## Command Line Utility `ccase`
+//!
+//! This library was developed for the purposes of a command line utility for converting
+//! the case of strings and filenames.  You can check out
+//! [`ccase` on Github](https://github.com/rutrum/ccase).
 
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
 
 use alloc::string::String;
+use alloc::vec::Vec;
 
 mod boundary;
 mod case;
@@ -342,6 +376,14 @@ pub trait Casing<T: AsRef<str>> {
     /// assert!(!"kebab-case-string".is_case(Case::Train));
     /// ```
     fn is_case(&self, case: Case) -> bool;
+
+    /// Consider removing
+    fn detect_cases(&self) -> Vec<Case> {
+        Case::deterministic_cases()
+            .iter()
+            .filter_map(|&c| self.is_case(c).then_some(c))
+            .collect()
+    }
 }
 
 impl<T: AsRef<str>> Casing<T> for T {
@@ -362,24 +404,11 @@ impl<T: AsRef<str>> Casing<T> for T {
     }
 
     fn is_case(&self, case: Case) -> bool {
-        // drop all digits first
         let digitless = self
             .as_ref()
             .chars()
             .filter(|x| !x.is_ascii_digit())
             .collect::<String>();
-
-        // split on everything
-        //let parts = boundary::split(&digitless, &Boundary::defaults());
-
-        // drop the digits
-        //let words = parts
-        //    .into_iter()
-        //    .filter(|x| !x.chars().all(|x| x.is_ascii_digit()))
-        //    .collect::<alloc::vec::Vec<&str>>();
-
-        // iterate over characters and remove digits
-        //let converted = case.join(&case.mutate(&parts));
 
         digitless == digitless.to_case(case)
     }
@@ -881,6 +910,34 @@ mod test {
                 assert!(!"Sentence-with-hyphens".is_case(*c));
                 assert!(!"Sentence_with_underscores".is_case(*c));
             }
+        }
+
+        #[test]
+        fn detect_single_word() {
+            assert_eq!(
+                "lowercase".detect_cases(),
+                vec![
+                    Case::Snake,
+                    Case::Kebab,
+                    Case::Flat,
+                    Case::Camel,
+                    Case::Lower,
+                ],
+            );
+            assert_eq!(
+                "UPPERCASE".detect_cases(),
+                vec![Case::Constant, Case::Cobol, Case::UpperFlat, Case::Upper],
+            );
+            assert_eq!(
+                "Capitalcase".detect_cases(),
+                vec![
+                    Case::Ada,
+                    Case::Train,
+                    Case::Pascal,
+                    Case::Title,
+                    Case::Sentence
+                ],
+            )
         }
     }
 
