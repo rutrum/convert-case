@@ -29,7 +29,156 @@
 //!
 //! For a full list of cases, see [`Case`].
 //!
-//! ## Old
+//! # Splitting Conditions
+//!
+//! Case conversion starts by splitting a single identifier into a list of words.  The
+//! condition for when to split and how to perform the split is defined by a [`Boundary`].
+//!
+//! By default, [`ccase`] and [`Casing::to_case`] will split identifiers at all locations
+//! based on a list of [default boundaries](Boundary::defaults).
+//!
+//! ```
+//! use convert_case::ccase;
+//!
+//! assert_eq!(ccase!(pascal, "hyphens-and_underscores"), "HyphensAndUnderscores");
+//! assert_eq!(ccase!(pascal, "lowerUpper space"), "LowerUpperSpace");
+//! assert_eq!(ccase!(snake, "HTTPRequest"), "http_request");
+//! assert_eq!(ccase!(snake, "vector4d"), "vector_4_d")
+//! ```
+//!
+//! Associated with each case is a [list of boundaries](Case::boundaries) that can be
+//! used to split identifiers instead of the defaults.  We can use the following notation
+//! with the [`ccase`] macro.
+//! ```
+//! use convert_case::ccase;
+//!
+//! assert_eq!(
+//!     ccase!(snake -> title, "1999-25-01_family_photo.png"),
+//!     "1999-25-01 Family Photo.png",
+//! );
+//! ```
+//! Or we can use the [`from_case`](Casing::from_case) method on `Casing` before calling
+//! `to_case`.
+//! ```
+//! use convert_case::{Case, Casing};
+//!
+//! assert_eq!(
+//!     "John McCarthy".from_case(Case::Title).to_case(Case::Snake),
+//!     "john_mccarthy",
+//! );
+//! ```
+//! You can specify exactly which boundaries are used with [`Casing::with_boundaries`].  See
+//! the list of constants on [`Boundary`] for splitting conditions.
+//! ```
+//! use convert_case::{Boundary, Case, Casing};
+//!
+//! assert_eq!(
+//!     "Vector4D".with_boundaries(&[Boundary::LOWER_DIGIT]).to_case(Case::Snake),
+//!     "vector_4d",
+//! );
+//! ```
+//!
+//! # Other Behavior
+//!
+//! * removes trailing or duplicate delimiters
+//! * acronyms aren't identified or preserved
+//! * unicode?
+//! * digits are funny
+//! * symbols and non-cased values are ignored
+//!
+//! # Customizing Behavior
+//!
+//! Case conversion takes place in three steps:
+//! 1. Splitting the identifier into a list of words
+//! 2. Mutating the letter case of characters within each word
+//! 3. Joining the words back into an identifier using a delimiter
+//!
+//! Those are defined by boundaries, patterns, and delimiters respectively.  Graphically:
+//!
+//! ```md
+//! Identifier        Identifier
+//!     |                 ^
+//!     | boundaries      | delimiter
+//!     V                 |
+//!   Words ----------> Words
+//!           pattern
+//! ```
+//!
+//! ## Patterns
+//!
+//! How to change the case of letters across a list of words is called a _pattern_.
+//! A pattern is a function that when passed a `&[&str]`, produces a
+//! `Vec<String>`.  Inside the [`pattern`] module is a list of functions that are
+//! used across all cases.  Although any function with type [`Pattern`](pattern::Pattern)
+//! could be used.
+//!
+//! ## Boundaries
+//!
+//! The condition for splitting at part of an identifier, where to perform
+//! the split, and if any characters are removed are defined by [boundaries](Boundary).
+//! By default, identifies are split based on [`Boundary::defaults`].  This list
+//! contains word boundaries that you would likely see after creating a multi-word
+//! identifier of any case.
+//!
+//! Custom boundary conditions can created.  Commonly, you might split based on some
+//! character or list of characters.  The [`Boundary::from_delim`] method builds
+//! a boundary that splits on the presence of a string, and removes the string
+//! from the final list of words.  You can also insantiate instances of boundaries
+//! for very specific boundary conditions.  If you actually need to instantiate a
+//! boundary condition from scratch, you should file an issue to let the author know.
+//!
+//! ## `Custom` Case variant
+//!
+//! In addition to a delimiter, the string to intersperse between words before concatenation,
+//! the pattern and boundaries define a case.  [`Case::Custom`] is a struct enum variant with
+//! exactly those three fields.  You could create your own case like so.
+//! ```
+//! use convert_case::{Case, Casing, Boundary, pattern};
+//!
+//! let dot_case = Case::Custom {
+//!     boundaries: &[Boundary::from_delim(".")],
+//!     pattern: pattern::lowercase,
+//!     delim: ".",
+//! };
+//!
+//! assert_eq!("AnimalFactoryFactory".to_case(dot_case), "animal.factory.factory");
+//!
+//! assert_eq!(
+//!     "pd.options.mode.copy_on_write"
+//!         .from_case(dot_case)
+//!         .to_case(Case::Title),
+//!     "Pd Options Mode Copy_on_write",
+//! )
+//! ```
+//!
+//! ## Converter
+//!
+//! The intent with case conversion is to use attributes from two cases.  From
+//! the first case is how you split the identifier, and from the second is
+//! how to mutate and join the words.  The [`Converter`] is used instead
+//! to define the _conversion_ process, not a case directly.
+//!
+//! It has the same fields as case, but is exposed via a builder interface
+//! and can be used to apply a conversion on a string directly, without
+//! specifying all the parameters at the time of conversion.
+//!
+//! In the below example, we build a converter that maps the double colon
+//! delimited module path in rust to a series of file directories.
+//!
+//! ```
+//! use convert_case::{Case, Converter, Boundary, pattern};
+//!
+//! let modules_to_path = Converter::new()
+//!     .set_boundaries(&[Boundary::from_delim("::")])
+//!     .set_delim("/");
+//!
+//! assert_eq!(
+//!     modules_to_path.convert("std::os::path"),
+//!     "std/os/path",
+//! );
+//! ```
+//!
+//! # Old
 //!
 //! Provides a [`Case`] enum which defines a variety of cases to convert into.
 //! Strings have implemented the [`Casing`] trait, which adds methods for
