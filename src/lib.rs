@@ -80,11 +80,53 @@
 //!
 //! # Other Behavior
 //!
-//! * removes trailing or duplicate delimiters
-//! * acronyms aren't identified or preserved
-//! * unicode?
-//! * digits are funny
-//! * symbols and non-cased values are ignored
+//! ### Acronyms
+//! Part of the default list of boundaries is [`Acronym`](Boundary::ACRONYM) which
+//! will detect two capital letters followed by a lowercase letter.  But there is no memory
+//! that the word itself was considered an acronym.
+//! ```
+//! # use convert_case::ccase;
+//! assert_eq!(ccase!(snake, "HTTPRequest"), "http_request");
+//! assert_eq!(ccase!(pascal, "HTTPRequest"), "HttpRequest");
+//! ```
+//!
+//! ### Digits
+//! The default list of boundaries includes splitting before and after digits.
+//! ```
+//! # use convert_case::ccase;
+//! assert_eq!(ccase!(title, "word2vec"), "Word 2 Vec");
+//! ```
+//!
+//! ### Unicode
+//! Conversion works on _graphemes_ as defined by the
+//! [`unicode_segmentation`](unicode_segmentation::UnicodeSegmentation::graphemes) library.  
+//! This means that transforming letters to lowercase or uppercase works on all unicode
+//! characters, which also means that the number of characters isn't necessarily the
+//! same after conversion.
+//! ```
+//! # use convert_case::ccase;
+//! assert_eq!(ccase!(kebab, "GranatÄpfel"), "granat-äpfel");
+//! assert_eq!(ccase!(title, "ПЕРСПЕКТИВА24"), "Перспектива 24");
+//! assert_eq!(ccase!(lower, "ὈΔΥΣΣΕΎΣ"), "ὀδυσσεύς");
+//! ```
+//!
+//! ### Symbols
+//! All symbols that are not part of boundary conditions are ignored.
+//! ```
+//! # use convert_case::ccase;
+//! assert_eq!(ccase!(snake, "dots.arent.default"), "dots.arent.default");
+//! assert_eq!(ccase!(pascal, "path/to/file_name"), "Path/to/fileName");
+//! ```
+//!
+//! ### Delimiters
+//! Trailing and leading delimiters are dropped, and duplicate delimiters
+//! are ignored as well.
+//! ```
+//! # use convert_case::ccase;
+//! assert_eq!(ccase!(constant, "_leading_score"), "LEADING_SCORE");
+//! assert_eq!(ccase!(ada, "trailing-dash-"), "Trailing_Dash");
+//! assert_eq!(ccase!(train, "duplicate----hyphens"), "Duplicate-Hyphens");
+//! ```
 //!
 //! # Customizing Behavior
 //!
@@ -173,10 +215,39 @@
 //!     .set_delim("/");
 //!
 //! assert_eq!(
-//!     modules_to_path.convert("std::os::path"),
-//!     "std/os/path",
+//!     modules_to_path.convert("std::os::unix"),
+//!     "std/os/unix",
 //! );
 //! ```
+//!
+//! # Random Feature
+//!
+//! This feature adds two additional cases: [`Case::Random`] and [`Case::PseudoRandom`].
+//! The `random` feature depends on the [`rand`](https://docs.rs/rand) crate.
+//!
+//! You can enable this feature by including the following in your `Cargo.toml`.
+//!
+//! ```toml
+//! [dependencies]
+//! convert_case = { version = "^0.8.0", features = ["random"] }
+//! ```
+//!
+//! TODO: add example
+//!
+//! # Associated Projects
+//!
+//! ## stringcase.org
+//!
+//! While developing `convert_case`, the author became fascinated in the naming conventions
+//! used for cases as well as different implementations for conversion.  On [stringcase.org](https://stringcase.org)
+//! is documentation of the history of naming conventions, a catalogue of case conversion tools,
+//! and a more mathematical definition of what it means to "convert the string case of an identifier."
+//!
+//! ## Command Line Utility `ccase`
+//!
+//! `convert_case` was originally developed for the purposes of a command line utility
+//! for converting the case of strings and filenames.  You can check out
+//! [`ccase` on Github](https://github.com/rutrum/ccase).
 //!
 //! # Old
 //!
@@ -416,28 +487,6 @@
 //! )
 //! ```
 //! For more details on how strings are converted, see the docs for [`Converter`].
-//!
-//! # Random Feature
-//!
-//! This feature adds two additional cases: [`Case::Random`] and [`Case::PseudoRandom`].
-//! The `random` feature depends on the [`rand`](https://docs.rs/rand) crate.
-//!
-//! You can enable this feature by including the following in your `Cargo.toml`.
-//!
-//! ```toml
-//! [dependencies]
-//! convert_case = { version = "^0.8.0", features = ["random"] }
-//! ```
-//!
-//! # Associated Projects
-//!
-//! ## stringcase.org
-//!
-//! ## Command Line Utility `ccase`
-//!
-//! This library was developed for the purposes of a command line utility for converting
-//! the case of strings and filenames.  You can check out
-//! [`ccase` on Github](https://github.com/rutrum/ccase).
 
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
