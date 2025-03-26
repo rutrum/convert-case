@@ -28,7 +28,9 @@
           just
           watchexec
           rustup
+          rust-analyzer
         ];
+        shellHook = ''just --list'';
       };
     };
 }

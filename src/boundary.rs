@@ -41,6 +41,31 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 ///     .to_case(Case::Title);
 /// assert_eq!("7empest By Tool", conv.convert("7empest byTool"));
 /// ```
+///
+/// ## Example
+///
+/// For more complex boundaries, such as splitting based on the first character being a certain
+/// symbol and the second is lowercase, you can instantiate a boundary directly.
+///
+/// ```
+/// # use convert_case::{Boundary, Case, Casing};
+/// let at_then_letter = Boundary {
+///     name: "AtLetter",
+///     condition: |s, _| {
+///         s.get(0).map(|c| *c == "@") == Some(true)
+///             && s.get(1).map(|c| *c == c.to_lowercase()) == Some(true)
+///     },
+///     arg: None,
+///     start: 1,
+///     len: 0,
+/// };
+/// assert_eq!(
+///     "Name@ Domain",
+///     "name@domain"
+///         .with_boundaries(&[at_then_letter])
+///         .to_case(Case::Title)
+/// )
+/// ```
 #[derive(Debug, Eq, Hash, Clone, Copy)]
 pub struct Boundary {
     /// A unique name used for comparison.

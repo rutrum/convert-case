@@ -5,12 +5,10 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 /// Defines the case of an identifier.
-///
 /// ```
 /// use convert_case::{Case, Casing};
 ///
-/// let super_mario_title: String = "super_mario_64".to_case(Case::Title);
-/// assert_eq!("Super Mario 64", super_mario_title);
+/// assert_eq!("super_mario_64".to_case(Case::Title), "Super Mario 64");
 /// ```
 ///
 /// A case is the pair of a [pattern](pattern::Pattern) and a delimeter (a string).  Given
@@ -52,12 +50,12 @@ pub enum Case<'a> {
     /// };
     ///
     /// assert_eq!(
-    ///     "my.new.case",
     ///     "myNewCase".to_case(dot_case),
+    ///     "my.new.case",
     /// );
     /// assert_eq!(
-    ///     "My New Case",
     ///     "my.new.case".from_case(dot_case).to_case(Case::Title),
+    ///     "My New Case",
     /// );
     /// ```
     Custom {
@@ -67,19 +65,20 @@ pub enum Case<'a> {
     },
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
-    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [lowercase](pattern::lowercase)
-    /// * Delimeter: Underscore `"_"`
+    ///
+    /// * Boundaries : [Underscore](Boundary::UNDERSCORE)
+    /// * Pattern : [Lowercase](pattern::lowercase)
+    /// * Delimeter : Underscore `"_"`
     ///
     /// ```
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my_variable_name", "My variable NAME".to_case(Case::Snake))
+    /// assert_eq!("My variable NAME".to_case(Case::Snake), "my_variable_name")
     /// ```
     Snake,
 
     /// Constant case strings are delimited by underscores `_` and are all uppercase.
     /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Pattern: [Uppercase](pattern::uppercase)
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
@@ -94,7 +93,7 @@ pub enum Case<'a> {
     /// Ada case strings are delimited by underscores `_`.  The leading letter of
     /// each word is uppercase, while the rest is lowercase.
     /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [capital](pattern::capital)
+    /// * Pattern: [Capital](pattern::capital)
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
@@ -105,7 +104,7 @@ pub enum Case<'a> {
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [lowercase](pattern::lowercase)
+    /// * Pattern: [Lowercase](pattern::lowercase)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
@@ -116,7 +115,7 @@ pub enum Case<'a> {
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Pattern: [Uppercase](pattern::uppercase)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
@@ -128,10 +127,10 @@ pub enum Case<'a> {
     /// Upper kebab case is an alternative name for [Cobol case](Case::Cobol).
     UpperKebab,
 
-    /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
-    /// except for the leading character of each word.
+    /// Train case strings are delimited by hyphens `-`.  The leading letter of
+    /// each word is uppercase, while the rest is lowercase.
     /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [capital](pattern::capital)
+    /// * Pattern: [Capital](pattern::capital)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
@@ -142,7 +141,7 @@ pub enum Case<'a> {
 
     /// Flat case strings are all lowercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [lowercase](pattern::lowercase)
+    /// * Pattern: [Lowercase](pattern::lowercase)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
@@ -153,7 +152,7 @@ pub enum Case<'a> {
 
     /// Upper flat case strings are all uppercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Pattern: [Uppercase](pattern::uppercase)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
@@ -167,7 +166,7 @@ pub enum Case<'a> {
     /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
     ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
     ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [capital](`pattern::capital`)
+    /// * Pattern: [Capital](`pattern::capital`)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
@@ -184,7 +183,7 @@ pub enum Case<'a> {
     /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
     ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
     ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [camel](`pattern::camel`)
+    /// * Pattern: [Camel](`pattern::camel`)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
@@ -195,7 +194,7 @@ pub enum Case<'a> {
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [lowercase](`pattern::lowercase`)
+    /// * Pattern: [Lowercase](`pattern::lowercase`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -206,7 +205,7 @@ pub enum Case<'a> {
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [uppercase](`pattern::uppercase`)
+    /// * Pattern: [Uppercase](`pattern::uppercase`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -219,7 +218,7 @@ pub enum Case<'a> {
     /// each word is uppercase.  No inferences are made about language, so words
     /// like "as", "to", and "for" will still be capitalized.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [capital](`pattern::capital`)
+    /// * Pattern: [Capital](`pattern::capital`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -231,7 +230,7 @@ pub enum Case<'a> {
     /// Sentence case strings are delimited by spaces. Only the leading character of
     /// the first word is uppercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [sentence](`pattern::sentence`)
+    /// * Pattern: [Sentence](`pattern::sentence`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -243,7 +242,7 @@ pub enum Case<'a> {
     /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
     /// and lowercase.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [alternating](pattern::alternating)
+    /// * Pattern: [Alternating](pattern::alternating)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -255,7 +254,7 @@ pub enum Case<'a> {
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [toggle](`pattern::toggle`)
+    /// * Pattern: [Toggle](`pattern::toggle`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -270,7 +269,7 @@ pub enum Case<'a> {
     /// This uses the `rand` crate
     /// and is only available with the "random" feature.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [random](pattern::random)
+    /// * Pattern: [Random](pattern::random)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -290,7 +289,7 @@ pub enum Case<'a> {
     /// This uses the `rand` crate and is
     /// only available with the "random" feature.
     /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [pseudo_random](pattern::pseudo_random)
+    /// * Pattern: [Pseudo random](pattern::pseudo_random)
     /// * Delimeter: Space `" "`
     ///
     /// ```
