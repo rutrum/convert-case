@@ -1,6 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
 
 use alloc::vec::Vec;
+use core::hash::{Hash, Hasher};
 
 fn grapheme_is_digit(c: &&str) -> bool {
     c.chars().all(|c| c.is_ascii_digit())
@@ -41,7 +42,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 ///     .to_case(Case::Title);
 /// assert_eq!("7empest By Tool", conv.convert("7empest byTool"));
 /// ```
-#[derive(Debug, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Eq, Clone, Copy)]
 pub struct Boundary {
     /// A unique name used for comparison.
     pub name: &'static str,
@@ -61,6 +62,12 @@ pub struct Boundary {
 impl PartialEq for Boundary {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
+    }
+}
+
+impl Hash for Boundary {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
     }
 }
 
