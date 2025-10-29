@@ -204,7 +204,7 @@ pub enum Case<'a> {
     /// ```
     Lower,
 
-    /// Lowercase strings are delimited by spaces and all characters are lowercase.
+    /// Uppercase strings are delimited by spaces and all characters are uppercase.
     /// * Boundaries: [Space](`Boundary::SPACE`)
     /// * Pattern: [Uppercase](`pattern::uppercase`)
     /// * Delimeter: Space `" "`
