@@ -3,6 +3,68 @@
 //! A pattern is a function that maps a list of words into another list
 //! after changing the casing of each letter.  How a patterns mutates
 //! each letter can be dependent on the word the letters are present in.
+//!
+//! ## Custom Pattern
+//!
+//! Any function that matches the `Pattern` type alias is sufficient for
+//! a pattern for custom casing behavior.  One example might be a pattern
+//! that detects a fixed list of two-letter acronyms, and capitalizes them
+//! appropriately on output.
+//!
+//! To work over graphemes, you can use the provided methods in the `word_pattern`
+//! module that will handle that for you.
+//! ```
+//! use convert_case::{Converter, pattern::word_pattern};
+//!
+//! fn pascal_upper_acronyms(words: &[&str]) -> Vec<String> {
+//!     words.iter()
+//!         .map(|word| word_pattern::capital(word))
+//!         .map(|word| match word.as_ref() {
+//!             "Io" | "Xml" => word.to_uppercase(),
+//!             _ => word,
+//!         })
+//!         .collect()
+//! }
+//!
+//! let acronym_converter = Converter::new()
+//!     .set_pattern(pascal_upper_acronyms);
+//!
+//! assert_eq!(acronym_converter.convert("io_stream"), "IOStream");
+//! assert_eq!(acronym_converter.convert("xml request"), "XMLRequest");
+//! ```
+//!
+//! Another example might be a one that explicitly adds leading
+//! and trailing double underscores.  We do this by modifying the words directly,
+//! which will get passed as-is to the join function.
+//! ```
+//! use convert_case::Converter;
+//!
+//! fn snake_dunder(mut words: &[&str]) -> Vec<String> {
+//!     words
+//!         .into_iter()
+//!         .map(|word| word.to_lowercase())
+//!         .enumerate()
+//!         .map(|(i, word)| {
+//!             if words.len() == 1 {
+//!                 format!("__{}__", word)
+//!             } else if i == 0 {
+//!                 format!("__{}", word)
+//!             } else if i == words.len() - 1 {
+//!                 format!("{}__", word)
+//!             } else {
+//!                 word
+//!             }
+//!         })
+//!         .collect()
+//! }
+//!
+//! let dunder_converter = Converter::new()
+//!     .set_pattern(snake_dunder)
+//!     .set_delim("_");
+//!
+//! assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
+//! assert_eq!(dunder_converter.convert("ITER"), "__iter__");
+//! ```
 
 #[cfg(feature = "random")]
 use rand::prelude::*;
@@ -12,14 +74,18 @@ use alloc::vec::Vec;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-mod word_pattern {
+/// Methods for applying grapheme-level uppercasing and lowercasing.
+///
+/// You do not want to act on chars, since you could split a unicode character
+/// in half and cause a panic.
+pub mod word_pattern {
     use super::*;
 
-    pub fn lowercase(word: &str) -> String {
+    pub(crate) fn lowercase(word: &str) -> String {
         word.to_lowercase()
     }
 
-    pub fn uppercase(word: &str) -> String {
+    pub(crate) fn uppercase(word: &str) -> String {
         word.to_uppercase()
     }
 
@@ -44,14 +110,17 @@ mod word_pattern {
     }
 }
 
+/// A pattern is a function that maps a list of word references
+/// to a vector of strings.  For more information
+/// about patterns, see the [`pattern`](index.html) module documentation.
 pub type Pattern = fn(&[&str]) -> Vec<String>;
 
 /// The no-op pattern performs no mutations.
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::noop(&["Case", "CONVERSION", "library"]),
 ///     vec!["Case", "CONVERSION", "library"],
-///     pattern::noop(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn noop(words: &[&str]) -> Vec<String> {
@@ -62,8 +131,8 @@ pub fn noop(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::lowercase(&["Case", "CONVERSION", "library"]),
 ///     vec!["case", "conversion", "library"],
-///     pattern::lowercase(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn lowercase(words: &[&str]) -> Vec<String> {
@@ -77,8 +146,8 @@ pub fn lowercase(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::uppercase(&["Case", "CONVERSION", "library"]),
 ///     vec!["CASE", "CONVERSION", "LIBRARY"],
-///     pattern::uppercase(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn uppercase(words: &[&str]) -> Vec<String> {
@@ -93,8 +162,8 @@ pub fn uppercase(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::capital(&["Case", "CONVERSION", "library"]),
 ///     vec!["Case", "Conversion", "Library"],
-///     pattern::capital(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn capital(words: &[&str]) -> Vec<String> {
@@ -109,8 +178,8 @@ pub fn capital(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::camel(&["Case", "CONVERSION", "library"]),
 ///     vec!["case", "Conversion", "Library"],
-///     pattern::camel(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn camel(words: &[&str]) -> Vec<String> {
@@ -132,8 +201,8 @@ pub fn camel(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::sentence(&["Case", "CONVERSION", "library"]),
 ///     vec!["Case", "conversion", "library"],
-///     pattern::sentence(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn sentence(words: &[&str]) -> Vec<String> {
@@ -155,8 +224,8 @@ pub fn sentence(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::toggle(&["Case", "CONVERSION", "library"]),
 ///     vec!["cASE", "cONVERSION", "lIBRARY"],
-///     pattern::toggle(&["Case", "CONVERSION", "library"])
 /// );
 /// ```
 pub fn toggle(words: &[&str]) -> Vec<String> {
@@ -175,15 +244,16 @@ pub fn toggle(words: &[&str]) -> Vec<String> {
 /// ```
 /// # use convert_case::pattern;
 /// assert_eq!(
+///     pattern::alternating(&["Case", "CONVERSION", "library"]),
 ///     vec!["cAsE", "cOnVeRsIoN", "lIbRaRy"],
-///     pattern::alternating(&["Case", "CONVERSION", "library"])
 /// );
 /// assert_eq!(
-///     vec!["aNoThEr", "ExAmPlE"],
 ///     pattern::alternating(&["Another", "Example"]),
+///     vec!["aNoThEr", "ExAmPlE"],
 /// );
 /// ```
 pub fn alternating(words: &[&str]) -> Vec<String> {
+    // TODO: this is broken, hasn't been updated for graphemes
     let mut upper = false;
     words
         .iter()
@@ -210,19 +280,17 @@ pub fn alternating(words: &[&str]) -> Vec<String> {
 /// Lowercases or uppercases each letter
 /// uniformly randomly.  
 ///
-/// This uses the `rand` crate and is only available with the "random"
-/// feature.  This example will not pass the assertion due to randomness, but it used as an
-/// example of what output is possible.
-/// ```should_panic
+/// This uses the `rand` crate and is only available with the "random" feature.
+/// ```
 /// # use convert_case::pattern;
 /// # #[cfg(any(doc, feature = "random"))]
-/// assert_eq!(
-///     vec!["Case", "coNVeRSiOn", "lIBraRY"],
-///     pattern::random(&["Case", "CONVERSION", "library"])
-/// );
+/// pattern::random(&["Case", "CONVERSION", "library"]);
+/// // "casE", "coNVeRSiOn", "lIBraRY"
 /// ```
+// #[doc(cfg(feature = "random"))]
 #[cfg(feature = "random")]
 pub fn random(words: &[&str]) -> Vec<String> {
+    // TODO: this is broken, hasn't been updated for graphemes
     let mut rng = rand::thread_rng();
     words
         .iter()
@@ -248,15 +316,12 @@ pub fn random(words: &[&str]) -> Vec<String> {
 /// more "random looking" words.  A consequence of this algorithm for randomization
 /// is that there will never be three consecutive letters that are all lowercase
 /// or all uppercase.  This uses the `rand` crate and is only available with the "random"
-/// feature.  This example will not pass the assertion due to randomness, but it used as an
-/// example of what output is possible.
-/// ```should_panic
+/// feature.
+/// ```
 /// # use convert_case::pattern;
 /// # #[cfg(any(doc, feature = "random"))]
-/// assert_eq!(
-///     vec!["cAsE", "cONveRSioN", "lIBrAry"],
-///     pattern::pseudo_random(&["Case", "CONVERSION", "library"]),
-/// );
+/// pattern::pseudo_random(&["Case", "CONVERSION", "library"]);
+/// // "cAsE", "cONveRSioN", "lIBrAry"
 /// ```
 #[cfg(feature = "random")]
 pub fn pseudo_random(words: &[&str]) -> Vec<String> {

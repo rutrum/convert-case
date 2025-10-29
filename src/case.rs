@@ -34,6 +34,7 @@ use alloc::vec::Vec;
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
 /// converting "from" a particular case.
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum Case<'a> {
     /// Custom cases can be delimited by any static string slice and mutate words
     /// using any pattern.  Further, they can use any list of boundaries for

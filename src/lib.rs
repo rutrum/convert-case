@@ -243,6 +243,7 @@
 //!
 //! ```
 //! # use convert_case::ccase;
+//! # #[cfg(any(doc, feature = "random"))]
 //! ccase!(random, "What's the deal with airline food?");
 //! // WhAT's tHe Deal WitH aIRline fOOD?
 //! ```
@@ -254,6 +255,7 @@
 //!
 //! ```
 //! # use convert_case::ccase;
+//! # #[cfg(any(doc, feature = "random"))]
 //! ccase!(random, "What's the deal with airline food?");
 //! // wHAt'S The DeAl WIth AiRlInE fOoD?
 //! ```
@@ -1142,5 +1144,15 @@ mod test {
     fn russian() {
         let s = "ПЕРСПЕКТИВА24".to_string();
         let _n = s.to_case(Case::Title);
+        let _n = s.to_case(Case::Alternating);
+    }
+
+    // From issue https://github.com/rutrum/convert-case/issues/4
+    #[test]
+    #[cfg(feature = "random")]
+    fn russian_random() {
+        let s = "ПЕРСПЕКТИВА24".to_string();
+        let _n = s.to_case(Case::Random);
+        let _n = s.to_case(Case::PseudoRandom);
     }
 }
