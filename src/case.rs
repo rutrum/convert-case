@@ -319,22 +319,22 @@ impl Case<'_> {
     pub fn boundaries(&self) -> &[Boundary] {
         use Case::*;
         match self {
-            Snake | Constant | UpperSnake | Ada => &[Boundary::UNDERSCORE],
-            Kebab | Cobol | UpperKebab | Train => &[Boundary::HYPHEN],
-            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::SPACE],
+            Snake | Constant | UpperSnake | Ada => &[Boundary::Underscore],
+            Kebab | Cobol | UpperKebab | Train => &[Boundary::Hyphen],
+            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::Space],
             Camel | UpperCamel | Pascal => &[
-                Boundary::LOWER_UPPER,
-                Boundary::ACRONYM,
-                Boundary::LOWER_DIGIT,
-                Boundary::UPPER_DIGIT,
-                Boundary::DIGIT_LOWER,
-                Boundary::DIGIT_UPPER,
+                Boundary::LowerUpper,
+                Boundary::Acronym,
+                Boundary::LowerDigit,
+                Boundary::UpperDigit,
+                Boundary::DigitLower,
+                Boundary::DigitUpper,
             ],
             UpperFlat | Flat => &[],
             Custom { boundaries, .. } => boundaries,
 
             #[cfg(feature = "random")]
-            Random | PseudoRandom => &[Boundary::SPACE],
+            Random | PseudoRandom => &[Boundary::Space],
         }
     }
 

@@ -81,7 +81,7 @@
 //! use convert_case::{Boundary, Case, Casing};
 //!
 //! assert_eq!(
-//!     "Vector4D".without_boundaries(&[Boundary::DIGIT_UPPER]).to_case(Case::Snake),
+//!     "Vector4D".without_boundaries(&[Boundary::DigitUpper]).to_case(Case::Snake),
 //!     "vector_4d",
 //! );
 //! ```
@@ -89,7 +89,7 @@
 //! # Other Behavior
 //!
 //! ### Acronyms
-//! Part of the default list of boundaries is [`acronym`](Boundary::ACRONYM) which
+//! Part of the default list of boundaries is [`acronym`](Boundary::Acronym) which
 //! will detect two capital letters followed by a lowercase letter.  But there is no memory
 //! that the word itself was parsed considered an acronym.
 //! ```
@@ -347,7 +347,7 @@
 //!     "scale_2d",
 //!     "scale2D"
 //!         .from_case(Case::Camel)
-//!         .without_boundaries(&[Boundary::DIGIT_UPPER, Boundary::DIGIT_LOWER])
+//!         .without_boundaries(&[Boundary::DigitUpper, Boundary::DigitLower])
 //!         .to_case(Case::Snake)
 //! );
 //!
@@ -355,7 +355,7 @@
 //! assert_eq!(
 //!     "scale_2d",
 //!     "scale2D"
-//!         .with_boundaries(&[Boundary::LOWER_DIGIT])
+//!         .with_boundaries(&[Boundary::LowerDigit])
 //!         .to_case(Case::Snake)
 //! );
 //! ```
@@ -433,7 +433,7 @@ pub trait Casing<T: AsRef<str>> {
     /// assert_eq!(
     ///     "e1_m1_hangar",
     ///     "E1M1 Hangar"
-    ///         .with_boundaries(&[Boundary::DIGIT_UPPER, Boundary::SPACE])
+    ///         .with_boundaries(&[Boundary::DigitUpper, Boundary::Space])
     ///         .to_case(Case::Snake)
     /// );
     /// ```
@@ -555,7 +555,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     ///
     /// let song = "theHumbling river-puscifer"
     ///     .from_case(Case::Kebab) // from Casing trait
-    ///     .with_boundaries(&[Boundary::SPACE, Boundary::LOWER_UPPER]) // overwrites `from_case`
+    ///     .with_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
     ///     .to_case(Case::Pascal);
     /// assert_eq!("TheHumblingRiver-puscifer", song);  // doesn't split on hyphen `-`
     /// ```
@@ -1061,7 +1061,7 @@ mod test {
             "m02_s05_binary_trees.pdf",
             "M02S05BinaryTrees.pdf"
                 .from_case(Case::Pascal)
-                .without_boundaries(&[Boundary::UPPER_DIGIT])
+                .without_boundaries(&[Boundary::UpperDigit])
                 .to_case(Case::Snake)
         );
     }
@@ -1071,7 +1071,7 @@ mod test {
         assert_eq!(
             "my-dumb-file-name",
             "my_dumbFileName"
-                .with_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER])
+                .with_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
                 .to_case(Case::Kebab)
         );
     }

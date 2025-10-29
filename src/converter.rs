@@ -40,7 +40,7 @@ use alloc::vec::Vec;
 ///
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
-///     .set_boundaries(&[Boundary::HYPHEN])
+///     .set_boundaries(&[Boundary::Hyphen])
 ///     .set_pattern(pattern::lowercase)
 ///     .set_delim("_");
 /// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
@@ -52,7 +52,7 @@ use alloc::vec::Vec;
 /// ```
 /// # use convert_case::{Boundary, Case, Casing, Converter, pattern};
 /// let dot_camel = Converter::new()
-///     .set_boundaries(&[Boundary::LOWER_UPPER, Boundary::LOWER_DIGIT])
+///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
 ///     .set_pattern(pattern::camel)
 ///     .set_delim(".");
 /// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
@@ -141,7 +141,7 @@ impl Converter {
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
-    ///     .set_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER])
+    ///     .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
     ///     .to_case(Case::Lower);
     /// assert_eq!("panic attack dream theater", conv.convert("panicAttack_dreamTheater"))
     /// ```
@@ -155,7 +155,7 @@ impl Converter {
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
     ///     .from_case(Case::Title)
-    ///     .add_boundary(Boundary::HYPHEN)
+    ///     .add_boundary(Boundary::Hyphen)
     ///     .to_case(Case::Snake);
     /// assert_eq!("my_biography_video_1", conv.convert("My Biography - Video 1"))
     /// ```
@@ -170,7 +170,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .from_case(Case::Kebab)
     ///     .to_case(Case::Title)
-    ///     .add_boundaries(&[Boundary::UNDERSCORE, Boundary::LOWER_UPPER]);
+    ///     .add_boundaries(&[Boundary::Underscore, Boundary::LowerUpper]);
     /// assert_eq!("2020 10 First Day", conv.convert("2020-10_firstDay"));
     /// ```
     pub fn add_boundaries(mut self, bs: &[Boundary]) -> Self {
@@ -182,7 +182,7 @@ impl Converter {
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
-    ///     .remove_boundary(Boundary::ACRONYM)
+    ///     .remove_boundary(Boundary::Acronym)
     ///     .to_case(Case::Kebab);
     /// assert_eq!("httprequest-parser", conv.convert("HTTPRequest_parser"));
     /// ```
@@ -329,7 +329,7 @@ mod test {
     #[test]
     fn remove_boundary() {
         let conv = Converter::new()
-            .remove_boundary(Boundary::DIGIT_UPPER)
+            .remove_boundary(Boundary::DigitUpper)
             .to_case(Case::Snake);
         assert_eq!("test_08bound", conv.convert("Test 08Bound"));
         assert_eq!("a_8_a_a_8a", conv.convert("a8aA8A"));
@@ -340,7 +340,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
-            .add_boundary(Boundary::LOWER_UPPER);
+            .add_boundary(Boundary::LowerUpper);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
     }
 
@@ -349,7 +349,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
-            .add_boundaries(&[Boundary::LOWER_UPPER, Boundary::UPPER_LOWER]);
+            .add_boundaries(&[Boundary::LowerUpper, Boundary::UpperLower]);
         assert_eq!("word-word-w-ord", conv.convert("word_wordWord"));
     }
 
@@ -358,7 +358,7 @@ mod test {
         let conv = Converter::new().from_case(Case::Snake).to_case(Case::Kebab);
         assert_eq!("word-wordword", conv.convert("word_wordWord"));
 
-        let conv = conv.add_boundary(Boundary::LOWER_UPPER);
+        let conv = conv.add_boundary(Boundary::LowerUpper);
         assert_eq!("word-word-word", conv.convert("word_wordWord"));
     }
 
@@ -366,9 +366,9 @@ mod test {
     fn explicit_boundaries() {
         let conv = Converter::new()
             .set_boundaries(&[
-                Boundary::DIGIT_LOWER,
-                Boundary::DIGIT_UPPER,
-                Boundary::ACRONYM,
+                Boundary::DigitLower,
+                Boundary::DigitUpper,
+                Boundary::Acronym,
             ])
             .to_case(Case::Snake);
         assert_eq!(
