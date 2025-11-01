@@ -1,6 +1,5 @@
 use crate::boundary;
 use crate::boundary::Boundary;
-use crate::pattern;
 use crate::pattern::Pattern;
 use crate::Case;
 
@@ -22,7 +21,7 @@ use alloc::vec::Vec;
 /// than those provided in `Casing`, or if it is simply more convenient or explicit.
 ///
 /// ```
-/// use convert_case::{Boundary, Case, Casing, Converter, pattern};
+/// use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 ///
 /// let s = "DialogueBox-border-shadow";
 ///
@@ -41,7 +40,7 @@ use alloc::vec::Vec;
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::Hyphen])
-///     .set_pattern(pattern::lowercase)
+///     .set_pattern(Pattern::Lowercase)
 ///     .set_delim("_");
 /// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
 /// ```
@@ -50,10 +49,10 @@ use alloc::vec::Vec;
 /// not provided as a variant of `Case`.
 ///
 /// ```
-/// # use convert_case::{Boundary, Case, Casing, Converter, pattern};
+/// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
-///     .set_pattern(pattern::camel)
+///     .set_pattern(Pattern::Camel)
 ///     .set_delim(".");
 /// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
 /// ```
@@ -74,7 +73,7 @@ impl Default for Converter {
     fn default() -> Self {
         Converter {
             boundaries: Boundary::defaults().to_vec(),
-            pattern: pattern::noop,
+            pattern: Pattern::Noop,
             delim: String::new(),
         }
     }
@@ -107,7 +106,7 @@ impl Converter {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = boundary::split(&s, &self.boundaries);
         let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
-        (self.pattern)(&words).join(&self.delim)
+        self.pattern.mutate(&words).join(&self.delim)
     }
 
     /// Set the pattern and delimiter to those associated with the given case.
@@ -237,10 +236,10 @@ impl Converter {
 
     /// Sets the pattern.
     /// ```
-    /// # use convert_case::{Case, Converter, pattern};
+    /// # use convert_case::{Case, Converter, Pattern};
     /// let conv = Converter::new()
     ///     .set_delim("_")
-    ///     .set_pattern(pattern::sentence);
+    ///     .set_pattern(Pattern::Sentence);
     /// assert_eq!("Bjarne_case", conv.convert("BJARNE CASE"));
     /// ```
     pub fn set_pattern(mut self, p: Pattern) -> Self {
@@ -259,7 +258,7 @@ impl Converter {
     /// assert_eq!("KoRn_Alone_I_Break", conv.convert("KoRn Alone I Break"));
     /// ```
     pub fn remove_pattern(mut self) -> Self {
-        self.pattern = pattern::noop;
+        self.pattern = Pattern::Noop;
         self
     }
 }
@@ -280,7 +279,7 @@ mod test {
     fn snake_converter_from_scratch() {
         let conv = Converter::new()
             .set_delim("_")
-            .set_pattern(pattern::lowercase);
+            .set_pattern(Pattern::Lowercase);
         let s = String::from("my var name");
         assert_eq!(s.to_case(Case::Snake), conv.convert(s));
     }
@@ -289,7 +288,7 @@ mod test {
     fn custom_pattern() {
         let conv = Converter::new()
             .to_case(Case::Snake)
-            .set_pattern(pattern::sentence);
+            .set_pattern(Pattern::Sentence);
         assert_eq!("Bjarne_case", conv.convert("bjarne case"));
     }
 

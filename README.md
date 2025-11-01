@@ -66,7 +66,9 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
-### 1.0.0
+### 0.9.0
+
+TODO: not accurate
 
 Most features have been implemented.  The final, large scale change would be adding support to ascii string via the ascii crate, likely a 2.0.0 release.  But the recent breakthrough in redesigning the `Boundary` and `Pattern` types allowed the flexibility to fix a variety of known limitations of the API.  This 1.0.0 release adds some final touches. In particular, a new suggested default way of using the library.  This method can work for 99% of the crates usage patterns, and require less code to do so.  Further, the documentation has been cleaned and updated to reflect the first stable release.
 
@@ -78,6 +80,11 @@ New features:
 * `Casing::is_case` has a different implementation that less sensitive to digits
     * before, something like `1CAPS` would have not been considered `Case::Upper`, but now does, which aligns more with expectations
     * and due to the change in implementation, `ToString` is no longer a required trait for `Casing`
+
+Other breaking changes:
+* `Boundary` is reverted back to being an enum, but with a `Custom` variant that gives all the same flexibility that `Boundary` had as a struct.  This aligns with the `Case::Custom` pattern.
+    * `Boundary.match` will return true if a set of graphemes matches the boundary condition
+    * `Boundary` methods for `start` and `len` describe how enum variants consume letters when matched
 
 ### 0.8.0: Pattern Overhaul, Custom Case
 

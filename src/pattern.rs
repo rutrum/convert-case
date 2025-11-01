@@ -14,7 +14,7 @@
 //! To work over graphemes, you can use the provided methods in the `word_pattern`
 //! module that will handle that for you.
 //! ```
-//! use convert_case::{Converter, pattern::word_pattern};
+//! use convert_case::{Converter, Pattern, pattern::word_pattern};
 //!
 //! fn pascal_upper_acronyms(words: &[&str]) -> Vec<String> {
 //!     words.iter()
@@ -27,7 +27,7 @@
 //! }
 //!
 //! let acronym_converter = Converter::new()
-//!     .set_pattern(pascal_upper_acronyms);
+//!     .set_pattern(Pattern::Custom(pascal_upper_acronyms));
 //!
 //! assert_eq!(acronym_converter.convert("io_stream"), "IOStream");
 //! assert_eq!(acronym_converter.convert("xml request"), "XMLRequest");
@@ -37,7 +37,7 @@
 //! and trailing double underscores.  We do this by modifying the words directly,
 //! which will get passed as-is to the join function.
 //! ```
-//! use convert_case::Converter;
+//! use convert_case::{Converter, Pattern};
 //!
 //! fn snake_dunder(mut words: &[&str]) -> Vec<String> {
 //!     words
@@ -59,7 +59,7 @@
 //! }
 //!
 //! let dunder_converter = Converter::new()
-//!     .set_pattern(snake_dunder)
+//!     .set_pattern(Pattern::Custom(snake_dunder))
 //!     .set_delim("_");
 //!
 //! assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
@@ -110,10 +110,158 @@ pub mod word_pattern {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Pattern {
+    Custom(fn(&[&str]) -> Vec<String>),
+    Noop,
+    Lowercase,
+    Uppercase,
+    Capital,
+    Camel,
+    Sentence,
+    Toggle,
+    Alternating,
+    #[cfg(feature = "random")]
+    Random,
+    #[cfg(feature = "random")]
+    PseudoRandom,
+}
+
+impl Pattern {
+    pub fn mutate(&self, words: &[&str]) -> Vec<String> {
+        use Pattern::*;
+        match self {
+            Custom(_mutate) => (_mutate)(words),
+            Noop => words.iter().map(|word| word.to_string()).collect(),
+            Lowercase => words
+                .iter()
+                .map(|word| word_pattern::lowercase(word))
+                .collect(),
+            Uppercase => words
+                .iter()
+                .map(|word| word_pattern::uppercase(word))
+                .collect(),
+            Capital => words
+                .iter()
+                .map(|word| word_pattern::capital(word))
+                .collect(),
+            Camel => words
+                .iter()
+                .enumerate()
+                .map(|(i, &word)| {
+                    if i == 0 {
+                        word_pattern::lowercase(&word)
+                    } else {
+                        word_pattern::capital(&word)
+                    }
+                })
+                .collect(),
+            Sentence => words
+                .iter()
+                .enumerate()
+                .map(|(i, &word)| {
+                    if i == 0 {
+                        word_pattern::capital(&word)
+                    } else {
+                        word_pattern::lowercase(&word)
+                    }
+                })
+                .collect(),
+            Toggle => words
+                .iter()
+                .map(|word| word_pattern::toggle(word))
+                .collect(),
+            Alternating => {
+                let mut upper = false;
+                words
+                    .iter()
+                    .map(|word| {
+                        word.chars()
+                            .map(|letter| {
+                                if letter.is_uppercase() || letter.is_lowercase() {
+                                    if upper {
+                                        upper = false;
+                                        letter.to_uppercase().to_string()
+                                    } else {
+                                        upper = true;
+                                        letter.to_lowercase().to_string()
+                                    }
+                                } else {
+                                    letter.to_string()
+                                }
+                            })
+                            .collect()
+                    })
+                    .collect()
+            }
+            // #[doc(cfg(feature = "random"))]
+            #[cfg(feature = "random")]
+            Random => {
+                // TODO: this is broken, hasn't been updated for graphemes
+                let mut rng = rand::thread_rng();
+                words
+                    .iter()
+                    .map(|word| {
+                        word.chars()
+                            .map(|letter| {
+                                if rng.gen::<f32>() > 0.5 {
+                                    letter.to_uppercase().to_string()
+                                } else {
+                                    letter.to_lowercase().to_string()
+                                }
+                            })
+                            .collect()
+                    })
+                    .collect()
+            }
+            #[cfg(feature = "random")]
+            PsuedoRandom => {
+                // This is a dumb feature.  Can this be seen as a custom variant?
+                let mut rng = rand::thread_rng();
+
+                // Keeps track of when to alternate
+                let mut alt: Option<bool> = None;
+                words
+                    .iter()
+                    .map(|word| {
+                        word.chars()
+                            .map(|letter| {
+                                match alt {
+                                    // No existing pattern, start one
+                                    None => {
+                                        if rng.gen::<f32>() > 0.5 {
+                                            alt = Some(false); // Make the next char lower
+                                            letter.to_uppercase().to_string()
+                                        } else {
+                                            alt = Some(true); // Make the next char upper
+                                            letter.to_lowercase().to_string()
+                                        }
+                                    }
+                                    // Existing pattern, do what it says
+                                    Some(upper) => {
+                                        alt = None;
+                                        if upper {
+                                            letter.to_uppercase().to_string()
+                                        } else {
+                                            letter.to_lowercase().to_string()
+                                        }
+                                    }
+                                }
+                            })
+                            .collect()
+                    })
+                    .collect()
+            }
+        }
+    }
+}
+
 /// A pattern is a function that maps a list of word references
 /// to a vector of strings.  For more information
 /// about patterns, see the [`pattern`](index.html) module documentation.
-pub type Pattern = fn(&[&str]) -> Vec<String>;
+// pub type Pattern = fn(&[&str]) -> Vec<String>;
+
+// TODO: do I keep all these functions?
 
 /// The no-op pattern performs no mutations.
 /// ```

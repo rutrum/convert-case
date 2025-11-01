@@ -188,11 +188,11 @@
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
 //! exactly those three fields.  You could create your own case like so.
 //! ```
-//! use convert_case::{Case, Casing, Boundary, pattern};
+//! use convert_case::{Case, Casing, Boundary, Pattern};
 //!
 //! let dot_case = Case::Custom {
 //!     boundaries: &[Boundary::from_delim(".")],
-//!     pattern: pattern::lowercase,
+//!     pattern: Pattern::Lowercase,
 //!     delim: ".",
 //! };
 //!
@@ -388,11 +388,12 @@ use alloc::vec::Vec;
 mod boundary;
 mod case;
 mod converter;
-
 pub mod pattern;
+
 pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
+pub use pattern::Pattern;
 
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple
