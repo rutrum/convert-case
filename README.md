@@ -70,7 +70,7 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 TODO: not accurate
 
-Most features have been implemented.  The final, large scale change would be adding support to ascii string via the ascii crate, likely a 2.0.0 release.  But the recent breakthrough in redesigning the `Boundary` and `Pattern` types allowed the flexibility to fix a variety of known limitations of the API.  This 1.0.0 release adds some final touches. In particular, a new suggested default way of using the library.  This method can work for 99% of the crates usage patterns, and require less code to do so.  Further, the documentation has been cleaned and updated to reflect the first stable release.
+Most features have been implemented.  The final, large scale change would be adding support to ascii string via the ascii crate, likely a 2.0.0 release.  But the recent breakthrough in redesigning the `Boundary` and `Pattern` types allowed the flexibility to fix a variety of known limitations of the API.  This release is preparing for a 1.0.0 version. In particular, a new suggested default way of using the library.  This method can work for 99% of the crates usage patterns, and require less code to do so.  Further, the documentation has been cleaned and updated to reflect the first stable release.
 
 New features:
 * `ccase!` macro that performs case conversion on a string _without needing to import `Case` or `Casing`_.  It has two forms:
@@ -85,6 +85,8 @@ Other breaking changes:
 * `Boundary` is reverted back to being an enum, but with a `Custom` variant that gives all the same flexibility that `Boundary` had as a struct.  This aligns with the `Case::Custom` pattern.
     * `Boundary.match` will return true if a set of graphemes matches the boundary condition
     * `Boundary` methods for `start` and `len` describe how enum variants consume letters when matched
+* `Pattern` is reverted back to being an enum, but with a `Custom` variant that allowed you to pass your own `fn (&[&str]) -> Vec<String>` as input.
+    * `Pattern.mutate` will perform the associated mutation function
 
 ### 0.8.0: Pattern Overhaul, Custom Case
 
@@ -132,7 +134,3 @@ Other changes:
 
 * Remove most imports from doc comments.
 * Remove loop over `str::chars` in favor of `graphemes` from `unicode-segmentation`.
-
-## Other Projects
-
-Github user [Wild-W](https://github.com/Wild-W) has built [nodejs bindings for convert_case](https://github.com/Wild-W/convert-case) that are up to date with 0.6.0.

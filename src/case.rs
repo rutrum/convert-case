@@ -11,17 +11,17 @@ use alloc::vec::Vec;
 /// assert_eq!("super_mario_64".to_case(Case::Title), "Super Mario 64");
 /// ```
 ///
-/// A case is the pair of a [pattern](pattern::Pattern) and a delimeter (a string).  Given
+/// A case is the pair of a [pattern](Pattern) and a delimeter (a string).  Given
 /// a list of words, a pattern describes how to mutate the words and a delimeter is how the mutated
 /// words are joined together.  These inherantly are the properties of what makes a "multiword
 /// identifier case", or simply "case".
 ///
 /// | pattern | underscore `_` | hyphen `-` | empty string | space |
 /// | ---: | --- | --- | --- | --- |
-/// | [lowercase](pattern::lowercase) | [snake_case](Case::Snake) | [kebab-case](Case::Kebab) | [flatcase](Case::Flat) | [lower case](Case::Lower) |
-/// | [uppercase](pattern::uppercase) | [CONSTANT_CASE](Case::Constant) | [COBOL-CASE](Case::Cobol) | [UPPERFLATCASE](Case::UpperFlat) | [UPPER CASE](Case::Upper) |
-/// | [capital](pattern::capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
-/// | [camel](pattern::camel) | | | [camelCase](Case::Camel) |
+/// | [lowercase](Pattern::Lowercase) | [snake_case](Case::Snake) | [kebab-case](Case::Kebab) | [flatcase](Case::Flat) | [lower case](Case::Lower) |
+/// | [uppercase](Pattern::Uppercase) | [CONSTANT_CASE](Case::Constant) | [COBOL-CASE](Case::Cobol) | [UPPERFLATCASE](Case::UpperFlat) | [UPPER CASE](Case::Upper) |
+/// | [capital](Pattern::Capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
+/// | [camel](Pattern::Camel) | | | [camelCase](Case::Camel) |
 ///
 /// There are other less common cases, such as [`Case::Sentence`], [`Case::Alternating`], and [`Case::Toggle`].
 ///
@@ -311,10 +311,10 @@ impl Case<'_> {
     ///
     /// | Cases | Boundaries |
     /// | --- | --- |
-    /// | Snake, Constant, UpperSnake, Ada | [UNDERSCORE](Boundary::UNDERSCORE)  |
-    /// | Kebab, Cobol, UpperKebab, Train | [HYPHEN](Boundary::HYPHEN) |
-    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [SPACE](Boundary::SPACE) |
-    /// | Pascal, UpperCamel, Camel | [LOWER_UPPER](Boundary::LOWER_UPPER), [LOWER_DIGIT](Boundary::LOWER_DIGIT), [UPPER_DIGIT](Boundary::UPPER_DIGIT), [DIGIT_LOWER](Boundary::DIGIT_LOWER), [DIGIT_UPPER](Boundary::DIGIT_UPPER), [ACRONYM](Boundary::ACRONYM) |
+    /// | Snake, Constant, UpperSnake, Ada | [Underscore](Boundary::Underscore)  |
+    /// | Kebab, Cobol, UpperKebab, Train | [Hyphen](Boundary::Hyphen) |
+    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [Space](Boundary::Space) |
+    /// | Pascal, UpperCamel, Camel | [LowerUpper](Boundary::LowerUpper), [LowerDigit](Boundary::LowerDigit), [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower), [DigitUpper](Boundary::DigitUpper), [Acronym](Boundary::Acronym) |
     /// | Flat, UpperFlat | No boundaries |
     pub fn boundaries(&self) -> &[Boundary] {
         use Case::*;
@@ -366,13 +366,13 @@ impl Case<'_> {
     ///
     /// | Cases | Pattern |
     /// | --- | --- |
-    /// | Constant, UpperSnake, Cobol, UpperKebab, UpperFlat, Upper | [uppercase](pattern::uppercase) |
-    /// | Snake, Kebab, Flat, Lower | [lowercase](pattern::lowercase) |
-    /// | Ada, Train, Pascal, UpperCamel, Title | [capital](pattern::capital) |
-    /// | Camel | [camel](pattern::camel) |
-    /// | Alternating | [alternating](pattern::alternating) |
-    /// | Random | [random](pattern::random) |
-    /// | PseudoRandom | [pseudo_random](pattern::pseudo_random) |
+    /// | Constant, UpperSnake, Cobol, UpperKebab, UpperFlat, Upper | [Uppercase](Pattern::Uppercase) |
+    /// | Snake, Kebab, Flat, Lower | [Lowercase](Pattern::Lowercase) |
+    /// | Ada, Train, Pascal, UpperCamel, Title | [Capital](Pattern::Capital) |
+    /// | Camel | [Camel](Pattern::Camel) |
+    /// | Alternating | [Alternating](Pattern::Alternating) |
+    /// | Random | [Random](Pattern::Random) |
+    /// | PseudoRandom | [PseudoRandom](pattern::PseudoRandom) |
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {

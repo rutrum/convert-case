@@ -142,7 +142,7 @@
 //!
 //! Case conversion takes place in three steps:
 //! 1. Splitting the identifier into a list of words
-//! 2. Mutating the letter case of characters within each word
+//! 2. Mutating the letter case of graphemes within each word
 //! 3. Joining the words back into an identifier using a delimiter
 //!
 //! Those are defined by boundaries, patterns, and delimiters respectively.  Graphically:
@@ -160,9 +160,9 @@
 //!
 //! How to change the case of letters across a list of words is called a _pattern_.
 //! A pattern is a function that when passed a `&[&str]`, produces a
-//! `Vec<String>`.  Inside the [`pattern`] module is a list of functions that are
-//! used across all cases.  Although any function with type [`Pattern`](pattern::Pattern)
-//! could be used.
+//! `Vec<String>`.  The `Pattern` enum encapsulates the common transformations
+//! used across all cases.  Although custom functions can be supplied with the
+//! [`Custom`](Pattern::Custom) variant.
 //!
 //! ## Boundaries
 //!
@@ -221,7 +221,7 @@
 //! delimited module path in rust into a series of file directories.
 //!
 //! ```
-//! use convert_case::{Case, Converter, Boundary, pattern};
+//! use convert_case::{Case, Converter, Boundary};
 //!
 //! let modules_into_path = Converter::new()
 //!     .set_boundaries(&[Boundary::from_delim("::")])
@@ -388,12 +388,13 @@ use alloc::vec::Vec;
 mod boundary;
 mod case;
 mod converter;
-pub mod pattern;
+mod pattern;
 
 pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
+pub use pattern::{grapheme_capitalize_word, grapheme_toggle_word};
 
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple

@@ -50,7 +50,6 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// ```
 /// # use convert_case::{Boundary, Case, Casing};
 /// let at_then_letter = Boundary::Custom {
-///     name: "AtLetter",
 ///     condition: |s, _| {
 ///         s.get(0).map(|c| *c == "@") == Some(true)
 ///             && s.get(1).map(|c| *c == c.to_lowercase()) == Some(true)
@@ -66,27 +65,23 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 ///         .to_case(Case::Title)
 /// )
 /// ```
-/*
-#[derive(Debug, Eq, Hash, Clone, Copy)]
-pub struct Boundary {
-    /// A unique name used for comparison.
-    pub name: &'static str,
-    /// A function that determines if this boundary is present at the start
-    /// of the string.  Second argument is the `arg` field.
-    pub condition: fn(&[&str], Option<&'static str>) -> bool,
-    /// An optional string passed to `condition` at runtime.  Used
-    /// internally for [`Boundary::from_delim`] method.
-    pub arg: Option<&'static str>,
-    /// Where the beginning of the boundary is.
-    pub start: usize,
-    /// The length of the boundary.  This is the number of graphemes that
-    /// are removed when splitting.
-    pub len: usize,
-}
-*/
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Boundary {
+    Custom {
+        /// A function that determines if this boundary is present at the start
+        /// of the string.  Second argument is the `arg` field.
+        condition: fn(&[&str], Option<&'static str>) -> bool,
+        /// An optional string passed to `condition` at runtime.  Used
+        /// internally for [`Boundary::from_delim`] method.
+        arg: Option<&'static str>,
+        /// Where the beginning of the boundary is.
+        start: usize,
+        /// The length of the boundary.  This is the number of graphemes that
+        /// are removed when splitting.
+        len: usize,
+    },
+
     /// Splits on `-`, consuming the character on segmentation.
     /// ```
     /// # use convert_case::Boundary;
@@ -187,216 +182,7 @@ pub enum Boundary {
     /// );
     /// ```
     Acronym,
-
-    Custom {
-        /// A unique name used for comparison.
-        name: &'static str,
-        /// A function that determines if this boundary is present at the start
-        /// of the string.  Second argument is the `arg` field.
-        condition: fn(&[&str], Option<&'static str>) -> bool,
-        /// An optional string passed to `condition` at runtime.  Used
-        /// internally for [`Boundary::from_delim`] method.
-        arg: Option<&'static str>,
-        /// Where the beginning of the boundary is.
-        start: usize,
-        /// The length of the boundary.  This is the number of graphemes that
-        /// are removed when splitting.
-        len: usize,
-    },
 }
-
-// TODO: remove or add back
-//impl PartialEq for Boundary {
-//    fn eq(&self, other: &Self) -> bool {
-//        self == other
-//    }
-//}
-
-/*
-impl Boundary {
-    /// Splits on `_`, consuming the character on segmentation.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::UNDERSCORE],
-    ///     Boundary::defaults_from("_")
-    /// );
-    /// ```
-    pub const UNDERSCORE: Boundary = Boundary {
-        name: "Underscore",
-        condition: |s, _| s.get(0) == Some(&"_"),
-        arg: None,
-        start: 0,
-        len: 1,
-    };
-
-    /// Splits on `-`, consuming the character on segmentation.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::HYPHEN],
-    ///     Boundary::defaults_from("-")
-    /// );
-    /// ```
-    pub const HYPHEN: Boundary = Boundary {
-        name: "Hyphen",
-        condition: |s, _| s.get(0) == Some(&"-"),
-        arg: None,
-        start: 0,
-        len: 1,
-    };
-
-    /// Splits on space, consuming the character on segmentation.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::SPACE],
-    ///     Boundary::defaults_from(" ")
-    /// );
-    /// ```
-    pub const SPACE: Boundary = Boundary {
-        name: "Space",
-        condition: |s, _| s.get(0) == Some(&" "),
-        arg: None,
-        start: 0,
-        len: 1,
-    };
-
-    /// Splits where a lowercase letter is followed by an uppercase letter.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::LOWER_UPPER],
-    ///     Boundary::defaults_from("aA")
-    /// );
-    /// ```
-    pub const LOWER_UPPER: Boundary = Boundary {
-        name: "LowerUpper",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_lowercase) == Some(true)
-                && s.get(1).map(grapheme_is_uppercase) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-    /// Splits where an uppercase letter is followed by a lowercase letter.  This is seldom used,
-    /// and is **not** included in the [defaults](Boundary::defaults).
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert!(
-    ///     Boundary::defaults_from("Aa").len() == 0
-    /// );
-    /// ```
-    pub const UPPER_LOWER: Boundary = Boundary {
-        name: "UpperLower",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_uppercase) == Some(true)
-                && s.get(1).map(grapheme_is_lowercase) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-
-    /// Acronyms are identified by two uppercase letters followed by a lowercase letter.
-    /// The word boundary is between the two uppercase letters.  For example, "HTTPRequest"
-    /// would have an acronym boundary identified at "PRe" and split into "HTTP" and "Request".
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::ACRONYM],
-    ///     Boundary::defaults_from("AAa")
-    /// );
-    /// ```
-    pub const ACRONYM: Boundary = Boundary {
-        name: "Acronym",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_uppercase) == Some(true)
-                && s.get(1).map(grapheme_is_uppercase) == Some(true)
-                && s.get(2).map(grapheme_is_lowercase) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-
-    /// Splits where a lowercase letter is followed by a digit.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::LOWER_DIGIT],
-    ///     Boundary::defaults_from("a1")
-    /// );
-    /// ```
-    pub const LOWER_DIGIT: Boundary = Boundary {
-        name: "LowerDigit",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_lowercase) == Some(true)
-                && s.get(1).map(grapheme_is_digit) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-
-    /// Splits where an uppercase letter is followed by a digit.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::UPPER_DIGIT],
-    ///     Boundary::defaults_from("A1")
-    /// );
-    /// ```
-    pub const UPPER_DIGIT: Boundary = Boundary {
-        name: "UpperDigit",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_uppercase) == Some(true)
-                && s.get(1).map(grapheme_is_digit) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-
-    /// Splits where digit is followed by a lowercase letter.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::DIGIT_LOWER],
-    ///     Boundary::defaults_from("1a")
-    /// );
-    /// ```
-    pub const DIGIT_LOWER: Boundary = Boundary {
-        name: "DigitLower",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_digit) == Some(true)
-                && s.get(1).map(grapheme_is_lowercase) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-
-    /// Splits where digit is followed by an uppercase letter.
-    /// ```
-    /// # use convert_case::Boundary;
-    /// assert_eq!(
-    ///     vec![Boundary::DIGIT_UPPER],
-    ///     Boundary::defaults_from("1A")
-    /// );
-    /// ```
-    pub const DIGIT_UPPER: Boundary = Boundary {
-        name: "DigitUpper",
-        condition: |s, _| {
-            s.get(0).map(grapheme_is_digit) == Some(true)
-                && s.get(1).map(grapheme_is_uppercase) == Some(true)
-        },
-        arg: None,
-        start: 1,
-        len: 0,
-    };
-    */
 
 impl Boundary {
     /// Create a new boundary based on a delimiter.
@@ -412,7 +198,6 @@ impl Boundary {
     /// ```
     pub const fn from_delim(delim: &'static str) -> Boundary {
         Boundary::Custom {
-            name: delim,
             arg: Some(delim),
             condition: |s, arg| s.join("").starts_with(arg.unwrap()),
             start: 0,
@@ -687,6 +472,19 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn boundary_equality() {
+        let a = Boundary::Custom {
+            condition: |_, _| true,
+            arg: None,
+            start: 0,
+            len: 0,
+        };
+        let b = a;
+
+        assert_eq!(a, b)
+    }
 
     #[test]
     fn hyphen() {
