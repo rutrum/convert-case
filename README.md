@@ -4,15 +4,15 @@ Converts to and from various cases.
 
 ## Rust Library `convert_case`
 
-Convert case was written in Rust and is ready to be used inline with your rust code as a library.
+Convert case is written in Rust and is ready to be used inline with your rust code as a library.
 ```{rust}
-use convert_case::{Case, Casing};
+use convert_case::ccase;
 
-assert_eq!("ronnieJamesDio", "Ronnie_James_dio".to_case(Case::Camel));
-assert_eq!("io_stream", "IOStream".to_case(Case::Snake));
+assert_eq!(ccase!(camel, "My_Var_Name"), "myVarName");
+assert_eq!(ccase!(snake, "IOStream"), "io_stream");
 assert_eq!(
-    "2020-04-16 My Cat Cali",
-    "2020-04-16_my_cat_cali".from_case(Case::Snake).to_case(Case::Title)
+    ccase!(snake -> title, "2020-04-16_family_photo"),
+    "2020-04-16 Family Photo",
 );
 ```
 You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
@@ -24,8 +24,8 @@ The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to 
 $ ccase -t title super_mario_64
 Super Mario 64
 
-$ ccase -f snake -t title 2020-04-15_my_cat_cali
-2020-04-16 My Cat Cali
+$ ccase -f snake -t title 2020-04-15_my_cat
+2020-04-16 My Cat
 
 $ ccase -t camel "convert to camel"
 convertToCamel
@@ -66,11 +66,27 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 
 ## Change Log
 
-### 0.9.0
+### 0.9.0: Back to enums, but keep the customization
 
-TODO: not accurate
+This release is trying to finalize the API for a 1.0.0 release.  In hindsight, making `Pattern` a function and `Boundary` a struct were poor decisions.  While trying to add customized behavior, I made it harder to use.  Luckily, by following the convention that was done with `Case` in 0.8.0, which was providing a struct-variant `Case::Custom`, I can keep the new customization options while reverting back to the enum pattern the library has had since the beginning.
 
-Most features have been implemented.  The final, large scale change would be adding support to ascii string via the ascii crate, likely a 2.0.0 release.  But the recent breakthrough in redesigning the `Boundary` and `Pattern` types allowed the flexibility to fix a variety of known limitations of the API.  This release is preparing for a 1.0.0 version. In particular, a new suggested default way of using the library.  This method can work for 99% of the crates usage patterns, and require less code to do so.  Further, the documentation has been cleaned and updated to reflect the first stable release.
+If you are updating from before 0.7.0, I don't think any changes are necessary.  If you're coming from 0.8.0,
+* Change boundaries from constants to enum variants: `Boundary::UPPER_SNAKE` into `Boundary::UpperSnake`
+* Change patterns from functions to enum variants on `Pattern`: `pattern::lowercase` into `Pattern::Lowercase`
+
+Most excitingly, I've introduced a brand new way to use the crate for 99% of use cases, which is the default behavior out of the box to just convert a string to a case, with no modifications to behavior.  Instead of
+```
+use convert_case::{Case, Casing};
+"MyVarName".to_case(Case::Snake);
+"my-var name".from_case(Case::Title).to_case(Case::Snake);
+```
+You can use the `ccase!` macro:
+```
+use convert_case::ccase;
+ccase!(snake, "MyVarName");
+ccase!(title -> snake, "my-var name");
+```
+This means only one import and its invocation is brief and easy to read.  This is now the first thing you see when viewing the docs, which themselves have gotten a huge overhaul and many improvements in this version.
 
 New features:
 * `ccase!` macro that performs case conversion on a string _without needing to import `Case` or `Casing`_.  It has two forms:
@@ -82,11 +98,13 @@ New features:
     * and due to the change in implementation, `ToString` is no longer a required trait for `Casing`
 
 Other breaking changes:
+* Leading, trailing, and duplicate delimiters are no longer removed and are returned as is.
 * `Boundary` is reverted back to being an enum, but with a `Custom` variant that gives all the same flexibility that `Boundary` had as a struct.  This aligns with the `Case::Custom` pattern.
     * `Boundary.match` will return true if a set of graphemes matches the boundary condition
     * `Boundary` methods for `start` and `len` describe how enum variants consume letters when matched
 * `Pattern` is reverted back to being an enum, but with a `Custom` variant that allowed you to pass your own `fn (&[&str]) -> Vec<String>` as input.
     * `Pattern.mutate` will perform the associated mutation function
+* `Converter.with_boundaries` has been renamed to `Converter.set_boundaries`.
 
 ### 0.8.0: Pattern Overhaul, Custom Case
 

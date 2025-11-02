@@ -396,8 +396,8 @@ impl Boundary {
 /// ```
 /// use convert_case::{Boundary, split};
 /// assert_eq!(
-///     vec!["one", "two", "three.four"],
 ///     split(&"one_two-three.four", &[Boundary::Underscore, Boundary::Hyphen]),
+///     vec!["one", "two", "three.four"],
 /// )
 /// ```
 pub fn split<'s, T>(s: &'s T, boundaries: &[Boundary]) -> Vec<&'s str>
@@ -444,7 +444,8 @@ where
         }
     }
     words.push(&s[last_boundary_end..]);
-    words.into_iter().filter(|s| !s.is_empty()).collect()
+    //words.into_iter().filter(|s| !s.is_empty()).collect()
+    words.into_iter().collect()
 }
 
 // ascii version

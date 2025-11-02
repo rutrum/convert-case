@@ -1,71 +1,3 @@
-//! Functions for transforming a list of words.
-//!
-//! A pattern is a function that maps a list of words into another list
-//! after changing the casing of each letter.  How a patterns mutates
-//! each letter can be dependent on the word the letters are present in.
-//!
-//! ## Custom Pattern
-//!
-//! Any function that matches the `Pattern` type alias is sufficient for
-//! a pattern for custom casing behavior.  One example might be a pattern
-//! that detects a fixed list of two-letter acronyms, and capitalizes them
-//! appropriately on output.
-//!
-//! To work over graphemes, you can use the provided methods in the `word_pattern`
-//! module that will handle that for you.
-//! ```
-//! use convert_case::{grapheme_capitalize_word, Converter, Pattern};
-//!
-//! fn pascal_upper_acronyms(words: &[&str]) -> Vec<String> {
-//!     words.iter()
-//!         .map(|word| grapheme_capitalize_word(word))
-//!         .map(|word| match word.as_ref() {
-//!             "Io" | "Xml" => word.to_uppercase(),
-//!             _ => word,
-//!         })
-//!         .collect()
-//! }
-//!
-//! let acronym_converter = Converter::new()
-//!     .set_pattern(Pattern::Custom(pascal_upper_acronyms));
-//!
-//! assert_eq!(acronym_converter.convert("io_stream"), "IOStream");
-//! assert_eq!(acronym_converter.convert("xml request"), "XMLRequest");
-//! ```
-//!
-//! Another example might be a one that explicitly adds leading
-//! and trailing double underscores.  We do this by modifying the words directly,
-//! which will get passed as-is to the join function.
-//! ```
-//! use convert_case::{Converter, Pattern};
-//!
-//! fn snake_dunder(mut words: &[&str]) -> Vec<String> {
-//!     words
-//!         .into_iter()
-//!         .map(|word| word.to_lowercase())
-//!         .enumerate()
-//!         .map(|(i, word)| {
-//!             if words.len() == 1 {
-//!                 format!("__{}__", word)
-//!             } else if i == 0 {
-//!                 format!("__{}", word)
-//!             } else if i == words.len() - 1 {
-//!                 format!("{}__", word)
-//!             } else {
-//!                 word
-//!             }
-//!         })
-//!         .collect()
-//! }
-//!
-//! let dunder_converter = Converter::new()
-//!     .set_pattern(Pattern::Custom(snake_dunder))
-//!     .set_delim("_");
-//!
-//! assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
-//! assert_eq!(dunder_converter.convert("ITER"), "__iter__");
-//! ```
-
 #[cfg(feature = "random")]
 use rand::prelude::*;
 
@@ -74,11 +6,11 @@ use alloc::vec::Vec;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-pub(crate) fn lowercase_word(word: &str) -> String {
+fn lowercase_word(word: &str) -> String {
     word.to_lowercase()
 }
 
-pub(crate) fn uppercase_word(word: &str) -> String {
+fn uppercase_word(word: &str) -> String {
     word.to_uppercase()
 }
 
@@ -104,12 +36,76 @@ pub fn grapheme_capitalize_word(word: &str) -> String {
     }
 }
 
-/// A pattern is a function that maps a list of word references
-/// to a vector of strings.  For more information
-/// about patterns, see the [`pattern`](index.html) module documentation.
+/// Transformations on a list of words.
+///
+/// A pattern is a function that maps a list of words into another list
+/// after changing the casing of each letter.  How a patterns mutates
+/// each letter can be dependent on the word the letters are present in.
+///
+/// ## Custom Pattern
+///
+/// A pattern is a function that maps from a borrowed list of words `&[&str]` to
+/// an owned list of owned words `Vec<String>` by applying a transformation.
+/// One example of custom behavior might be a pattern
+/// that detects a fixed list of two-letter acronyms, and capitalizes them
+/// appropriately on output.
+///
+/// To work over graphemes, you can use utility methods provided by the
+/// crate.
+/// ```
+/// use convert_case::{grapheme_capitalize_word, Converter, Pattern};
+///
+/// fn pascal_upper_acronyms(words: &[&str]) -> Vec<String> {
+///     words.iter()
+///         .map(|word| grapheme_capitalize_word(word))
+///         .map(|word| match word.as_ref() {
+///             "Io" | "Xml" => word.to_uppercase(),
+///             _ => word,
+///         })
+///         .collect()
+/// }
+///
+/// let acronym_converter = Converter::new()
+///     .set_pattern(Pattern::Custom(pascal_upper_acronyms));
+///
+/// assert_eq!(acronym_converter.convert("io_stream"), "IOStream");
+/// assert_eq!(acronym_converter.convert("xml request"), "XMLRequest");
+/// ```
+///
+/// Another example might be a one that explicitly adds leading
+/// and trailing double underscores.  We do this by modifying the words directly,
+/// which will get passed as-is to the join function.
+/// ```
+/// use convert_case::{Converter, Pattern};
+///
+/// fn snake_dunder(mut words: &[&str]) -> Vec<String> {
+///     words
+///         .into_iter()
+///         .map(|word| word.to_lowercase())
+///         .enumerate()
+///         .map(|(i, word)| {
+///             if words.len() == 1 {
+///                 format!("__{}__", word)
+///             } else if i == 0 {
+///                 format!("__{}", word)
+///             } else if i == words.len() - 1 {
+///                 format!("{}__", word)
+///             } else {
+///                 word
+///             }
+///         })
+///         .collect()
+/// }
+///
+/// let dunder_converter = Converter::new()
+///     .set_pattern(Pattern::Custom(snake_dunder))
+///     .set_delim("_");
+///
+/// assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
+/// assert_eq!(dunder_converter.convert("ITER"), "__iter__");
+/// ```
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Pattern {
-    Custom(fn(&[&str]) -> Vec<String>),
     /// The no-op pattern performs no mutations.
     /// ```
     /// # use convert_case::Pattern;
@@ -151,7 +147,7 @@ pub enum Pattern {
     /// ```
     Capital,
 
-    /// Makes the first word lowercase and the
+    /// Makes the first non-empty word lowercase and the
     /// remaining capitalized.
     /// ```
     /// # use convert_case::Pattern;
@@ -162,7 +158,7 @@ pub enum Pattern {
     /// ```
     Camel,
 
-    /// Makes the first word capitalized and the
+    /// Makes the first non-empty word capitalized and the
     /// remaining lowercase.
     /// ```
     /// # use convert_case::Pattern;
@@ -226,6 +222,8 @@ pub enum Pattern {
     /// is that there will never be three consecutive letters that are all lowercase
     /// or all uppercase.  This uses the `rand` crate and is only available with the "random"
     /// feature.
+    ///
+    /// This uses the `rand` crate and is only available with the "random" feature.
     /// ```
     /// # use convert_case::Pattern;
     /// # #[cfg(any(doc, feature = "random"))]
@@ -234,14 +232,19 @@ pub enum Pattern {
     /// ```
     #[cfg(feature = "random")]
     PseudoRandom,
+
+    /// Define custom behavior to transform a set of words.
+    ///
+    /// See the [`Pattern`] documentation for examples.
+    Custom(fn(&[&str]) -> Vec<String>),
 }
 
 impl Pattern {
-    /// Converts a list of words based on the pattern.
+    /// Applies the pattern transformation to a list of words.
     pub fn mutate(&self, words: &[&str]) -> Vec<String> {
         use Pattern::*;
         match self {
-            Custom(_mutate) => (_mutate)(words),
+            Custom(transformation) => (transformation)(words),
             Noop => words.iter().map(|word| word.to_string()).collect(),
             Lowercase => words.iter().map(|word| lowercase_word(word)).collect(),
             Uppercase => words.iter().map(|word| uppercase_word(word)).collect(),

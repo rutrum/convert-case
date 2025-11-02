@@ -129,13 +129,15 @@
 //! ```
 //!
 //! ### Delimiters
-//! Trailing and leading delimiters are dropped.  Duplicate delimiters
-//! are also ignored.
+//! Leading, trailing, and duplicate delimiters create empty words.
+//! This propogates and the converted string will share the behavior.  This can cause
+//! unintuitive behavior for patterns that transform words based on index.
 //! ```
 //! # use convert_case::ccase;
-//! assert_eq!(ccase!(constant, "_leading_score"), "LEADING_SCORE");
-//! assert_eq!(ccase!(ada, "trailing-dash-"), "Trailing_Dash");
-//! assert_eq!(ccase!(train, "duplicate----hyphens"), "Duplicate-Hyphens");
+//! assert_eq!(ccase!(constant, "_leading_score"), "_LEADING_SCORE");
+//! assert_eq!(ccase!(ada, "trailing-dash-"), "Trailing_Dash_");
+//! assert_eq!(ccase!(train, "duplicate----hyphens"), "Duplicate----Hyphens");
+//! assert_eq!(ccase!(camel, "_empty__first_word"), "EmptyFirstWord");
 //! ```
 //!
 //! # Customizing Behavior
@@ -160,7 +162,7 @@
 //!
 //! How to change the case of letters across a list of words is called a _pattern_.
 //! A pattern is a function that when passed a `&[&str]`, produces a
-//! `Vec<String>`.  The `Pattern` enum encapsulates the common transformations
+//! `Vec<String>`.  The [`Pattern`] enum encapsulates the common transformations
 //! used across all cases.  Although custom functions can be supplied with the
 //! [`Custom`](Pattern::Custom) variant.
 //!
@@ -177,12 +179,12 @@
 //! a boundary that splits on the presence of a string, and removes the string
 //! from the final list of words.  
 //!
-//! You can also insantiate instances of [`Boundary`] for very specific boundary
-//! conditions.  If you actually need to instantiate a
+//! You can also use of [`Boundary::Custom`] to explicitly define boundary
+//! conditions.  If you actually need to create a
 //! boundary condition from scratch, you should file an issue to let the author know
 //! how you used it.
 //!
-//! ## `Custom` Case variant
+//! ## Cases
 //!
 //! A case is defined by a list of boundaries, a pattern, and a delimiter: the string to
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
@@ -211,7 +213,7 @@
 //! Case conversion with `convert_case` allows using attributes from two cases.  From
 //! the first case is how you split the identifier (the _from_ case), and
 //! from the second is how to mutate and join the words (the _to_ case.)  The
-//! [`Converter`] is used instead to define the _conversion_ process, not a case directly.
+//! [`Converter`] is used to define the _conversion_ process, not a case directly.
 //!
 //! It has the same fields as case, but is exposed via a builder interface
 //! and can be used to apply a conversion on a string directly, without
@@ -277,48 +279,12 @@
 //!
 //! # Old
 //!
-//! Provides a [`Case`] enum which defines a variety of cases to convert into.
-//! Strings have implemented the [`Casing`] trait, which adds methods for
-//! case conversion.
-//!
-//! You can convert strings into a case using the [`to_case`](Casing::to_case) method.
-//! ```
-//! use convert_case::{Case, Casing};
-//!
-//! assert_eq!("Ronnie James Dio", "ronnie james dio".to_case(Case::Title));
-//! assert_eq!("ronnieJamesDio", "Ronnie_James_dio".to_case(Case::Camel));
-//! assert_eq!("Ronnie-James-Dio", "RONNIE_JAMES_DIO".to_case(Case::Train));
-//! ```
-//!
-//! By default, `to_case` will split along a set of default word boundaries, that is
-//! * underscores `_`,
-//! * hyphens `-`,
-//! * spaces ` `,
-//! * changes in capitalization from lowercase to uppercase `aA`,
-//! * adjacent digits and letters `a1`, `1a`, `A1`, `1A`,
-//! * and acroynms `AAa` (as in `HTTPRequest`).
-//!
 //! You can also test what case a string is in.
 //! ```
 //! # use convert_case::{Case, Casing};
 //! assert!( "css-class-name".is_case(Case::Kebab));
 //! assert!(!"css-class-name".is_case(Case::Snake));
 //! assert!(!"UPPER_CASE_VAR".is_case(Case::Snake));
-//! ```
-//!
-//! # Note on Accuracy
-//!
-//! The `Casing` methods `from_case` and `to_case` do not fail.  Conversion to a case will always
-//! succeed.  However, the results can still be unexpected.  Failure to detect any word boundaries
-//! for a particular case means the entire string will be considered a single word.
-//! ```
-//! use convert_case::{Case, Casing};
-//!
-//! // Mistakenly parsing using Case::Snake
-//! assert_eq!("My-kebab-var", "my-kebab-var".from_case(Case::Snake).to_case(Case::Title));
-//!
-//! // Converts using an unexpected method
-//! assert_eq!("my_kebab_like_variable", "myKebab-like-variable".to_case(Case::Snake));
 //! ```
 //!
 //! # Boundary Specificity
@@ -483,7 +449,7 @@ impl<T: AsRef<str>> Casing<T> for T {
     }
 
     fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
-        StateConverter::new(self).with_boundaries(bs)
+        StateConverter::new(self).set_boundaries(bs)
     }
 
     fn without_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
@@ -557,11 +523,11 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     ///
     /// let song = "theHumbling river-puscifer"
     ///     .from_case(Case::Kebab) // from Casing trait
-    ///     .with_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
+    ///     .set_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
     ///     .to_case(Case::Pascal);
     /// assert_eq!("TheHumblingRiver-puscifer", song);  // doesn't split on hyphen `-`
     /// ```
-    pub fn with_boundaries(self, bs: &[Boundary]) -> Self {
+    pub fn set_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
             conv: self.conv.set_boundaries(bs),
@@ -858,47 +824,53 @@ mod test {
     #[test]
     fn leading_tailing_delimeters() {
         assert_eq!(
-            "leading_underscore",
+            "_leading_underscore",
             "_leading_underscore"
                 .from_case(Case::Snake)
                 .to_case(Case::Snake)
         );
         assert_eq!(
-            "tailing_underscore",
+            "tailing_underscore_",
             "tailing_underscore_"
                 .from_case(Case::Snake)
                 .to_case(Case::Snake)
         );
         assert_eq!(
-            "leading_hyphen",
+            "_leading_hyphen",
             "-leading-hyphen"
                 .from_case(Case::Kebab)
                 .to_case(Case::Snake)
         );
         assert_eq!(
-            "tailing_hyphen",
+            "tailing_hyphen_",
             "tailing-hyphen-"
                 .from_case(Case::Kebab)
                 .to_case(Case::Snake)
         );
         assert_eq!(
-            "tailing_hyphens",
+            "tailing_hyphens_____",
             "tailing-hyphens-----"
                 .from_case(Case::Kebab)
                 .to_case(Case::Snake)
+        );
+        assert_eq!(
+            "tailingHyphens",
+            "tailing-hyphens-----"
+                .from_case(Case::Kebab)
+                .to_case(Case::Camel)
         );
     }
 
     #[test]
     fn double_delimeters() {
         assert_eq!(
-            "many_underscores",
+            "many___underscores",
             "many___underscores"
                 .from_case(Case::Snake)
                 .to_case(Case::Snake)
         );
         assert_eq!(
-            "many-underscores",
+            "many---underscores",
             "many---underscores"
                 .from_case(Case::Kebab)
                 .to_case(Case::Kebab)

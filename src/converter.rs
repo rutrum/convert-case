@@ -156,7 +156,7 @@ impl Converter {
     ///     .from_case(Case::Title)
     ///     .add_boundary(Boundary::Hyphen)
     ///     .to_case(Case::Snake);
-    /// assert_eq!("my_biography_video_1", conv.convert("My Biography - Video 1"))
+    /// assert_eq!("my_biography___video_1", conv.convert("My Biography - Video 1"))
     /// ```
     pub fn add_boundary(mut self, b: Boundary) -> Self {
         self.boundaries.push(b);
