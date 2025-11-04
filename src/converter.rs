@@ -15,7 +15,7 @@ use alloc::vec::Vec;
 ///
 /// Then calling [`convert`](Converter::convert) on a `Converter` will apply a case conversion
 /// defined by those fields.  The `Converter` struct is what is used underneath those functions
-/// available in the `Casing` struct.  
+/// available in the `Casing` struct.
 ///
 /// You can use `Converter` when you need more specificity on conversion
 /// than those provided in `Casing`, or if it is simply more convenient or explicit.
@@ -27,22 +27,22 @@ use alloc::vec::Vec;
 ///
 /// // Convert using Casing trait
 /// assert_eq!(
+///     s.from_case(Case::Kebab).to_case(Case::Snake),
 ///     "dialoguebox_border_shadow",
-///     s.from_case(Case::Kebab).to_case(Case::Snake)
 /// );
 ///
 /// // Convert using similar functions on Converter
 /// let conv = Converter::new()
 ///     .from_case(Case::Kebab)
 ///     .to_case(Case::Snake);
-/// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
+/// assert_eq!(conv.convert(s), "dialoguebox_border_shadow");
 ///
 /// // Convert by setting each field explicitly.
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::Hyphen])
 ///     .set_pattern(Pattern::Lowercase)
 ///     .set_delim("_");
-/// assert_eq!("dialoguebox_border_shadow", conv.convert(s));
+/// assert_eq!(conv.convert(s), "dialoguebox_border_shadow");
 /// ```
 ///
 /// Or you can use `Converter` when you are trying to make a unique case
@@ -54,7 +54,7 @@ use alloc::vec::Vec;
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
 ///     .set_pattern(Pattern::Camel)
 ///     .set_delim(".");
-/// assert_eq!("collision.Shape.2d", dot_camel.convert("CollisionShape2D"));
+/// assert_eq!(dot_camel.convert("CollisionShape2D"), "collision.Shape.2d");
 /// ```
 pub struct Converter {
     /// How a string is segmented into words.
@@ -86,7 +86,7 @@ impl Converter {
     /// ```
     /// # use convert_case::Converter;
     /// let conv = Converter::new();
-    /// assert_eq!("DeathPerennialQUEST", conv.convert("Death-Perennial QUEST"))
+    /// assert_eq!(conv.convert("Ice-cream TRUCK"), "IcecreamTRUCK")
     /// ```
     pub fn new() -> Self {
         Self::default()
@@ -97,7 +97,7 @@ impl Converter {
     /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Camel);
-    /// assert_eq!("xmlHttpRequest", conv.convert("XML_HTTP_Request"))
+    /// assert_eq!(conv.convert("XML_HTTP_Request"), "xmlHttpRequest")
     /// ```
     pub fn convert<T>(&self, s: T) -> String
     where
@@ -221,19 +221,6 @@ impl Converter {
         self
     }
 
-    /// Sets the delimeter to an empty string.
-    /// ```
-    /// # use convert_case::{Case, Converter};
-    /// let conv = Converter::new()
-    ///     .to_case(Case::Snake)
-    ///     .remove_delim();
-    /// assert_eq!("nodelimshere", conv.convert("No Delims Here"));
-    /// ```
-    pub fn remove_delim(mut self) -> Self {
-        self.delim = String::new();
-        self
-    }
-
     /// Sets the pattern.
     /// ```
     /// # use convert_case::{Case, Converter, Pattern};
@@ -312,7 +299,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Title)
             .to_case(Case::Kebab)
-            .remove_delim();
+            .set_delim("");
         assert_eq!("justflat", conv.convert("Just Flat"));
     }
 

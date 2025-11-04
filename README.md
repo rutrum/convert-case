@@ -95,7 +95,6 @@ New features:
 * While not intended to be used directly, the new `case!` macro returns a `Case` variant from the snake case version of the variant.  For instance, `case!(snake)` is substituted for `Case::Snake` and `case!(upper_flat)` for `Case::UpperFlat`.
 * `Casing::is_case` has a different implementation that less sensitive to digits
     * before, something like `1CAPS` would have not been considered `Case::Upper`, but now does, which aligns more with expectations
-    * and due to the change in implementation, `ToString` is no longer a required trait for `Casing`
 
 Other breaking changes:
 * Leading, trailing, and duplicate delimiters are no longer removed and are returned as is.
@@ -105,6 +104,9 @@ Other breaking changes:
 * `Pattern` is reverted back to being an enum, but with a `Custom` variant that allowed you to pass your own `fn (&[&str]) -> Vec<String>` as input.
     * `Pattern.mutate` will perform the associated mutation function
 * `Converter.with_boundaries` has been renamed to `Converter.set_boundaries`.
+* Removed `Converter.remove_delim`
+* `ToString` is no longer a required trait for using `is_case`
+* `word_pattern` module is gone and the `grapheme_capitalize_word` and `grapheme_toggle_word` are provided as utility functions instead
 
 ### 0.8.0: Pattern Overhaul, Custom Case
 
