@@ -28,8 +28,9 @@
           just
           watchexec
           rustup
-          #cargo-tarpaulin
+          rust-analyzer
         ];
+        shellHook = ''just --list'';
       };
     };
 }

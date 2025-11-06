@@ -1,29 +1,28 @@
 use crate::boundary::{self, Boundary};
-use crate::pattern;
+use crate::pattern::Pattern;
 
 use alloc::string::String;
 use alloc::vec::Vec;
 
 /// Defines the case of an identifier.
-///
 /// ```
+/// use convert_case::ccase;
+/// assert_eq!(ccase!(title, "super_mario_64"), "Super Mario 64");
+///
 /// use convert_case::{Case, Casing};
-///
-/// let super_mario_title: String = "super_mario_64".to_case(Case::Title);
-/// assert_eq!("Super Mario 64", super_mario_title);
+/// assert_eq!("super_mario_64".to_case(Case::Title), "Super Mario 64");
 /// ```
 ///
-/// A case is the pair of a [pattern](pattern::Pattern) and a delimeter (a string).  Given
+/// A case is the pair of a [pattern](Pattern) and a delimeter (a string).  Given
 /// a list of words, a pattern describes how to mutate the words and a delimeter is how the mutated
-/// words are joined together.  These inherantly are the properties of what makes a "multiword
-/// identifier case", or simply "case".
+/// words are joined together.
 ///
 /// | pattern | underscore `_` | hyphen `-` | empty string | space |
 /// | ---: | --- | --- | --- | --- |
-/// | [lowercase](pattern::lowercase) | [snake_case](Case::Snake) | [kebab-case](Case::Kebab) | [flatcase](Case::Flat) | [lower case](Case::Lower) |
-/// | [uppercase](pattern::uppercase) | [CONSTANT_CASE](Case::Constant) | [COBOL-CASE](Case::Cobol) | [UPPERFLATCASE](Case::UpperFlat) | [UPPER CASE](Case::Upper) |
-/// | [capital](pattern::capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
-/// | [camel](pattern::camel) | | | [camelCase](Case::Camel) |
+/// | [lowercase](Pattern::Lowercase) | [snake_case](Case::Snake) | [kebab-case](Case::Kebab) | [flatcase](Case::Flat) | [lower case](Case::Lower) |
+/// | [uppercase](Pattern::Uppercase) | [CONSTANT_CASE](Case::Constant) | [COBOL-CASE](Case::Cobol) | [UPPERFLATCASE](Case::UpperFlat) | [UPPER CASE](Case::Upper) |
+/// | [capital](Pattern::Capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
+/// | [camel](Pattern::Camel) | | | [camelCase](Case::Camel) |
 ///
 /// There are other less common cases, such as [`Case::Sentence`], [`Case::Alternating`], and [`Case::Toggle`].
 ///
@@ -36,7 +35,8 @@ use alloc::vec::Vec;
 /// uppercase letter.  Each case is also associated with a list of boundaries that are used when
 /// converting "from" a particular case.
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub enum Case<'a> {
+#[non_exhaustive]
+pub enum Case<'b> {
     /// Custom cases can be delimited by any static string slice and mutate words
     /// using any pattern.  Further, they can use any list of boundaries for
     /// splitting identifiers into words.
@@ -44,47 +44,54 @@ pub enum Case<'a> {
     /// This flexibility can create cases not present as another variant of the
     /// Case enum.  For instance, you could create a "dot case" like so.
     /// ```
-    /// use convert_case::{Case, Casing, Boundary, pattern};
+    /// use convert_case::{Case, Casing, Boundary, Pattern};
     /// let dot_case = Case::Custom {
     ///     boundaries: &[Boundary::from_delim(".")],
-    ///     pattern: pattern::lowercase,
+    ///     pattern: Pattern::Lowercase,
     ///     delim: ".",
     /// };
     ///
     /// assert_eq!(
-    ///     "my.new.case",
     ///     "myNewCase".to_case(dot_case),
+    ///     "my.new.case",
     /// );
     /// assert_eq!(
-    ///     "My New Case",
     ///     "my.new.case".from_case(dot_case).to_case(Case::Title),
+    ///     "My New Case",
     /// );
     /// ```
     Custom {
-        boundaries: &'a [Boundary],
-        pattern: fn(&[&str]) -> Vec<String>,
+        boundaries: &'b [Boundary],
+        pattern: Pattern,
         delim: &'static str,
     },
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
-    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [lowercase](pattern::lowercase)
-    /// * Delimeter: Underscore `"_"`
+    ///
+    /// * Boundaries : [Underscore](Boundary::Underscore)
+    /// * Pattern : [Lowercase](Pattern::Lowercase)
+    /// * Delimeter : Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(snake, "My variable NAME"), "my_variable_name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my_variable_name", "My variable NAME".to_case(Case::Snake))
+    /// assert_eq!("My variable NAME".to_case(Case::Snake), "my_variable_name");
     /// ```
     Snake,
 
     /// Constant case strings are delimited by underscores `_` and are all uppercase.
-    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(constant, "My variable NAME"), "MY_VARIABLE_NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::Constant))
+    /// assert_eq!("My variable NAME".to_case(Case::Constant), "MY_VARIABLE_NAME");
     /// ```
     Constant,
 
@@ -93,86 +100,107 @@ pub enum Case<'a> {
 
     /// Ada case strings are delimited by underscores `_`.  The leading letter of
     /// each word is uppercase, while the rest is lowercase.
-    /// * Boundaries: [Underscore](Boundary::UNDERSCORE)
-    /// * Pattern: [capital](pattern::capital)
+    /// * Boundaries: [Underscore](Boundary::Underscore)
+    /// * Pattern: [Capital](Pattern::Capital)
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(ada, "My variable NAME"), "My_Variable_Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My_Variable_Name", "My variable NAME".to_case(Case::Ada))
+    /// assert_eq!("My variable NAME".to_case(Case::Ada), "My_Variable_Name");
     /// ```
     Ada,
 
     /// Kebab case strings are delimited by hyphens `-` and are all lowercase.
-    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [lowercase](pattern::lowercase)
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Lowercase](Pattern::Lowercase)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(kebab, "My variable NAME"), "my-variable-name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my-variable-name", "My variable NAME".to_case(Case::Kebab))
+    /// assert_eq!("My variable NAME".to_case(Case::Kebab), "my-variable-name");
     /// ```
     Kebab,
 
     /// Cobol case strings are delimited by hyphens `-` and are all uppercase.
-    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(cobol, "My variable NAME"), "MY-VARIABLE-NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY-VARIABLE-NAME", "My variable NAME".to_case(Case::Cobol))
+    /// assert_eq!("My variable NAME".to_case(Case::Cobol), "MY-VARIABLE-NAME");
     /// ```
     Cobol,
 
     /// Upper kebab case is an alternative name for [Cobol case](Case::Cobol).
     UpperKebab,
 
-    /// Train case strings are delimited by hyphens `-`.  All characters are lowercase
-    /// except for the leading character of each word.
-    /// * Boundaries: [Hyphen](Boundary::HYPHEN)
-    /// * Pattern: [capital](pattern::capital)
+    /// Train case strings are delimited by hyphens `-`.  The leading letter of
+    /// each word is uppercase, while the rest is lowercase.
+    /// * Boundaries: [Hyphen](Boundary::Hyphen)
+    /// * Pattern: [Capital](Pattern::Capital)
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(train, "My variable NAME"), "My-Variable-Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My-Variable-Name", "My variable NAME".to_case(Case::Train))
+    /// assert_eq!("My variable NAME".to_case(Case::Train), "My-Variable-Name");
     /// ```
     Train,
 
     /// Flat case strings are all lowercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [lowercase](pattern::lowercase)
+    /// * Pattern: [Lowercase](Pattern::Lowercase)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(flat, "My variable NAME"), "myvariablename");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("myvariablename", "My variable NAME".to_case(Case::Flat))
+    /// assert_eq!("My variable NAME".to_case(Case::Flat), "myvariablename");
     /// ```
     Flat,
 
     /// Upper flat case strings are all uppercase, with no delimiter. Note that word boundaries are lost.
     /// * Boundaries: No boundaries
-    /// * Pattern: [uppercase](pattern::uppercase)
+    /// * Pattern: [Uppercase](Pattern::Uppercase)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(upper_flat, "My variable NAME"), "MYVARIABLENAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MYVARIABLENAME", "My variable NAME".to_case(Case::UpperFlat))
+    /// assert_eq!("My variable NAME".to_case(Case::UpperFlat), "MYVARIABLENAME");
     /// ```
     UpperFlat,
 
     /// Pascal case strings are lowercase, but for every word the
     /// first letter is capitalized.
-    /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
-    ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
-    ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [capital](`pattern::capital`)
+    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
+    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Pattern: [Capital](`Pattern::Capital`)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(pascal, "My variable NAME"), "MyVariableName");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MyVariableName", "My variable NAME".to_case(Case::Pascal))
+    /// assert_eq!("My variable NAME".to_case(Case::Pascal), "MyVariableName");
     /// ```
     Pascal,
 
@@ -181,96 +209,117 @@ pub enum Case<'a> {
 
     /// Camel case strings are lowercase, but for every word _except the first_ the
     /// first letter is capitalized.
-    /// * Boundaries: [LowerUpper](Boundary::LOWER_UPPER), [DigitUpper](Boundary::DIGIT_UPPER),
-    ///   [UpperDigit](Boundary::UPPER_DIGIT), [DigitLower](Boundary::DIGIT_LOWER),
-    ///   [LowerDigit](Boundary::LOWER_DIGIT), [Acronym](Boundary::ACRONYM)
-    /// * Pattern: [camel](`pattern::camel`)
+    /// * Boundaries: [LowerUpper](Boundary::LowerUpper), [DigitUpper](Boundary::DigitUpper),
+    ///   [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower),
+    ///   [LowerDigit](Boundary::LowerDigit), [Acronym](Boundary::Acronym)
+    /// * Pattern: [Camel](`Pattern::Camel`)
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(camel, "My variable NAME"), "myVariableName");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("myVariableName", "My variable NAME".to_case(Case::Camel))
+    /// assert_eq!("My variable NAME".to_case(Case::Camel), "myVariableName");
     /// ```
     Camel,
 
     /// Lowercase strings are delimited by spaces and all characters are lowercase.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [lowercase](`pattern::lowercase`)
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Lowercase](`Pattern::Lowercase`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(lower, "My variable NAME"), "my variable name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my variable name", "My variable NAME".to_case(Case::Lower))
+    /// assert_eq!("My variable NAME".to_case(Case::Lower), "my variable name");
     /// ```
     Lower,
 
-    /// Lowercase strings are delimited by spaces and all characters are lowercase.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [uppercase](`pattern::uppercase`)
+    /// Uppercase strings are delimited by spaces and all characters are uppercase.
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Uppercase](`Pattern::Uppercase`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(upper, "My variable NAME"), "MY VARIABLE NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY VARIABLE NAME", "My variable NAME".to_case(Case::Upper))
+    /// assert_eq!("My variable NAME".to_case(Case::Upper), "MY VARIABLE NAME");
     /// ```
     Upper,
 
     /// Title case strings are delimited by spaces. Only the leading character of
     /// each word is uppercase.  No inferences are made about language, so words
     /// like "as", "to", and "for" will still be capitalized.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [capital](`pattern::capital`)
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Capital](`Pattern::Capital`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(title, "My variable NAME"), "My Variable Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My Variable Name", "My variable NAME".to_case(Case::Title))
+    /// assert_eq!("My variable NAME".to_case(Case::Title), "My Variable Name");
     /// ```
     Title,
 
     /// Sentence case strings are delimited by spaces. Only the leading character of
     /// the first word is uppercase.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [sentence](`pattern::sentence`)
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Sentence](`Pattern::Sentence`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(sentence, "My variable NAME"), "My variable name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My variable name", "My variable NAME".to_case(Case::Sentence))
+    /// assert_eq!("My variable NAME".to_case(Case::Sentence), "My variable name");
     /// ```
     Sentence,
 
     /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
     /// and lowercase.
-    /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [alternating](pattern::alternating)
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [Alternating](Pattern::Alternating)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(alternating, "My variable NAME"), "mY vArIaBlE nAmE");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("mY vArIaBlE nAmE", "My variable NAME".to_case(Case::Alternating));
+    /// assert_eq!("My variable NAME".to_case(Case::Alternating), "mY vArIaBlE nAmE");
     /// ```
     Alternating,
 
     /// Toggle case strings are delimited by spaces.  All characters are uppercase except
     /// for the leading character of each word, which is lowercase.
-    /// * Boundaries: [Space](`Boundary::SPACE`)
-    /// * Pattern: [toggle](`pattern::toggle`)
+    /// * Boundaries: [Space](`Boundary::Space`)
+    /// * Pattern: [Toggle](`Pattern::Toggle`)
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(toggle, "My variable NAME"), "mY vARIABLE nAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("mY vARIABLE nAME", "My variable NAME".to_case(Case::Toggle))
+    /// assert_eq!("My variable NAME".to_case(Case::Toggle), "mY vARIABLE nAME");
     /// ```
     Toggle,
 
     /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.  
+    /// randomly upper case or lower case.
     ///
     /// This uses the `rand` crate
     /// and is only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [random](pattern::random)
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [Random](Pattern::Random)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -285,12 +334,12 @@ pub enum Case<'a> {
 
     /// Pseudo-random case strings are delimited by spaces and characters are randomly
     /// upper case or lower case, but there will never more than two consecutive lower
-    /// case or upper case letters in a row.  
+    /// case or upper case letters in a row.
     ///
     /// This uses the `rand` crate and is
     /// only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::SPACE)
-    /// * Pattern: [pseudo_random](pattern::pseudo_random)
+    /// * Boundaries: [Space](Boundary::Space)
+    /// * Pattern: [Pseudo random](Pattern::PsuedoRandom)
     /// * Delimeter: Space `" "`
     ///
     /// ```
@@ -311,30 +360,30 @@ impl Case<'_> {
     ///
     /// | Cases | Boundaries |
     /// | --- | --- |
-    /// | Snake, Constant, UpperSnake, Ada | [UNDERSCORE](Boundary::UNDERSCORE)  |
-    /// | Kebab, Cobol, UpperKebab, Train | [HYPHEN](Boundary::HYPHEN) |
-    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [SPACE](Boundary::Space) |
-    /// | Pascal, UpperCamel, Camel | [LOWER_UPPER](Boundary::LOWER_UPPER), [LOWER_DIGIT](Boundary::LOWER_DIGIT), [UPPER_DIGIT](Boundary::UPPER_DIGIT), [DIGIT_LOWER](Boundary::DIGIT_LOWER), [DIGIT_UPPER](Boundary::DIGIT_UPPER), [ACRONYM](Boundary::ACRONYM) |
+    /// | Snake, Constant, UpperSnake, Ada | [Underscore](Boundary::Underscore)  |
+    /// | Kebab, Cobol, UpperKebab, Train | [Hyphen](Boundary::Hyphen) |
+    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [Space](Boundary::Space) |
+    /// | Pascal, UpperCamel, Camel | [LowerUpper](Boundary::LowerUpper), [LowerDigit](Boundary::LowerDigit), [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower), [DigitUpper](Boundary::DigitUpper), [Acronym](Boundary::Acronym) |
     /// | Flat, UpperFlat | No boundaries |
     pub fn boundaries(&self) -> &[Boundary] {
         use Case::*;
         match self {
-            Snake | Constant | UpperSnake | Ada => &[Boundary::UNDERSCORE],
-            Kebab | Cobol | UpperKebab | Train => &[Boundary::HYPHEN],
-            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::SPACE],
+            Snake | Constant | UpperSnake | Ada => &[Boundary::Underscore],
+            Kebab | Cobol | UpperKebab | Train => &[Boundary::Hyphen],
+            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::Space],
             Camel | UpperCamel | Pascal => &[
-                Boundary::LOWER_UPPER,
-                Boundary::ACRONYM,
-                Boundary::LOWER_DIGIT,
-                Boundary::UPPER_DIGIT,
-                Boundary::DIGIT_LOWER,
-                Boundary::DIGIT_UPPER,
+                Boundary::LowerUpper,
+                Boundary::Acronym,
+                Boundary::LowerDigit,
+                Boundary::UpperDigit,
+                Boundary::DigitLower,
+                Boundary::DigitUpper,
             ],
             UpperFlat | Flat => &[],
             Custom { boundaries, .. } => boundaries,
 
             #[cfg(feature = "random")]
-            Random | PseudoRandom => &[Boundary::SPACE],
+            Random | PseudoRandom => &[Boundary::Space],
         }
     }
 
@@ -366,29 +415,29 @@ impl Case<'_> {
     ///
     /// | Cases | Pattern |
     /// | --- | --- |
-    /// | Constant, UpperSnake, Cobol, UpperKebab, UpperFlat, Upper | [uppercase](pattern::uppercase) |
-    /// | Snake, Kebab, Flat, Lower | [lowercase](pattern::lowercase) |
-    /// | Ada, Train, Pascal, UpperCamel, Title | [capital](pattern::capital) |
-    /// | Camel | [camel](pattern::camel) |
-    /// | Alternating | [alternating](pattern::alternating) |
-    /// | Random | [random](pattern::random) |
-    /// | PseudoRandom | [pseudo_random](pattern::pseudo_random) |
-    pub const fn pattern(&self) -> pattern::Pattern {
+    /// | Constant, UpperSnake, Cobol, UpperKebab, UpperFlat, Upper | [Uppercase](Pattern::Uppercase) |
+    /// | Snake, Kebab, Flat, Lower | [Lowercase](Pattern::Lowercase) |
+    /// | Ada, Train, Pascal, UpperCamel, Title | [Capital](Pattern::Capital) |
+    /// | Camel | [Camel](Pattern::Camel) |
+    /// | Alternating | [Alternating](Pattern::Alternating) |
+    /// | Random | [Random](Pattern::Random) |
+    /// | PseudoRandom | [PseudoRandom](pattern::PseudoRandom) |
+    pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
-            Constant | UpperSnake | Cobol | UpperKebab | UpperFlat | Upper => pattern::uppercase,
-            Snake | Kebab | Flat | Lower => pattern::lowercase,
-            Ada | Train | Pascal | UpperCamel | Title => pattern::capital,
-            Camel => pattern::camel,
-            Toggle => pattern::toggle,
-            Alternating => pattern::alternating,
-            Sentence => pattern::sentence,
+            Constant | UpperSnake | Cobol | UpperKebab | UpperFlat | Upper => Pattern::Uppercase,
+            Snake | Kebab | Flat | Lower => Pattern::Lowercase,
+            Ada | Train | Pascal | UpperCamel | Title => Pattern::Capital,
+            Camel => Pattern::Camel,
+            Toggle => Pattern::Toggle,
+            Alternating => Pattern::Alternating,
+            Sentence => Pattern::Sentence,
             Custom { pattern, .. } => *pattern,
 
             #[cfg(feature = "random")]
-            Random => pattern::random,
+            Random => Pattern::Random,
             #[cfg(feature = "random")]
-            PseudoRandom => pattern::pseudo_random,
+            PseudoRandom => Pattern::PseudoRandom,
         }
     }
 
@@ -396,8 +445,8 @@ impl Case<'_> {
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     vec!["get", "Total", "Length"],
     ///     Case::Pascal.split(&"getTotalLength"),
+    ///     vec!["get", "Total", "Length"],
     /// );
     /// ```
     pub fn split<T>(self, s: &T) -> Vec<&str>
@@ -411,24 +460,24 @@ impl Case<'_> {
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     vec!["get", "total", "length"],
     ///     Case::Snake.mutate(&["get", "Total", "Length"]),
+    ///     vec!["get", "total", "length"],
     /// );
     /// ```
     pub fn mutate(self, words: &[&str]) -> Vec<String> {
-        (self.pattern())(words)
+        self.pattern().mutate(words)
     }
 
     /// Join a list of words into a single identifier using the delimiter of this case.
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     String::from("get_total_length"),
     ///     Case::Snake.join(&[
     ///         String::from("get"),
     ///         String::from("total"),
     ///         String::from("length")
     ///     ]),
+    ///     String::from("get_total_length"),
     /// );
     /// ```
     pub fn join(self, words: &[String]) -> String {
