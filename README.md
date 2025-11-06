@@ -47,7 +47,7 @@ convertToCamel
 
 ## Cases
 
-This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature.
+This is list of cases that `convert_case` supports.  Some cases have aliases.
 
 | Case | Example |
 | ---- | ------- |
@@ -65,12 +65,21 @@ This is list of cases that convert\_case supports.  Some cases are simply aliase
 | Lower | my variable name |
 | Title | My Variable Name |
 | Sentence | My variable name |
-| Alternating | mY vArIaBlE nAmE |
-| Toggle | mY vARIABLE nAME |
-| Random | MY vaRiabLe nAME |
-| PseudoRandom | mY VaRiAblE nAMe |
 
 ## Change Log
+
+### 0.10.0: Extra features are in a new crates
+
+Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available.  All the features that are removed are now in a new library `convert_case_extras` which is a little more _fun_.
+
+Removed:
+* `Case::Toggle` and `Pattern::Toggle`
+* `Case::Alternating` and `Pattern::Alternating`
+* `Case::Random` and `Pattern::Random`
+* `Case::PseudoRandom` and `Pattern::PseudoRandom`
+* `random` feature is removed.  The library no longer has any features.
+* `Case::deterministic_cases` is removed
+* `Case::random_cases` is removed
 
 ### 0.9.0: Back to enums, but keep the customization
 

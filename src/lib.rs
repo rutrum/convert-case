@@ -235,34 +235,12 @@
 //! );
 //! ```
 //!
-//! # Random Feature
-//!
-//! This feature adds two additional cases with non-deterministic behavior.
-//! The `random` feature depends on the [`rand`](https://docs.rs/rand) crate.
-//!
-//! The [`Case::Random`] variant will flip a coin at every letter to make it uppercase
-//! or lowercase.  Here are some examples:
-//!
-//! ```
-//! # use convert_case::ccase;
-//! # #[cfg(any(doc, feature = "random"))]
-//! ccase!(random, "What's the deal with airline food?");
-//! // WhAT's tHe Deal WitH aIRline fOOD?
-//! ```
-//!
-//! For a more even distribution of uppercase and lowercase letters, which might _look_ more
-//! random, use the [`Case::PseudoRandom`] variant.  This variant randomly decides if every pair of letters
-//! is upper then lower or lower then upper.  This guarantees that no three consecutive characters
-//! is all uppercase or all lowercase.
-//!
-//! ```
-//! # use convert_case::ccase;
-//! # #[cfg(any(doc, feature = "random"))]
-//! ccase!(random, "What's the deal with airline food?");
-//! // wHAt'S The DeAl WIth AiRlInE fOoD?
-//! ```
-//!
 //! # Associated Projects
+//!
+//! ## convert_case_extras
+//!
+//! Some extra utilties for convert_case that don't need to be in the main library.  These
+//! utilities are niche and fun.
 //!
 //! ## stringcase.org
 //!
@@ -496,7 +474,6 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
 /// The variant of `case` from a token.
 ///
 /// The token associated with each variant is the variant written in snake case.
-#[cfg(not(feature = "random"))]
 #[macro_export]
 macro_rules! case {
     (snake) => {
@@ -549,83 +526,6 @@ macro_rules! case {
     };
     (sentence) => {
         convert_case::Case::Sentence
-    };
-    (alternating) => {
-        convert_case::Case::Alternating
-    };
-    (toggle) => {
-        convert_case::Case::Toggle
-    };
-}
-
-/// The variant of `case` from a token.
-///
-/// The token associated with each variant is the variant written in snake case.
-#[cfg(feature = "random")]
-#[macro_export]
-macro_rules! case {
-    (snake) => {
-        convert_case::Case::Snake
-    };
-    (constant) => {
-        convert_case::Case::Constant
-    };
-    (upper_snake) => {
-        convert_case::Case::UpperSnake
-    };
-    (ada) => {
-        convert_case::Case::Ada;
-    };
-    (kebab) => {
-        convert_case::Case::Kebab
-    };
-    (cobol) => {
-        convert_case::Case::Cobol
-    };
-    (upper_kebab) => {
-        convert_case::Case::UpperKebab
-    };
-    (train) => {
-        convert_case::Case::Train
-    };
-    (flat) => {
-        convert_case::Case::Flat
-    };
-    (upper_flat) => {
-        convert_case::Case::UpperFlat
-    };
-    (pascal) => {
-        convert_case::Case::Pascal
-    };
-    (upper_camel) => {
-        convert_case::Case::UpperCamel
-    };
-    (camel) => {
-        convert_case::Case::Camel
-    };
-    (lower) => {
-        convert_case::Case::Lower
-    };
-    (upper) => {
-        convert_case::Case::Upper
-    };
-    (title) => {
-        convert_case::Case::Title
-    };
-    (sentence) => {
-        convert_case::Case::Sentence
-    };
-    (alternating) => {
-        convert_case::Case::Alternating
-    };
-    (toggle) => {
-        convert_case::Case::Toggle
-    };
-    (random) => {
-        convert_case::Case::Random
-    };
-    (psuedo_random) => {
-        convert_case::Case::PsuedoRandom
     };
 }
 
@@ -671,7 +571,7 @@ mod test {
     use alloc::vec::Vec;
 
     fn possible_cases(s: &str) -> Vec<Case> {
-        Case::deterministic_cases()
+        Case::all_cases()
             .iter()
             .filter(|&case| s.from_case(*case).to_case(*case) == s)
             .map(|c| *c)
@@ -693,8 +593,6 @@ mod test {
             (Case::Upper, "MY VARIABLE 22 NAME"),
             (Case::Title, "My Variable 22 Name"),
             (Case::Sentence, "My variable 22 name"),
-            (Case::Toggle, "mY vARIABLE 22 nAME"),
-            (Case::Alternating, "mY vArIaBlE 22 nAmE"),
         ];
 
         for (case_a, str_a) in &examples {
@@ -836,11 +734,6 @@ mod test {
         assert_eq!("8_a_8_a_8", "8a8A8".to_case(Case::Snake));
     }
 
-    #[test]
-    fn alternating_ignore_symbols() {
-        assert_eq!("tHaT's", "that's".to_case(Case::Alternating));
-    }
-
     mod is_case {
         use super::*;
 
@@ -948,19 +841,6 @@ mod test {
         );
     }
 
-    #[cfg(feature = "random")]
-    #[test]
-    fn random_case_boundaries() {
-        for &random_case in Case::random_cases() {
-            assert_eq!(
-                "split_by_spaces",
-                "Split By Spaces"
-                    .from_case(random_case)
-                    .to_case(Case::Snake)
-            );
-        }
-    }
-
     #[test]
     fn multiple_from_case() {
         assert_eq!(
@@ -997,7 +877,7 @@ mod test {
     #[test]
     fn detect_each_case() {
         let s = "My String Identifier".to_string();
-        for &case in Case::deterministic_cases() {
+        for &case in Case::all_cases() {
             let new_s = s.from_case(case).to_case(case);
             let possible = possible_cases(&new_s);
             assert!(possible.iter().any(|c| c == &case));
@@ -1016,15 +896,5 @@ mod test {
     fn russian() {
         let s = "ПЕРСПЕКТИВА24".to_string();
         let _n = s.to_case(Case::Title);
-        let _n = s.to_case(Case::Alternating);
-    }
-
-    // From issue https://github.com/rutrum/convert-case/issues/4
-    #[test]
-    #[cfg(feature = "random")]
-    fn russian_random() {
-        let s = "ПЕРСПЕКТИВА24".to_string();
-        let _n = s.to_case(Case::Random);
-        let _n = s.to_case(Case::PseudoRandom);
     }
 }

@@ -29,11 +29,3 @@ fn ccase_from_kebab_to_camel() {
 fn ccase_from_snake_to_pascal() {
     assert_eq!("My-varName-var", ccase!(snake -> pascal, "my-var_name-var"));
 }
-
-#[cfg(feature = "random")]
-#[test]
-fn ccase_random() {
-    assert!((0..10)
-        .map(|_| "my-var-name" != ccase!(random, "my_Var_Name"))
-        .fold(false, |acc, x| acc || x))
-}

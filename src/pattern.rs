@@ -1,6 +1,3 @@
-#[cfg(feature = "random")]
-use rand::prelude::*;
-
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
@@ -10,17 +7,6 @@ fn lowercase_word(word: &str) -> String {
 
 fn uppercase_word(word: &str) -> String {
     word.to_uppercase()
-}
-
-/// Applies toggle pattern to a single word using graphemes.
-fn toggle_word(word: &str) -> String {
-    let mut chars = word.chars();
-
-    if let Some(c) = chars.next() {
-        [c.to_lowercase().collect(), chars.as_str().to_uppercase()].concat()
-    } else {
-        String::new()
-    }
 }
 
 /// Applies capital pattern to a single word using graphemes.
@@ -163,70 +149,6 @@ pub enum Pattern {
     /// ```
     Sentence,
 
-    /// Makes the first letter of each word lowercase
-    /// and the remaining letters of each word uppercase.
-    /// ```
-    /// # use convert_case::Pattern;
-    /// assert_eq!(
-    ///     Pattern::Toggle.mutate(&["Case", "CONVERSION", "library"]),
-    ///     vec!["cASE", "cONVERSION", "lIBRARY"],
-    /// );
-    /// ```
-    Toggle,
-
-    /// Makes each letter of each word alternate
-    /// between lowercase and uppercase.
-    ///
-    /// It alternates across words,
-    /// which means the last letter of one word and the first letter of the
-    /// next will not be the same letter casing.
-    /// ```
-    /// # use convert_case::Pattern;
-    /// assert_eq!(
-    ///     Pattern::Alternating.mutate(&["Case", "CONVERSION", "library"]),
-    ///     vec!["cAsE", "cOnVeRsIoN", "lIbRaRy"],
-    /// );
-    /// assert_eq!(
-    ///     Pattern::Alternating.mutate(&["Another", "Example"]),
-    ///     vec!["aNoThEr", "ExAmPlE"],
-    /// );
-    /// ```
-    Alternating,
-
-    // #[doc(cfg(feature = "random"))]
-    /// Lowercases or uppercases each letter
-    /// uniformly randomly.
-    ///
-    /// This uses the `rand` crate and is only available with the "random" feature.
-    /// ```
-    /// # use convert_case::Pattern;
-    /// # #[cfg(any(doc, feature = "random"))]
-    /// Pattern::Random.mutate(&["Case", "CONVERSION", "library"]);
-    /// // "casE", "coNVeRSiOn", "lIBraRY"
-    /// ```
-    #[cfg(feature = "random")]
-    Random,
-
-    /// Case each letter in random-like patterns.
-    ///
-    /// Instead of randomizing
-    /// each letter individually, it mutates each pair of characters
-    /// as either (Lowercase, Uppercase) or (Uppercase, Lowercase).  This generates
-    /// more "random looking" words.  A consequence of this algorithm for randomization
-    /// is that there will never be three consecutive letters that are all lowercase
-    /// or all uppercase.  This uses the `rand` crate and is only available with the "random"
-    /// feature.
-    ///
-    /// This uses the `rand` crate and is only available with the "random" feature.
-    /// ```
-    /// # use convert_case::Pattern;
-    /// # #[cfg(any(doc, feature = "random"))]
-    /// Pattern::PseudoRandom.mutate(&["Case", "CONVERSION", "library"]);
-    /// // "cAsE", "cONveRSioN", "lIBrAry"
-    /// ```
-    #[cfg(feature = "random")]
-    PseudoRandom,
-
     /// Define custom behavior to transform a set of words.
     ///
     /// See the [`Pattern`] documentation for examples.
@@ -265,88 +187,6 @@ impl Pattern {
                     }
                 })
                 .collect(),
-            Toggle => words.iter().map(|word| toggle_word(word)).collect(),
-            Alternating => {
-                let mut upper = false;
-                words
-                    .iter()
-                    .map(|word| {
-                        word.chars()
-                            .map(|letter| {
-                                if letter.is_uppercase() || letter.is_lowercase() {
-                                    if upper {
-                                        upper = false;
-                                        letter.to_uppercase().to_string()
-                                    } else {
-                                        upper = true;
-                                        letter.to_lowercase().to_string()
-                                    }
-                                } else {
-                                    letter.to_string()
-                                }
-                            })
-                            .collect()
-                    })
-                    .collect()
-            }
-            // #[doc(cfg(feature = "random"))]
-            #[cfg(feature = "random")]
-            Random => {
-                // TODO: this is broken, hasn't been updated for graphemes
-                let mut rng = rand::thread_rng();
-                words
-                    .iter()
-                    .map(|word| {
-                        word.chars()
-                            .map(|letter| {
-                                if rng.gen::<f32>() > 0.5 {
-                                    letter.to_uppercase().to_string()
-                                } else {
-                                    letter.to_lowercase().to_string()
-                                }
-                            })
-                            .collect()
-                    })
-                    .collect()
-            }
-            #[cfg(feature = "random")]
-            PsuedoRandom => {
-                // This is a dumb feature.  Can this be seen as a custom variant?
-                let mut rng = rand::thread_rng();
-
-                // Keeps track of when to alternate
-                let mut alt: Option<bool> = None;
-                words
-                    .iter()
-                    .map(|word| {
-                        word.chars()
-                            .map(|letter| {
-                                match alt {
-                                    // No existing pattern, start one
-                                    None => {
-                                        if rng.gen::<f32>() > 0.5 {
-                                            alt = Some(false); // Make the next char lower
-                                            letter.to_uppercase().to_string()
-                                        } else {
-                                            alt = Some(true); // Make the next char upper
-                                            letter.to_lowercase().to_string()
-                                        }
-                                    }
-                                    // Existing pattern, do what it says
-                                    Some(upper) => {
-                                        alt = None;
-                                        if upper {
-                                            letter.to_uppercase().to_string()
-                                        } else {
-                                            letter.to_lowercase().to_string()
-                                        }
-                                    }
-                                }
-                            })
-                            .collect()
-                    })
-                    .collect()
-            }
         }
     }
 }
@@ -358,41 +198,9 @@ mod test {
 
     use super::*;
 
-    #[cfg(feature = "random")]
-    #[test]
-    fn pseudo_no_triples() {
-        let words = vec!["abcdefg", "hijklmnop", "qrstuv", "wxyz"];
-        for _ in 0..5 {
-            let new = Pattern::PseudoRandom.mutate(&words).join("");
-            let mut iter = new
-                .chars()
-                .zip(new.chars().skip(1))
-                .zip(new.chars().skip(2));
-            assert!(!iter
-                .clone()
-                .any(|((a, b), c)| a.is_lowercase() && b.is_lowercase() && c.is_lowercase()));
-            assert!(
-                !iter.any(|((a, b), c)| a.is_uppercase() && b.is_uppercase() && c.is_uppercase())
-            );
-        }
-    }
-
-    #[cfg(feature = "random")]
-    #[test]
-    fn randoms_are_random() {
-        let words = vec!["abcdefg", "hijklmnop", "qrstuv", "wxyz"];
-
-        for _ in 0..5 {
-            let transformed = Pattern::PseudoRandom.mutate(&words);
-            assert_ne!(words, transformed);
-            let transformed = Pattern::Random.mutate(&words);
-            assert_ne!(words, transformed);
-        }
-    }
-
     #[test]
     fn mutate_empty_strings() {
-        for word_pattern in [lowercase_word, uppercase_word, capital_word, toggle_word] {
+        for word_pattern in [lowercase_word, uppercase_word, capital_word] {
             assert_eq!(String::new(), word_pattern(&String::new()))
         }
     }
