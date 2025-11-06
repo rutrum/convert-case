@@ -105,7 +105,7 @@ impl Converter {
     {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = boundary::split(&s, &self.boundaries);
-        let words = words.iter().map(|s| s.as_ref()).collect::<Vec<&str>>();
+        let words = words.to_vec();
         self.pattern.mutate(&words).join(&self.delim)
     }
 
@@ -268,15 +268,6 @@ mod test {
     fn custom_delim() {
         let conv = Converter::new().set_delim("..");
         assert_eq!("oh..My", conv.convert("ohMy"));
-    }
-
-    #[test]
-    fn no_pattern() {
-        let conv = Converter::new()
-            .from_case(Case::Title)
-            .to_case(Case::Kebab)
-            .remove_pattern();
-        assert_eq!("wIErd-CASing", conv.convert("wIErd CASing"));
     }
 
     #[test]

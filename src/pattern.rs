@@ -248,9 +248,9 @@ impl Pattern {
                 .enumerate()
                 .map(|(i, &word)| {
                     if i == 0 {
-                        lowercase_word(&word)
+                        lowercase_word(word)
                     } else {
-                        capital_word(&word)
+                        capital_word(word)
                     }
                 })
                 .collect(),
@@ -259,9 +259,9 @@ impl Pattern {
                 .enumerate()
                 .map(|(i, &word)| {
                     if i == 0 {
-                        capital_word(&word)
+                        capital_word(word)
                     } else {
-                        lowercase_word(&word)
+                        lowercase_word(word)
                     }
                 })
                 .collect(),

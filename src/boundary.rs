@@ -208,36 +208,36 @@ impl Boundary {
     pub fn matches(self, s: &[&str]) -> bool {
         use Boundary::*;
         match self {
-            Underscore => s.get(0) == Some(&"_"),
-            Hyphen => s.get(0) == Some(&"-"),
-            Space => s.get(0) == Some(&" "),
+            Underscore => s.first() == Some(&"_"),
+            Hyphen => s.first() == Some(&"-"),
+            Space => s.first() == Some(&" "),
             Acronym => {
-                s.get(0).map(grapheme_is_uppercase) == Some(true)
+                s.first().map(grapheme_is_uppercase) == Some(true)
                     && s.get(1).map(grapheme_is_uppercase) == Some(true)
                     && s.get(2).map(grapheme_is_lowercase) == Some(true)
             }
             LowerUpper => {
-                s.get(0).map(grapheme_is_lowercase) == Some(true)
+                s.first().map(grapheme_is_lowercase) == Some(true)
                     && s.get(1).map(grapheme_is_uppercase) == Some(true)
             }
             UpperLower => {
-                s.get(0).map(grapheme_is_uppercase) == Some(true)
+                s.first().map(grapheme_is_uppercase) == Some(true)
                     && s.get(1).map(grapheme_is_lowercase) == Some(true)
             }
             LowerDigit => {
-                s.get(0).map(grapheme_is_lowercase) == Some(true)
+                s.first().map(grapheme_is_lowercase) == Some(true)
                     && s.get(1).map(grapheme_is_digit) == Some(true)
             }
             UpperDigit => {
-                s.get(0).map(grapheme_is_uppercase) == Some(true)
+                s.first().map(grapheme_is_uppercase) == Some(true)
                     && s.get(1).map(grapheme_is_digit) == Some(true)
             }
             DigitLower => {
-                s.get(0).map(grapheme_is_digit) == Some(true)
+                s.first().map(grapheme_is_digit) == Some(true)
                     && s.get(1).map(grapheme_is_lowercase) == Some(true)
             }
             DigitUpper => {
-                s.get(0).map(grapheme_is_digit) == Some(true)
+                s.first().map(grapheme_is_digit) == Some(true)
                     && s.get(1).map(grapheme_is_uppercase) == Some(true)
             }
             Custom { condition, arg, .. } => condition(s, arg),
@@ -383,7 +383,7 @@ impl Boundary {
         let mut boundaries = Vec::new();
         for boundary in Boundary::defaults() {
             let parts = split(&pattern, &[boundary]);
-            if parts.len() > 1 || parts.len() == 0 || parts[0] != pattern {
+            if parts.len() > 1 || parts.is_empty() || parts[0] != pattern {
                 boundaries.push(boundary);
             }
         }
@@ -408,7 +408,7 @@ where
 {
     let s = s.as_ref();
 
-    if s.len() == 0 {
+    if s.is_empty() {
         return Vec::new();
     }
 
