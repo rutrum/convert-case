@@ -6,15 +6,16 @@ use alloc::vec::Vec;
 
 /// Defines the case of an identifier.
 /// ```
-/// use convert_case::{Case, Casing};
+/// use convert_case::ccase;
+/// assert_eq!(ccase!(title, "super_mario_64"), "Super Mario 64");
 ///
+/// use convert_case::{Case, Casing};
 /// assert_eq!("super_mario_64".to_case(Case::Title), "Super Mario 64");
 /// ```
 ///
 /// A case is the pair of a [pattern](Pattern) and a delimeter (a string).  Given
 /// a list of words, a pattern describes how to mutate the words and a delimeter is how the mutated
-/// words are joined together.  These inherantly are the properties of what makes a "multiword
-/// identifier case", or simply "case".
+/// words are joined together.
 ///
 /// | pattern | underscore `_` | hyphen `-` | empty string | space |
 /// | ---: | --- | --- | --- | --- |
@@ -35,7 +36,7 @@ use alloc::vec::Vec;
 /// converting "from" a particular case.
 #[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[non_exhaustive]
-pub enum Case<'a> {
+pub enum Case<'b> {
     /// Custom cases can be delimited by any static string slice and mutate words
     /// using any pattern.  Further, they can use any list of boundaries for
     /// splitting identifiers into words.
@@ -60,7 +61,7 @@ pub enum Case<'a> {
     /// );
     /// ```
     Custom {
-        boundaries: &'a [Boundary],
+        boundaries: &'b [Boundary],
         pattern: Pattern,
         delim: &'static str,
     },
@@ -72,8 +73,11 @@ pub enum Case<'a> {
     /// * Delimeter : Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(snake, "My variable NAME"), "my_variable_name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My variable NAME".to_case(Case::Snake), "my_variable_name")
+    /// assert_eq!("My variable NAME".to_case(Case::Snake), "my_variable_name");
     /// ```
     Snake,
 
@@ -83,8 +87,11 @@ pub enum Case<'a> {
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(constant, "My variable NAME"), "MY_VARIABLE_NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY_VARIABLE_NAME", "My variable NAME".to_case(Case::Constant))
+    /// assert_eq!("My variable NAME".to_case(Case::Constant), "MY_VARIABLE_NAME");
     /// ```
     Constant,
 
@@ -98,8 +105,11 @@ pub enum Case<'a> {
     /// * Delimeter: Underscore `"_"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(ada, "My variable NAME"), "My_Variable_Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My_Variable_Name", "My variable NAME".to_case(Case::Ada))
+    /// assert_eq!("My variable NAME".to_case(Case::Ada), "My_Variable_Name");
     /// ```
     Ada,
 
@@ -109,8 +119,11 @@ pub enum Case<'a> {
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(kebab, "My variable NAME"), "my-variable-name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my-variable-name", "My variable NAME".to_case(Case::Kebab))
+    /// assert_eq!("My variable NAME".to_case(Case::Kebab), "my-variable-name");
     /// ```
     Kebab,
 
@@ -120,8 +133,11 @@ pub enum Case<'a> {
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(cobol, "My variable NAME"), "MY-VARIABLE-NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY-VARIABLE-NAME", "My variable NAME".to_case(Case::Cobol))
+    /// assert_eq!("My variable NAME".to_case(Case::Cobol), "MY-VARIABLE-NAME");
     /// ```
     Cobol,
 
@@ -135,8 +151,11 @@ pub enum Case<'a> {
     /// * Delimeter: Hyphen `"-"`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(train, "My variable NAME"), "My-Variable-Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My-Variable-Name", "My variable NAME".to_case(Case::Train))
+    /// assert_eq!("My variable NAME".to_case(Case::Train), "My-Variable-Name");
     /// ```
     Train,
 
@@ -146,8 +165,11 @@ pub enum Case<'a> {
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(flat, "My variable NAME"), "myvariablename");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("myvariablename", "My variable NAME".to_case(Case::Flat))
+    /// assert_eq!("My variable NAME".to_case(Case::Flat), "myvariablename");
     /// ```
     Flat,
 
@@ -157,8 +179,11 @@ pub enum Case<'a> {
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(upper_flat, "My variable NAME"), "MYVARIABLENAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MYVARIABLENAME", "My variable NAME".to_case(Case::UpperFlat))
+    /// assert_eq!("My variable NAME".to_case(Case::UpperFlat), "MYVARIABLENAME");
     /// ```
     UpperFlat,
 
@@ -171,8 +196,11 @@ pub enum Case<'a> {
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(pascal, "My variable NAME"), "MyVariableName");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MyVariableName", "My variable NAME".to_case(Case::Pascal))
+    /// assert_eq!("My variable NAME".to_case(Case::Pascal), "MyVariableName");
     /// ```
     Pascal,
 
@@ -188,8 +216,11 @@ pub enum Case<'a> {
     /// * Delimeter: Empty string `""`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(camel, "My variable NAME"), "myVariableName");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("myVariableName", "My variable NAME".to_case(Case::Camel))
+    /// assert_eq!("My variable NAME".to_case(Case::Camel), "myVariableName");
     /// ```
     Camel,
 
@@ -199,8 +230,11 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(lower, "My variable NAME"), "my variable name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("my variable name", "My variable NAME".to_case(Case::Lower))
+    /// assert_eq!("My variable NAME".to_case(Case::Lower), "my variable name");
     /// ```
     Lower,
 
@@ -210,8 +244,11 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(upper, "My variable NAME"), "MY VARIABLE NAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("MY VARIABLE NAME", "My variable NAME".to_case(Case::Upper))
+    /// assert_eq!("My variable NAME".to_case(Case::Upper), "MY VARIABLE NAME");
     /// ```
     Upper,
 
@@ -223,8 +260,11 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(title, "My variable NAME"), "My Variable Name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My Variable Name", "My variable NAME".to_case(Case::Title))
+    /// assert_eq!("My variable NAME".to_case(Case::Title), "My Variable Name");
     /// ```
     Title,
 
@@ -235,8 +275,11 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(sentence, "My variable NAME"), "My variable name");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("My variable name", "My variable NAME".to_case(Case::Sentence))
+    /// assert_eq!("My variable NAME".to_case(Case::Sentence), "My variable name");
     /// ```
     Sentence,
 
@@ -247,8 +290,11 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(alternating, "My variable NAME"), "mY vArIaBlE nAmE");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("mY vArIaBlE nAmE", "My variable NAME".to_case(Case::Alternating));
+    /// assert_eq!("My variable NAME".to_case(Case::Alternating), "mY vArIaBlE nAmE");
     /// ```
     Alternating,
 
@@ -259,13 +305,16 @@ pub enum Case<'a> {
     /// * Delimeter: Space `" "`
     ///
     /// ```
+    /// use convert_case::ccase;
+    /// assert_eq!(ccase!(toggle, "My variable NAME"), "mY vARIABLE nAME");
+    ///
     /// use convert_case::{Case, Casing};
-    /// assert_eq!("mY vARIABLE nAME", "My variable NAME".to_case(Case::Toggle))
+    /// assert_eq!("My variable NAME".to_case(Case::Toggle), "mY vARIABLE nAME");
     /// ```
     Toggle,
 
     /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.  
+    /// randomly upper case or lower case.
     ///
     /// This uses the `rand` crate
     /// and is only available with the "random" feature.
@@ -285,7 +334,7 @@ pub enum Case<'a> {
 
     /// Pseudo-random case strings are delimited by spaces and characters are randomly
     /// upper case or lower case, but there will never more than two consecutive lower
-    /// case or upper case letters in a row.  
+    /// case or upper case letters in a row.
     ///
     /// This uses the `rand` crate and is
     /// only available with the "random" feature.
@@ -396,8 +445,8 @@ impl Case<'_> {
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     vec!["get", "Total", "Length"],
     ///     Case::Pascal.split(&"getTotalLength"),
+    ///     vec!["get", "Total", "Length"],
     /// );
     /// ```
     pub fn split<T>(self, s: &T) -> Vec<&str>
@@ -411,8 +460,8 @@ impl Case<'_> {
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     vec!["get", "total", "length"],
     ///     Case::Snake.mutate(&["get", "Total", "Length"]),
+    ///     vec!["get", "total", "length"],
     /// );
     /// ```
     pub fn mutate(self, words: &[&str]) -> Vec<String> {
@@ -423,12 +472,12 @@ impl Case<'_> {
     /// ```
     /// use convert_case::Case;
     /// assert_eq!(
-    ///     String::from("get_total_length"),
     ///     Case::Snake.join(&[
     ///         String::from("get"),
     ///         String::from("total"),
     ///         String::from("length")
     ///     ]),
+    ///     String::from("get_total_length"),
     /// );
     /// ```
     pub fn join(self, words: &[String]) -> String {

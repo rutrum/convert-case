@@ -233,21 +233,6 @@ impl Converter {
         self.pattern = p;
         self
     }
-
-    /// Sets the pattern field to `None`.  Where there is no pattern, a character's case is never
-    /// mutated and will be maintained at the end of conversion.
-    /// ```
-    /// # use convert_case::{Case, Converter};
-    /// let conv = Converter::new()
-    ///     .from_case(Case::Title)
-    ///     .to_case(Case::Snake)
-    ///     .remove_pattern();
-    /// assert_eq!("KoRn_Alone_I_Break", conv.convert("KoRn Alone I Break"));
-    /// ```
-    pub fn remove_pattern(mut self) -> Self {
-        self.pattern = Pattern::Noop;
-        self
-    }
 }
 
 #[cfg(test)]

@@ -29,11 +29,11 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// use convert_case::{Boundary, Case, Casing, Converter};
 ///
 /// assert_eq!(
-///     "transformations_in_3d",
 ///     "TransformationsIn3D"
 ///         .from_case(Case::Camel)
 ///         .without_boundaries(&Boundary::digit_letter())
-///         .to_case(Case::Snake)
+///         .to_case(Case::Snake),
+///     "transformations_in_3d",
 /// );
 ///
 /// let conv = Converter::new()
@@ -59,10 +59,10 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 ///     len: 0,
 /// };
 /// assert_eq!(
-///     "Name@ Domain",
 ///     "name@domain"
 ///         .with_boundaries(&[at_then_letter])
-///         .to_case(Case::Title)
+///         .to_case(Case::Title),
+///     "Name@ Domain",
 /// )
 /// ```
 
@@ -86,8 +86,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("-"),
     ///     vec![Boundary::Hyphen],
-    ///     Boundary::defaults_from("-")
     /// );
     /// ```
     Hyphen,
@@ -96,8 +96,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("_"),
     ///     vec![Boundary::Underscore],
-    ///     Boundary::defaults_from("_")
     /// );
     /// ```
     Underscore,
@@ -106,8 +106,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from(" "),
     ///     vec![Boundary::Space],
-    ///     Boundary::defaults_from(" ")
     /// );
     /// ```
     Space,
@@ -125,8 +125,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("aA"),
     ///     vec![Boundary::LowerUpper],
-    ///     Boundary::defaults_from("aA")
     /// );
     /// ```
     LowerUpper,
@@ -135,8 +135,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("1A"),
     ///     vec![Boundary::DigitUpper],
-    ///     Boundary::defaults_from("1A")
     /// );
     /// ```
     DigitUpper,
@@ -145,8 +145,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("A1"),
     ///     vec![Boundary::UpperDigit],
-    ///     Boundary::defaults_from("A1")
     /// );
     /// ```
     UpperDigit,
@@ -155,8 +155,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("1a"),
     ///     vec![Boundary::DigitLower],
-    ///     Boundary::defaults_from("1a")
     /// );
     /// ```
     DigitLower,
@@ -165,8 +165,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("a1"),
     ///     vec![Boundary::LowerDigit],
-    ///     Boundary::defaults_from("a1")
     /// );
     /// ```
     LowerDigit,
@@ -177,8 +177,8 @@ pub enum Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("AAa"),
     ///     vec![Boundary::Acronym],
-    ///     Boundary::defaults_from("AAa")
     /// );
     /// ```
     Acronym,
@@ -192,8 +192,8 @@ impl Boundary {
     ///     .set_boundaries(&[Boundary::from_delim("::")])
     ///     .to_case(Case::Camel);
     /// assert_eq!(
+    ///     conv.convert("my::var::name"),
     ///     "myVarName",
-    ///     conv.convert("my::var::name")
     /// )
     /// ```
     pub const fn from_delim(delim: &'static str) -> Boundary {
@@ -244,6 +244,7 @@ impl Boundary {
         }
     }
 
+    /// The number of graphemes consumed when splitting at the boundary.
     pub fn len(self) -> usize {
         use Boundary::*;
         match self {
@@ -254,6 +255,7 @@ impl Boundary {
         }
     }
 
+    /// The index of the character to split at.
     pub fn start(self) -> usize {
         use Boundary::*;
         match self {
@@ -269,6 +271,7 @@ impl Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults(),
     ///     [
     ///         Boundary::Underscore,
     ///         Boundary::Hyphen,
@@ -280,7 +283,6 @@ impl Boundary {
     ///         Boundary::DigitUpper,
     ///         Boundary::Acronym,
     ///     ],
-    ///     Boundary::defaults()
     /// );
     /// ```
     pub const fn defaults() -> [Boundary; 9] {
@@ -301,13 +303,13 @@ impl Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::digits(),
     ///     [
     ///         Boundary::LowerDigit,
     ///         Boundary::UpperDigit,
     ///         Boundary::DigitLower,
     ///         Boundary::DigitUpper,
     ///     ],
-    ///     Boundary::digits()
     /// );
     /// ```
     pub const fn digits() -> [Boundary; 4] {
@@ -323,11 +325,11 @@ impl Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::letter_digit(),
     ///     [
     ///         Boundary::LowerDigit,
     ///         Boundary::UpperDigit,
     ///     ],
-    ///     Boundary::letter_digit()
     /// );
     /// ```
     pub const fn letter_digit() -> [Boundary; 2] {
@@ -338,11 +340,11 @@ impl Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::digit_letter(),
     ///     [
     ///         Boundary::DigitLower,
     ///         Boundary::DigitUpper
     ///     ],
-    ///     Boundary::digit_letter()
     /// );
     /// ```
     pub const fn digit_letter() -> [Boundary; 2] {
@@ -358,6 +360,7 @@ impl Boundary {
     /// ```
     /// # use convert_case::Boundary;
     /// assert_eq!(
+    ///     Boundary::defaults_from("aA8a -"),
     ///     vec![
     ///         Boundary::Hyphen,
     ///         Boundary::Space,
@@ -365,16 +368,15 @@ impl Boundary {
     ///         Boundary::UpperDigit,
     ///         Boundary::DigitLower,
     ///     ],
-    ///     Boundary::defaults_from("aA8a -")
     /// );
     /// assert_eq!(
+    ///     Boundary::defaults_from("bD:0B:_:AAa"),
     ///     vec![
     ///         Boundary::Underscore,
     ///         Boundary::LowerUpper,
     ///         Boundary::DigitUpper,
     ///         Boundary::Acronym,
     ///     ],
-    ///     Boundary::defaults_from("bD:0B:_:AAa")
     /// );
     /// ```
     pub fn defaults_from(pattern: &str) -> Vec<Boundary> {

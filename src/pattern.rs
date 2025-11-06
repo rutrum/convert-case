@@ -4,8 +4,6 @@ use rand::prelude::*;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-use unicode_segmentation::UnicodeSegmentation;
-
 fn lowercase_word(word: &str) -> String {
     word.to_lowercase()
 }
@@ -14,23 +12,23 @@ fn uppercase_word(word: &str) -> String {
     word.to_uppercase()
 }
 
-/// Applies toggle pattern to a single word using graphemes
-pub fn grapheme_toggle_word(word: &str) -> String {
-    let mut graphemes = word.graphemes(true);
+/// Applies toggle pattern to a single word using graphemes.
+fn toggle_word(word: &str) -> String {
+    let mut chars = word.chars();
 
-    if let Some(c) = graphemes.next() {
-        [c.to_lowercase(), graphemes.as_str().to_uppercase()].concat()
+    if let Some(c) = chars.next() {
+        [c.to_lowercase().collect(), chars.as_str().to_uppercase()].concat()
     } else {
         String::new()
     }
 }
 
-/// Applies capital pattern to a single word using graphemes
-pub fn grapheme_capitalize_word(word: &str) -> String {
-    let mut graphemes = word.graphemes(true);
+/// Applies capital pattern to a single word using graphemes.
+fn capital_word(word: &str) -> String {
+    let mut chars = word.chars();
 
-    if let Some(c) = graphemes.next() {
-        [c.to_uppercase(), graphemes.as_str().to_lowercase()].concat()
+    if let Some(c) = chars.next() {
+        [c.to_uppercase().collect(), chars.as_str().to_lowercase()].concat()
     } else {
         String::new()
     }
@@ -49,15 +47,11 @@ pub fn grapheme_capitalize_word(word: &str) -> String {
 /// One example of custom behavior might be a pattern
 /// that detects a fixed list of two-letter acronyms, and capitalizes them
 /// appropriately on output.
-///
-/// To work over graphemes, you can use utility methods provided by the
-/// crate.
 /// ```
-/// use convert_case::{grapheme_capitalize_word, Converter, Pattern};
+/// use convert_case::{Converter, Pattern};
 ///
 /// fn pascal_upper_acronyms(words: &[&str]) -> Vec<String> {
-///     words.iter()
-///         .map(|word| grapheme_capitalize_word(word))
+///     Pattern::Capital.mutate(words).into_iter()
 ///         .map(|word| match word.as_ref() {
 ///             "Io" | "Xml" => word.to_uppercase(),
 ///             _ => word,
@@ -248,10 +242,7 @@ impl Pattern {
             Noop => words.iter().map(|word| word.to_string()).collect(),
             Lowercase => words.iter().map(|word| lowercase_word(word)).collect(),
             Uppercase => words.iter().map(|word| uppercase_word(word)).collect(),
-            Capital => words
-                .iter()
-                .map(|word| grapheme_capitalize_word(word))
-                .collect(),
+            Capital => words.iter().map(|word| capital_word(word)).collect(),
             Camel => words
                 .iter()
                 .enumerate()
@@ -259,7 +250,7 @@ impl Pattern {
                     if i == 0 {
                         lowercase_word(&word)
                     } else {
-                        grapheme_capitalize_word(&word)
+                        capital_word(&word)
                     }
                 })
                 .collect(),
@@ -268,16 +259,13 @@ impl Pattern {
                 .enumerate()
                 .map(|(i, &word)| {
                     if i == 0 {
-                        grapheme_capitalize_word(&word)
+                        capital_word(&word)
                     } else {
                         lowercase_word(&word)
                     }
                 })
                 .collect(),
-            Toggle => words
-                .iter()
-                .map(|word| grapheme_toggle_word(word))
-                .collect(),
+            Toggle => words.iter().map(|word| toggle_word(word)).collect(),
             Alternating => {
                 let mut upper = false;
                 words
@@ -365,6 +353,9 @@ impl Pattern {
 
 #[cfg(test)]
 mod test {
+    use crate::Case;
+    use crate::Converter;
+
     use super::*;
 
     #[cfg(feature = "random")]
@@ -401,13 +392,28 @@ mod test {
 
     #[test]
     fn mutate_empty_strings() {
-        for word_pattern in [
-            lowercase_word,
-            uppercase_word,
-            grapheme_capitalize_word,
-            grapheme_toggle_word,
-        ] {
+        for word_pattern in [lowercase_word, uppercase_word, capital_word, toggle_word] {
             assert_eq!(String::new(), word_pattern(&String::new()))
         }
+    }
+
+    #[test]
+    fn filtering_with_custom() {
+        // TODO: find a way to make this cleaner, then add in docs
+        let filter_camel_pattern = Pattern::Custom(|words| {
+            Pattern::Camel.mutate(
+                &words
+                    .into_iter()
+                    .filter(|word| word.len() > 0)
+                    .map(|word| *word)
+                    .collect::<Vec<&str>>(),
+            )
+        });
+
+        let conv = Converter::new()
+            .from_case(Case::Kebab)
+            .set_pattern(filter_camel_pattern);
+
+        assert_eq!(conv.convert("--leading-delims"), "leadingDelims");
     }
 }

@@ -177,7 +177,7 @@
 //! Custom boundary conditions can be created.  Commonly, you might split based on some
 //! character or list of characters.  The [`Boundary::from_delim`] method builds
 //! a boundary that splits on the presence of a string, and removes the string
-//! from the final list of words.  
+//! from the final list of words.
 //!
 //! You can also use of [`Boundary::Custom`] to explicitly define boundary
 //! conditions.  If you actually need to create a
@@ -276,75 +276,6 @@
 //! `convert_case` was originally developed for the purposes of a command line utility
 //! for converting the case of strings and filenames.  You can check out
 //! [`ccase` on Github](https://github.com/rutrum/ccase).
-//!
-//! # Old
-//!
-//! You can also test what case a string is in.
-//! ```
-//! # use convert_case::{Case, Casing};
-//! assert!( "css-class-name".is_case(Case::Kebab));
-//! assert!(!"css-class-name".is_case(Case::Snake));
-//! assert!(!"UPPER_CASE_VAR".is_case(Case::Snake));
-//! ```
-//!
-//! # Boundary Specificity
-//!
-//! It can be difficult to determine how to split a string into words.  That is why this case
-//! provides the [`from_case`](Casing::from_case) functionality, but sometimes that isn't enough
-//! to meet a specific use case.
-//!
-//! Say an identifier has the word `2D`, such as `scale2D`.  No exclusive usage of `from_case` will
-//! be enough to solve the problem.  In this case we can further specify which boundaries to split
-//! the string on.  `convert_case` provides some patterns for achieving this specificity.
-//! We can specify what boundaries we want to split on using instances of the [`Boundary`] struct.
-//! ```
-//! use convert_case::{Boundary, Case, Casing};
-//!
-//! // Not quite what we want
-//! assert_eq!(
-//!     "scale_2_d",
-//!     "scale2D"
-//!         .from_case(Case::Camel)
-//!         .to_case(Case::Snake)
-//! );
-//!
-//! // Remove boundary from Case::Camel
-//! assert_eq!(
-//!     "scale_2d",
-//!     "scale2D"
-//!         .from_case(Case::Camel)
-//!         .without_boundaries(&[Boundary::DigitUpper, Boundary::DigitLower])
-//!         .to_case(Case::Snake)
-//! );
-//!
-//! // Write boundaries explicitly
-//! assert_eq!(
-//!     "scale_2d",
-//!     "scale2D"
-//!         .with_boundaries(&[Boundary::LowerDigit])
-//!         .to_case(Case::Snake)
-//! );
-//! ```
-//!
-//! The `Casing` trait provides initial methods, but any subsequent methods that do not resolve
-//! the conversion return a [`StateConverter`] struct.  It contains similar methods as `Casing`.
-//!
-//! ## Custom Boundaries
-//!
-//! `convert_case` provides a number of constants for boundaries associated with common cases.
-//! But you can create your own boundary to split on other criteria.  For simple, delimiter
-//! based splits, use [`Boundary::from_delim`].
-//!
-//! ```
-//! # use convert_case::{Boundary, Case, Casing};
-//! assert_eq!(
-//!     "Coolers Revenge",
-//!     "coolers.revenge"
-//!         .with_boundaries(&[Boundary::from_delim(".")])
-//!         .to_case(Case::Title)
-//! )
-//! ```
-//!
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
 
@@ -360,7 +291,6 @@ pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
 pub use pattern::Pattern;
-pub use pattern::{grapheme_capitalize_word, grapheme_toggle_word};
 
 /// Describes items that can be converted into a case.  This trait is used
 /// in conjunction with the [`StateConverter`] struct which is returned from a couple
