@@ -363,14 +363,6 @@ pub trait Casing<T: AsRef<str>> {
     /// assert!(!"kebab-case-string".is_case(Case::Train));
     /// ```
     fn is_case(&self, case: Case) -> bool;
-
-    /// Consider removing
-    fn detect_cases(&self) -> Vec<Case> {
-        Case::deterministic_cases()
-            .iter()
-            .filter_map(|&c| self.is_case(c).then_some(c))
-            .collect()
-    }
 }
 
 impl<T: AsRef<str>> Casing<T> for T {
@@ -933,34 +925,6 @@ mod test {
                 assert!(!"Sentence-with-hyphens".is_case(*c));
                 assert!(!"Sentence_with_underscores".is_case(*c));
             }
-        }
-
-        #[test]
-        fn detect_single_word() {
-            assert_eq!(
-                "lowercase".detect_cases(),
-                vec![
-                    Case::Snake,
-                    Case::Kebab,
-                    Case::Flat,
-                    Case::Camel,
-                    Case::Lower,
-                ],
-            );
-            assert_eq!(
-                "UPPERCASE".detect_cases(),
-                vec![Case::Constant, Case::Cobol, Case::UpperFlat, Case::Upper],
-            );
-            assert_eq!(
-                "Capitalcase".detect_cases(),
-                vec![
-                    Case::Ada,
-                    Case::Train,
-                    Case::Pascal,
-                    Case::Title,
-                    Case::Sentence
-                ],
-            )
         }
     }
 
