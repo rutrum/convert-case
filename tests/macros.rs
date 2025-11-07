@@ -1,4 +1,5 @@
 use convert_case::ccase;
+use convert_case::{delim_boundary, split};
 
 #[test]
 fn ccase_snake() {
@@ -28,4 +29,20 @@ fn ccase_from_kebab_to_camel() {
 #[test]
 fn ccase_from_snake_to_pascal() {
     assert_eq!("My-varName-var", ccase!(snake -> pascal, "my-var_name-var"));
+}
+
+#[test]
+fn delim_boundary_dot() {
+    let boundary = delim_boundary!(".");
+    let s = "lower.Upper.Upper";
+    let v = split(&s, &[boundary]);
+    assert_eq!(vec!["lower", "Upper", "Upper"], v)
+}
+
+#[test]
+fn delim_boundary_double_colon() {
+    let boundary = delim_boundary!("::");
+    let s = "lower::lowerUpper::Upper";
+    let v = split(&s, &[boundary]);
+    assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
 }

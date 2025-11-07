@@ -175,7 +175,7 @@
 //! identifier of any case.
 //!
 //! Custom boundary conditions can be created.  Commonly, you might split based on some
-//! character or list of characters.  The [`Boundary::from_delim`] method builds
+//! character or list of characters.  The [`delim_boundary`] macro builds
 //! a boundary that splits on the presence of a string, and removes the string
 //! from the final list of words.
 //!
@@ -190,10 +190,10 @@
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
 //! exactly those three fields.  You could create your own case like so.
 //! ```
-//! use convert_case::{Case, Casing, Boundary, Pattern};
+//! use convert_case::{Case, Casing, delim_boundary, Pattern};
 //!
 //! let dot_case = Case::Custom {
-//!     boundaries: &[Boundary::from_delim(".")],
+//!     boundaries: &[delim_boundary!(".")],
 //!     pattern: Pattern::Lowercase,
 //!     delim: ".",
 //! };
@@ -223,10 +223,10 @@
 //! delimited module path in rust into a series of file directories.
 //!
 //! ```
-//! use convert_case::{Case, Converter, Boundary};
+//! use convert_case::{Case, Converter, delim_boundary};
 //!
 //! let modules_into_path = Converter::new()
-//!     .set_boundaries(&[Boundary::from_delim("::")])
+//!     .set_boundaries(&[delim_boundary!("::")])
 //!     .set_delim("/");
 //!
 //! assert_eq!(

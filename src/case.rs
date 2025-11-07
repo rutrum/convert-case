@@ -24,6 +24,8 @@ use alloc::vec::Vec;
 /// | [capital](Pattern::Capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
 /// | [camel](Pattern::Camel) | | | [camelCase](Case::Camel) |
 ///
+/// There are additionally [`Case::Sentence`].
+///
 /// This crate provides the ability to convert "from" a case.  This introduces a different feature
 /// of cases which are the [word boundaries](Boundary) that segment the identifier into words.  For example, a
 /// snake case identifier `my_var_name` can be split on underscores `_` to segment into words.  A
@@ -40,9 +42,9 @@ pub enum Case<'b> {
     /// This flexibility can create cases not present as another variant of the
     /// Case enum.  For instance, you could create a "dot case" like so.
     /// ```
-    /// use convert_case::{Case, Casing, Boundary, Pattern};
+    /// use convert_case::{Case, Casing, delim_boundary, Pattern};
     /// let dot_case = Case::Custom {
-    ///     boundaries: &[Boundary::from_delim(".")],
+    ///     boundaries: &[delim_boundary!(".")],
     ///     pattern: Pattern::Lowercase,
     ///     delim: ".",
     /// };

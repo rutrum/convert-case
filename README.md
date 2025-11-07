@@ -68,9 +68,9 @@ This is list of cases that `convert_case` supports.  Some cases have aliases.
 
 ## Change Log
 
-### 0.10.0: Extra features are in a new crates
+### 0.10.0: Extra features are in a new crate
 
-Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available.  All the features that are removed are now in a new library `convert_case_extras` which is a little more _fun_.
+Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available as variants of an enum.  All the features that are removed are now in a new library `convert_case_extras` which is a little more _fun_, but often unnecessary.
 
 Removed:
 * `Case::Toggle` and `Pattern::Toggle`
@@ -80,6 +80,10 @@ Removed:
 * `random` feature is removed.  The library no longer has any features.
 * `Case::deterministic_cases` is removed
 * `Case::random_cases` is removed
+
+Other breaking changes:
+* `Boundary::Custom` has lost the `arg` parameter.  It was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed.
+* `delim_boundary!` macro has replaced `Boundary::from_delim` functionality
 
 ### 0.9.0: Back to enums, but keep the customization
 
