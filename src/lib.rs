@@ -75,13 +75,13 @@
 //!     "john_mccarthy",
 //! );
 //! ```
-//! You can remove boundaries from the list of defaults with [`Casing::without_boundaries`].  See
+//! You can remove boundaries from the list of defaults with [`Casing::remove_boundaries`].  See
 //! the list of constants on [`Boundary`] for splitting conditions.
 //! ```
 //! use convert_case::{Boundary, Case, Casing};
 //!
 //! assert_eq!(
-//!     "Vector4D".without_boundaries(&[Boundary::DigitUpper]).to_case(Case::Snake),
+//!     "Vector4D".remove_boundaries(&[Boundary::DigitUpper]).to_case(Case::Snake),
 //!     "vector_4d",
 //! );
 //! ```
@@ -300,19 +300,18 @@ pub trait Casing<T: AsRef<str>> {
     #[allow(clippy::wrong_self_convention)]
     fn from_case(&self, case: Case) -> StateConverter<T>;
 
-    /// Creates a `StateConverter` struct initialized with the boundaries
-    /// provided.
+    /// Creates a `StateConverter` struct initialized with the boundaries provided.
     /// ```
     /// use convert_case::{Boundary, Case, Casing};
     ///
     /// assert_eq!(
     ///     "e1_m1_hangar",
     ///     "E1M1 Hangar"
-    ///         .with_boundaries(&[Boundary::DigitUpper, Boundary::Space])
+    ///         .set_boundaries(&[Boundary::DigitUpper, Boundary::Space])
     ///         .to_case(Case::Snake)
     /// );
     /// ```
-    fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
     /// Creates a `StateConverter` struct initialized without the boundaries
     /// provided.
@@ -322,11 +321,11 @@ pub trait Casing<T: AsRef<str>> {
     /// assert_eq!(
     ///     "2d_transformation",
     ///     "2dTransformation"
-    ///         .without_boundaries(&Boundary::digits())
+    ///         .remove_boundaries(&Boundary::digits())
     ///         .to_case(Case::Snake)
     /// );
     /// ```
-    fn without_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
     /// Determines if `self` is of the given case.  This is done simply by applying
     /// the conversion and seeing if the result is the same.
@@ -347,12 +346,12 @@ impl<T: AsRef<str>> Casing<T> for T {
         StateConverter::new(self).to_case(case)
     }
 
-    fn with_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
         StateConverter::new(self).set_boundaries(bs)
     }
 
-    fn without_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
-        StateConverter::new(self).without_boundaries(bs)
+    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+        StateConverter::new(self).remove_boundaries(bs)
     }
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
@@ -446,11 +445,11 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     ///     "2d_transformation",
     ///     "2dTransformation"
     ///         .from_case(Case::Camel)
-    ///         .without_boundaries(&Boundary::digits())
+    ///         .remove_boundaries(&Boundary::digits())
     ///         .to_case(Case::Snake)
     /// );
     /// ```
-    pub fn without_boundaries(self, bs: &[Boundary]) -> Self {
+    pub fn remove_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
             s: self.s,
             conv: self.conv.remove_boundaries(bs),
@@ -826,7 +825,7 @@ mod test {
             "m02_s05_binary_trees.pdf",
             "M02S05BinaryTrees.pdf"
                 .from_case(Case::Pascal)
-                .without_boundaries(&[Boundary::UpperDigit])
+                .remove_boundaries(&[Boundary::UpperDigit])
                 .to_case(Case::Snake)
         );
     }
@@ -836,7 +835,7 @@ mod test {
         assert_eq!(
             "my-dumb-file-name",
             "my_dumbFileName"
-                .with_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
+                .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
                 .to_case(Case::Kebab)
         );
     }

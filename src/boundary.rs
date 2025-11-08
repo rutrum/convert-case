@@ -23,7 +23,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
 /// of default boundaries based on the boundaries present in a string.
 ///
-/// You can also create custom delimiter boundaries using the [`delim_boundary`]
+/// You can also create custom delimiter boundaries using the [`delim_boundary`](crate::delim_boundary)
 /// macro or directly instantiate `Boundary` for complex boundary conditions.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
@@ -31,7 +31,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// assert_eq!(
 ///     "TransformationsIn3D"
 ///         .from_case(Case::Camel)
-///         .without_boundaries(&Boundary::digit_letter())
+///         .remove_boundaries(&Boundary::digit_letter())
 ///         .to_case(Case::Snake),
 ///     "transformations_in_3d",
 /// );
@@ -59,7 +59,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// };
 /// assert_eq!(
 ///     "name@domain"
-///         .with_boundaries(&[at_then_letter])
+///         .set_boundaries(&[at_then_letter])
 ///         .to_case(Case::Title),
 ///     "Name@ Domain",
 /// )

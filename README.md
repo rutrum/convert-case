@@ -84,6 +84,7 @@ Removed:
 Other breaking changes:
 * `Boundary::Custom` has lost the `arg` parameter.  It was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed.
 * `delim_boundary!` macro has replaced `Boundary::from_delim` functionality
+* `Casing::with_boundaries` is now `Casing::set_boundaries` and `Casing::without_boundaries` is now `Casing::remove_boundaries` to align with `Converter`
 
 ### 0.9.0: Back to enums, but keep the customization
 
