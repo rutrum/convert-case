@@ -432,6 +432,7 @@ where
 /// let conv = Converter::new()
 ///     .set_boundaries(&[delim_boundary!("::")])
 ///     .to_case(Case::Camel);
+///
 /// assert_eq!(
 ///     conv.convert("my::var::name"),
 ///     "myVarName",

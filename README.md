@@ -23,28 +23,6 @@ assert_eq!(
 ```
 You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
 
-## Command Line Utility `ccase`
-
-The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to expose the tools of the `convert_case` library to the command line.
-```
-$ ccase -t title super_mario_64
-Super Mario 64
-
-$ ccase -f snake -t title 2020-04-15_my_cat
-2020-04-16 My Cat
-
-$ ccase -t camel "convert to camel"
-convertToCamel
-```
-
-## Links
-
-| | `convert_case` | `ccase` |
-| --- | --- | --- |
-| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/ccase) |
-| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
-| Documentation | [docs.rs](https://docs.rs/convert_case) | |
-
 ## Cases
 
 This is list of cases that `convert_case` supports.  Some cases have aliases.
@@ -66,11 +44,37 @@ This is list of cases that `convert_case` supports.  Some cases have aliases.
 | Title | My Variable Name |
 | Sentence | My variable name |
 
+## Command Line Utility `ccase`
+
+The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to expose the tools of the `convert_case` library to the command line.
+```
+$ ccase -t title super_mario_64
+Super Mario 64
+
+$ ccase -f snake -t title 2020-04-15_my_cat
+2020-04-16 My Cat
+
+$ ccase -t camel "convert to camel"
+convertToCamel
+```
+
+## Additional utilities with `convert_case_extras`
+
+Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate.
+
+## Links
+
+| | `convert_case` | `convert_case_extras` | `ccase` |
+| --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case-extras) | [github](https://github.com/rutrum/ccase) |
+| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/convert_case_extras) | [crates.io](https://crates.io/crates/ccase) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | [docs.rs](https://docs.rs/convert_case_extras) | |
+
 ## Change Log
 
-### 0.10.0: Extra features are in a new crate
+### 0.10.0: Final clean up to prepare for 1.0.0
 
-Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available as variants of an enum.  All the features that are removed are now in a new library `convert_case_extras` which is a little more _fun_, but often unnecessary.
+Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  In the future that library will have a lower threshold on what is included, and will also serve as a demonstration of what's capable with the `convert_case` API.
 
 Removed:
 * `Case::Toggle` and `Pattern::Toggle`
@@ -82,8 +86,9 @@ Removed:
 * `Case::random_cases` is removed
 
 Other breaking changes:
-* `Boundary::Custom` has lost the `arg` parameter.  It was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed.
-* `delim_boundary!` macro has replaced `Boundary::from_delim` functionality
+* `Boundary::Custom` has lost the `arg` parameter.
+  * It was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed because
+  * `delim_boundary!` macro has replaced `Boundary::from_delim` functionality, without the need of the `arg` parameters
 * `Casing::with_boundaries` is now `Casing::set_boundaries` and `Casing::without_boundaries` is now `Casing::remove_boundaries` to align with `Converter`
 
 ### 0.9.0: Back to enums, but keep the customization

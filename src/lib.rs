@@ -130,13 +130,15 @@
 //!
 //! ### Delimiters
 //! Leading, trailing, and duplicate delimiters create empty words.
-//! This propogates and the converted string will share the behavior.  This can cause
-//! unintuitive behavior for patterns that transform words based on index.
+//! This propogates and the converted string will share the behavior.  **This can cause
+//! unintuitive behavior for patterns that transform words based on index.**
 //! ```
 //! # use convert_case::ccase;
 //! assert_eq!(ccase!(constant, "_leading_score"), "_LEADING_SCORE");
 //! assert_eq!(ccase!(ada, "trailing-dash-"), "Trailing_Dash_");
 //! assert_eq!(ccase!(train, "duplicate----hyphens"), "Duplicate----Hyphens");
+//!
+//! // not what you might expect!
 //! assert_eq!(ccase!(camel, "_empty__first_word"), "EmptyFirstWord");
 //! ```
 //!
@@ -172,21 +174,21 @@
 //! the split, and if any characters are removed are defined by [boundaries](Boundary).
 //! By default, identifiers are split based on [`Boundary::defaults`].  This list
 //! contains word boundaries that you would likely see after creating a multi-word
-//! identifier of any case.
+//! identifier of typical cases.
 //!
-//! Custom boundary conditions can be created.  Commonly, you might split based on some
+//! Custom boundary conditions can also be created.  Commonly, you might split based on some
 //! character or list of characters.  The [`delim_boundary`] macro builds
-//! a boundary that splits on the presence of a string, and removes the string
-//! from the final list of words.
+//! a boundary that splits on the presence of a string, and then removes the string
+//! while producing the list of words.
 //!
-//! You can also use of [`Boundary::Custom`] to explicitly define boundary
+//! You can also use [`Boundary::Custom`] to explicitly define boundary
 //! conditions.  If you actually need to create a
 //! boundary condition from scratch, you should file an issue to let the author know
-//! how you used it.
+//! how you used it.  I'm not certain what other boundary condition would be helpful.
 //!
 //! ## Cases
 //!
-//! A case is defined by a list of boundaries, a pattern, and a delimiter: the string to
+//! A case is defined by a list of boundaries, a pattern, and a _delimiter_: the string to
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
 //! exactly those three fields.  You could create your own case like so.
 //! ```
@@ -237,17 +239,17 @@
 //!
 //! # Associated Projects
 //!
-//! ## convert_case_extras
+//! ## Rust library `convert_case_extras`
 //!
 //! Some extra utilties for convert_case that don't need to be in the main library.  These
-//! utilities are niche and fun.
+//! utilities are niche and fun.  You can read more here: [`convert_case_extras`](https://docs.rs/convert_case_extras).
 //!
 //! ## stringcase.org
 //!
 //! While developing `convert_case`, the author became fascinated in the naming conventions
 //! used for cases as well as different implementations for conversion.  On [stringcase.org](https://stringcase.org)
 //! is documentation of the history of naming conventions, a catalogue of case conversion tools,
-//! and a more mathematical definition of what it means to "convert the string case of an identifier."
+//! and a more rigorous definition of what it means to "convert the case of an identifier."
 //!
 //! ## Command Line Utility `ccase`
 //!
@@ -895,5 +897,34 @@ mod test {
     fn russian() {
         let s = "ПЕРСПЕКТИВА24".to_string();
         let _n = s.to_case(Case::Title);
+    }
+
+    // idea for asserting the associated boundaries are correct
+    #[test]
+    fn appropriate_associated_boundaries() {
+        let word_groups = &[
+            vec!["my", "var", "name"],
+            vec!["MY", "var", "Name"],
+            vec!["another", "vAR"],
+            vec!["XML", "HTTP", "Request"],
+        ];
+
+        for words in word_groups {
+            for case in Case::all_cases() {
+                if case == &Case::Flat || case == &Case::UpperFlat {
+                    continue;
+                }
+                assert_eq!(
+                    case.pattern().mutate(&split(
+                        &case.pattern().mutate(words).join(case.delim()),
+                        case.boundaries()
+                    )),
+                    case.pattern().mutate(words),
+                    "Test boundaries on Case::{:?} with {:?}",
+                    case,
+                    words,
+                );
+            }
+        }
     }
 }
