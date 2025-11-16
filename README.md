@@ -25,24 +25,24 @@ You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) f
 
 ## Cases
 
-This is list of cases that `convert_case` supports.  Some cases have aliases.
+This is list of cases that `convert_case` provides out of the box.  You can always make your own custom case.
 
 | Case | Example |
 | ---- | ------- |
-| Snake | my\_variable\_name |
-| Constant<br />UpperSnake | MY\_VARIABLE\_NAME |
-| Ada | My\_Variable\_Name |
-| Kebab | my-variable-name |
-| Cobol<br />UpperKebab | MY-VARIABLE-NAME |
-| Train | My-Variable-Name |
-| Flat | myvariablename |
-| UpperFlat | MYVARIABLENAME |
-| Pascal<br />UpperCamel | MyVariableName |
-| Camel | myVariableName |
-| Upper | MY VARIABLE NAME |
-| Lower | my variable name |
-| Title | My Variable Name |
-| Sentence | My variable name |
+| Snake | `my_variable_name` |
+| Constant<br />UpperSnake | `MY_VARIABLE_NAME` |
+| Ada | `My_Variable_Name` |
+| Kebab | `my-variable-name` |
+| Cobol<br />UpperKebab | `MY-VARIABLE-NAME` |
+| Train | `My-Variable-Name` |
+| Flat | `myvariablename` |
+| UpperFlat | `MYVARIABLENAME` |
+| Pascal<br />UpperCamel | `MyVariableName` |
+| Camel | `myVariableName` |
+| Upper | `MY VARIABLE NAME` |
+| Lower | `my variable name` |
+| Title | `My Variable Name` |
+| Sentence | `My variable name` |
 
 ## Command Line Utility `ccase`
 
@@ -60,7 +60,7 @@ convertToCamel
 
 ## Additional utilities with `convert_case_extras`
 
-Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate.
+Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  It's utility is a little more niche!
 
 ## Links
 
