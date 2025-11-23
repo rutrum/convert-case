@@ -60,7 +60,7 @@ convertToCamel
 
 ## Additional utilities with `convert_case_extras`
 
-Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  It's utility is a little more niche!
+Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  This crate is a demonstration of what can be built on top of the `convert_case` API.
 
 ## Links
 
@@ -74,7 +74,7 @@ Some cases and utilies that didn't feel appropriate in this library are made ava
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 
-Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  In the future that library will have a lower threshold on what is included, and will also serve as a demonstration of what's capable with the `convert_case` API.
+Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  That library will have a lower threshold on what is included (i.e. more features), and will also serve as a demonstration of what's capable with the `convert_case` API.
 
 Removed:
 * `Case::Toggle` and `Pattern::Toggle`
@@ -86,8 +86,8 @@ Removed:
 * `Case::random_cases` is removed
 
 Other breaking changes:
-* `Boundary::Custom` has lost the `arg` parameter.
-  * It was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed because
+* `Boundary::Custom` has lost the `arg` parameter and `Boundary::Custom.condition` is more simply `fn(&[&str]) -> bool`.
+  * `arg` was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed because
   * `delim_boundary!` macro has replaced `Boundary::from_delim` functionality, without the need of the `arg` parameters
 * `Casing::with_boundaries` is now `Casing::set_boundaries` and `Casing::without_boundaries` is now `Casing::remove_boundaries` to align with `Converter`
 

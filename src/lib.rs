@@ -241,8 +241,8 @@
 //!
 //! ## Rust library `convert_case_extras`
 //!
-//! Some extra utilties for convert_case that don't need to be in the main library.  These
-//! utilities are niche and fun.  You can read more here: [`convert_case_extras`](https://docs.rs/convert_case_extras).
+//! Some extra utilties for convert_case that don't need to be in the main library.
+//! You can read more here: [`convert_case_extras`](https://docs.rs/convert_case_extras).
 //!
 //! ## stringcase.org
 //!
