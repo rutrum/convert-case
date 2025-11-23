@@ -24,9 +24,7 @@ use alloc::vec::Vec;
 /// | [capital](Pattern::Capital) | [Ada_Case](Case::Ada) | [Train-Case](Case::Train) | [PascalCase](Case::Pascal) | [Title Case](Case::Title) |
 /// | [camel](Pattern::Camel) | | | [camelCase](Case::Camel) |
 ///
-/// There are other less common cases, such as [`Case::Sentence`], [`Case::Alternating`], and [`Case::Toggle`].
-///
-/// Then there are two random cases [`Case::Random`] and [`Case::PseudoRandom`] from the `random` feature.
+/// There are additionally [`Case::Sentence`].
 ///
 /// This crate provides the ability to convert "from" a case.  This introduces a different feature
 /// of cases which are the [word boundaries](Boundary) that segment the identifier into words.  For example, a
@@ -44,9 +42,9 @@ pub enum Case<'b> {
     /// This flexibility can create cases not present as another variant of the
     /// Case enum.  For instance, you could create a "dot case" like so.
     /// ```
-    /// use convert_case::{Case, Casing, Boundary, Pattern};
+    /// use convert_case::{Case, Casing, delim_boundary, Pattern};
     /// let dot_case = Case::Custom {
-    ///     boundaries: &[Boundary::from_delim(".")],
+    ///     boundaries: &[delim_boundary!(".")],
     ///     pattern: Pattern::Lowercase,
     ///     delim: ".",
     /// };
@@ -282,75 +280,6 @@ pub enum Case<'b> {
     /// assert_eq!("My variable NAME".to_case(Case::Sentence), "My variable name");
     /// ```
     Sentence,
-
-    /// Alternating case strings are delimited by spaces.  Characters alternate between uppercase
-    /// and lowercase.
-    /// * Boundaries: [Space](Boundary::Space)
-    /// * Pattern: [Alternating](Pattern::Alternating)
-    /// * Delimeter: Space `" "`
-    ///
-    /// ```
-    /// use convert_case::ccase;
-    /// assert_eq!(ccase!(alternating, "My variable NAME"), "mY vArIaBlE nAmE");
-    ///
-    /// use convert_case::{Case, Casing};
-    /// assert_eq!("My variable NAME".to_case(Case::Alternating), "mY vArIaBlE nAmE");
-    /// ```
-    Alternating,
-
-    /// Toggle case strings are delimited by spaces.  All characters are uppercase except
-    /// for the leading character of each word, which is lowercase.
-    /// * Boundaries: [Space](`Boundary::Space`)
-    /// * Pattern: [Toggle](`Pattern::Toggle`)
-    /// * Delimeter: Space `" "`
-    ///
-    /// ```
-    /// use convert_case::ccase;
-    /// assert_eq!(ccase!(toggle, "My variable NAME"), "mY vARIABLE nAME");
-    ///
-    /// use convert_case::{Case, Casing};
-    /// assert_eq!("My variable NAME".to_case(Case::Toggle), "mY vARIABLE nAME");
-    /// ```
-    Toggle,
-
-    /// Random case strings are delimited by spaces and characters are
-    /// randomly upper case or lower case.
-    ///
-    /// This uses the `rand` crate
-    /// and is only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::Space)
-    /// * Pattern: [Random](Pattern::Random)
-    /// * Delimeter: Space `" "`
-    ///
-    /// ```
-    /// use convert_case::{Case, Casing};
-    /// # #[cfg(any(doc, feature = "random"))]
-    /// let new = "My variable NAME".to_case(Case::Random);
-    /// ```
-    /// String `new` could be "My vaRIAbLE nAme" for example.
-    #[cfg(any(doc, feature = "random"))]
-    #[cfg(feature = "random")]
-    Random,
-
-    /// Pseudo-random case strings are delimited by spaces and characters are randomly
-    /// upper case or lower case, but there will never more than two consecutive lower
-    /// case or upper case letters in a row.
-    ///
-    /// This uses the `rand` crate and is
-    /// only available with the "random" feature.
-    /// * Boundaries: [Space](Boundary::Space)
-    /// * Pattern: [Pseudo random](Pattern::PsuedoRandom)
-    /// * Delimeter: Space `" "`
-    ///
-    /// ```
-    /// use convert_case::{Case, Casing};
-    /// # #[cfg(any(doc, feature = "random"))]
-    /// let new = "My variable NAME".to_case(Case::Random);
-    /// ```
-    /// String `new` could be "mY vArIAblE NamE" for example.
-    #[cfg(any(doc, feature = "random"))]
-    #[cfg(feature = "random")]
-    PseudoRandom,
 }
 
 impl Case<'_> {
@@ -362,7 +291,7 @@ impl Case<'_> {
     /// | --- | --- |
     /// | Snake, Constant, UpperSnake, Ada | [Underscore](Boundary::Underscore)  |
     /// | Kebab, Cobol, UpperKebab, Train | [Hyphen](Boundary::Hyphen) |
-    /// | Lower, Upper, Title, Alternating, Toggle, Random, PseudoRandom | [Space](Boundary::Space) |
+    /// | Lower, Upper, Title | [Space](Boundary::Space) |
     /// | Pascal, UpperCamel, Camel | [LowerUpper](Boundary::LowerUpper), [LowerDigit](Boundary::LowerDigit), [UpperDigit](Boundary::UpperDigit), [DigitLower](Boundary::DigitLower), [DigitUpper](Boundary::DigitUpper), [Acronym](Boundary::Acronym) |
     /// | Flat, UpperFlat | No boundaries |
     pub fn boundaries(&self) -> &[Boundary] {
@@ -370,7 +299,7 @@ impl Case<'_> {
         match self {
             Snake | Constant | UpperSnake | Ada => &[Boundary::Underscore],
             Kebab | Cobol | UpperKebab | Train => &[Boundary::Hyphen],
-            Upper | Lower | Title | Sentence | Toggle | Alternating => &[Boundary::Space],
+            Upper | Lower | Title | Sentence => &[Boundary::Space],
             Camel | UpperCamel | Pascal => &[
                 Boundary::LowerUpper,
                 Boundary::Acronym,
@@ -381,9 +310,6 @@ impl Case<'_> {
             ],
             UpperFlat | Flat => &[],
             Custom { boundaries, .. } => boundaries,
-
-            #[cfg(feature = "random")]
-            Random | PseudoRandom => &[Boundary::Space],
         }
     }
 
@@ -394,19 +320,16 @@ impl Case<'_> {
     /// | --- | --- |
     /// | Snake, Constant, UpperSnake, Ada | Underscore `"_"` |
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `"-"` |
-    /// | Upper, Lower, Title, Sentence, Alternating, Toggle, Random, PseudoRandom | Space `" "` |
+    /// | Upper, Lower, Title, Sentence | Space `" "` |
     /// | Flat, UpperFlat, Pascal, UpperCamel, Camel | Empty string `""` |
     pub const fn delim(&self) -> &'static str {
         use Case::*;
         match self {
             Snake | Constant | UpperSnake | Ada => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
-            Upper | Lower | Title | Sentence | Alternating | Toggle => " ",
+            Upper | Lower | Title | Sentence => " ",
             Flat | UpperFlat | Pascal | UpperCamel | Camel => "",
             Custom { delim, .. } => delim,
-
-            #[cfg(feature = "random")]
-            Random | PseudoRandom => " ",
         }
     }
 
@@ -419,9 +342,6 @@ impl Case<'_> {
     /// | Snake, Kebab, Flat, Lower | [Lowercase](Pattern::Lowercase) |
     /// | Ada, Train, Pascal, UpperCamel, Title | [Capital](Pattern::Capital) |
     /// | Camel | [Camel](Pattern::Camel) |
-    /// | Alternating | [Alternating](Pattern::Alternating) |
-    /// | Random | [Random](Pattern::Random) |
-    /// | PseudoRandom | [PseudoRandom](pattern::PseudoRandom) |
     pub const fn pattern(&self) -> Pattern {
         use Case::*;
         match self {
@@ -429,15 +349,8 @@ impl Case<'_> {
             Snake | Kebab | Flat | Lower => Pattern::Lowercase,
             Ada | Train | Pascal | UpperCamel | Title => Pattern::Capital,
             Camel => Pattern::Camel,
-            Toggle => Pattern::Toggle,
-            Alternating => Pattern::Alternating,
             Sentence => Pattern::Sentence,
             Custom { pattern, .. } => *pattern,
-
-            #[cfg(feature = "random")]
-            Random => Pattern::Random,
-            #[cfg(feature = "random")]
-            PseudoRandom => Pattern::PseudoRandom,
         }
     }
 
@@ -488,58 +401,8 @@ impl Case<'_> {
     pub fn all_cases() -> &'static [Case<'static>] {
         use Case::*;
         &[
-            Snake,
-            Constant,
-            Ada,
-            Kebab,
-            Cobol,
-            Train,
-            Flat,
-            UpperFlat,
-            Pascal,
-            Camel,
-            Upper,
-            Lower,
-            Title,
-            Sentence,
-            Alternating,
-            Toggle,
-            #[cfg(feature = "random")]
-            Random,
-            #[cfg(feature = "random")]
-            PseudoRandom,
-        ]
-    }
-
-    /// Array with the two "random" feature cases `Random` and `PseudoRandom`.  Only
-    /// defined in the "random" feature.
-    #[cfg(feature = "random")]
-    pub fn random_cases() -> &'static [Case<'static>] {
-        use Case::*;
-        &[Random, PseudoRandom]
-    }
-
-    /// Array of all the cases that do not depend on randomness.  This is all
-    /// the cases not in the "random" feature.  Does not include aliases.
-    pub fn deterministic_cases() -> &'static [Case<'static>] {
-        use Case::*;
-        &[
-            Snake,
-            Constant,
-            Ada,
-            Kebab,
-            Cobol,
-            Train,
-            Flat,
-            UpperFlat,
-            Pascal,
-            Camel,
-            Upper,
-            Lower,
-            Title,
-            Sentence,
-            Alternating,
-            Toggle,
+            Snake, Constant, Ada, Kebab, Cobol, Train, Flat, UpperFlat, Pascal, Camel, Upper,
+            Lower, Title, Sentence,
         ]
     }
 }

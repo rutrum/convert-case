@@ -316,6 +316,15 @@ mod test {
     }
 
     #[test]
+    fn twice() {
+        let s = "myVarName".to_string();
+        let conv = Converter::new().to_case(Case::Snake);
+        let snake = conv.convert(&s);
+        let kebab = s.to_case(Case::Kebab);
+        assert_eq!(snake.to_case(Case::Camel), kebab.to_case(Case::Camel));
+    }
+
+    #[test]
     fn reuse_after_change() {
         let conv = Converter::new().from_case(Case::Snake).to_case(Case::Kebab);
         assert_eq!("word-wordword", conv.convert("word_wordWord"));

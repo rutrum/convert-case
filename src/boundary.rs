@@ -23,15 +23,15 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
 /// of default boundaries based on the boundaries present in a string.
 ///
-/// You can also create custom delimiter boundaries using the [`from_delim`](Boundary::from_delim)
-/// method or directly instantiate `Boundary` for complex boundary conditions.
+/// You can also create custom delimiter boundaries using the [`delim_boundary`](crate::delim_boundary)
+/// macro or directly instantiate `Boundary` for complex boundary conditions.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
 ///
 /// assert_eq!(
 ///     "TransformationsIn3D"
 ///         .from_case(Case::Camel)
-///         .without_boundaries(&Boundary::digit_letter())
+///         .remove_boundaries(&Boundary::digit_letter())
 ///         .to_case(Case::Snake),
 ///     "transformations_in_3d",
 /// );
@@ -50,17 +50,16 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// ```
 /// # use convert_case::{Boundary, Case, Casing};
 /// let at_then_letter = Boundary::Custom {
-///     condition: |s, _| {
+///     condition: |s| {
 ///         s.get(0).map(|c| *c == "@") == Some(true)
 ///             && s.get(1).map(|c| *c == c.to_lowercase()) == Some(true)
 ///     },
-///     arg: None,
 ///     start: 1,
 ///     len: 0,
 /// };
 /// assert_eq!(
 ///     "name@domain"
-///         .with_boundaries(&[at_then_letter])
+///         .set_boundaries(&[at_then_letter])
 ///         .to_case(Case::Title),
 ///     "Name@ Domain",
 /// )
@@ -71,10 +70,7 @@ pub enum Boundary {
     Custom {
         /// A function that determines if this boundary is present at the start
         /// of the string.  Second argument is the `arg` field.
-        condition: fn(&[&str], Option<&'static str>) -> bool,
-        /// An optional string passed to `condition` at runtime.  Used
-        /// internally for [`Boundary::from_delim`] method.
-        arg: Option<&'static str>,
+        condition: fn(&[&str]) -> bool,
         /// Where the beginning of the boundary is.
         start: usize,
         /// The length of the boundary.  This is the number of graphemes that
@@ -185,26 +181,6 @@ pub enum Boundary {
 }
 
 impl Boundary {
-    /// Create a new boundary based on a delimiter.
-    /// ```
-    /// # use convert_case::{Case, Converter, Boundary};
-    /// let conv = Converter::new()
-    ///     .set_boundaries(&[Boundary::from_delim("::")])
-    ///     .to_case(Case::Camel);
-    /// assert_eq!(
-    ///     conv.convert("my::var::name"),
-    ///     "myVarName",
-    /// )
-    /// ```
-    pub const fn from_delim(delim: &'static str) -> Boundary {
-        Boundary::Custom {
-            arg: Some(delim),
-            condition: |s, arg| s.join("").starts_with(arg.unwrap()),
-            start: 0,
-            len: delim.len(),
-        }
-    }
-
     pub fn matches(self, s: &[&str]) -> bool {
         use Boundary::*;
         match self {
@@ -240,7 +216,7 @@ impl Boundary {
                 s.first().map(grapheme_is_digit) == Some(true)
                     && s.get(1).map(grapheme_is_uppercase) == Some(true)
             }
-            Custom { condition, arg, .. } => condition(s, arg),
+            Custom { condition, .. } => condition(s),
         }
     }
 
@@ -450,27 +426,28 @@ where
     words.into_iter().collect()
 }
 
-// ascii version
-//pub fn split<'s, T>(s: &'s T, boundaries: &[Boundary]) -> Vec<&'s str>
-//where
-//    T: AsRef<str>,
-//{
-//    let s = s.as_ref();
-//
-//    let mut words = Vec::new();
-//    let mut last_end = 0;
-//    for i in 0..s.len() {
-//        for boundary in boundaries {
-//            if (boundary.condition)(&s[i..]) {
-//                words.push(&s[last_end..i + boundary.start]);
-//                last_end = i + boundary.start + boundary.len;
-//                break;
-//            }
-//        }
-//    }
-//    words.push(&s[last_end..]);
-//    words
-//}
+/// Create a new boundary based on a delimiter.
+/// ```
+/// # use convert_case::{Case, Converter, delim_boundary};
+/// let conv = Converter::new()
+///     .set_boundaries(&[delim_boundary!("::")])
+///     .to_case(Case::Camel);
+///
+/// assert_eq!(
+///     conv.convert("my::var::name"),
+///     "myVarName",
+/// )
+/// ```
+#[macro_export]
+macro_rules! delim_boundary {
+    ($delim:expr) => {
+        convert_case::Boundary::Custom {
+            condition: |s| s.join("").starts_with($delim),
+            start: 0,
+            len: $delim.len(),
+        }
+    };
+}
 
 #[cfg(test)]
 mod tests {
@@ -479,8 +456,7 @@ mod tests {
     #[test]
     fn boundary_equality() {
         let a = Boundary::Custom {
-            condition: |_, _| true,
-            arg: None,
+            condition: |_| true,
             start: 0,
             len: 0,
         };
@@ -562,21 +538,5 @@ mod tests {
     #[test]
     fn boundary_consts_same() {
         assert_eq!(Boundary::Space, Boundary::Space);
-    }
-
-    #[test]
-    fn from_delim_dot() {
-        let boundary = Boundary::from_delim(".");
-        let s = "lower.Upper.Upper";
-        let v = split(&s, &[boundary]);
-        assert_eq!(vec!["lower", "Upper", "Upper"], v)
-    }
-
-    #[test]
-    fn from_delim_double_colon() {
-        let boundary = Boundary::from_delim("::");
-        let s = "lower::lowerUpper::Upper";
-        let v = split(&s, &[boundary]);
-        assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
     }
 }

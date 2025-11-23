@@ -23,6 +23,27 @@ assert_eq!(
 ```
 You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
 
+## Cases
+
+This is list of cases that `convert_case` provides out of the box.  You can always make your own custom case.
+
+| Case | Example |
+| ---- | ------- |
+| Snake | `my_variable_name` |
+| Constant<br />UpperSnake | `MY_VARIABLE_NAME` |
+| Ada | `My_Variable_Name` |
+| Kebab | `my-variable-name` |
+| Cobol<br />UpperKebab | `MY-VARIABLE-NAME` |
+| Train | `My-Variable-Name` |
+| Flat | `myvariablename` |
+| UpperFlat | `MYVARIABLENAME` |
+| Pascal<br />UpperCamel | `MyVariableName` |
+| Camel | `myVariableName` |
+| Upper | `MY VARIABLE NAME` |
+| Lower | `my variable name` |
+| Title | `My Variable Name` |
+| Sentence | `My variable name` |
+
 ## Command Line Utility `ccase`
 
 The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to expose the tools of the `convert_case` library to the command line.
@@ -37,40 +58,38 @@ $ ccase -t camel "convert to camel"
 convertToCamel
 ```
 
+## Additional utilities with `convert_case_extras`
+
+Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  This crate is a demonstration of what can be built on top of the `convert_case` API.
+
 ## Links
 
-| | `convert_case` | `ccase` |
-| --- | --- | --- |
-| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/ccase) |
-| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/ccase) |
-| Documentation | [docs.rs](https://docs.rs/convert_case) | |
-
-## Cases
-
-This is list of cases that convert\_case supports.  Some cases are simply aliases of others.  The "Random" and "PseudoRandom" cases are provided in the `convert_case` library with the "random" feature.
-
-| Case | Example |
-| ---- | ------- |
-| Snake | my\_variable\_name |
-| Constant<br />UpperSnake | MY\_VARIABLE\_NAME |
-| Ada | My\_Variable\_Name |
-| Kebab | my-variable-name |
-| Cobol<br />UpperKebab | MY-VARIABLE-NAME |
-| Train | My-Variable-Name |
-| Flat | myvariablename |
-| UpperFlat | MYVARIABLENAME |
-| Pascal<br />UpperCamel | MyVariableName |
-| Camel | myVariableName |
-| Upper | MY VARIABLE NAME |
-| Lower | my variable name |
-| Title | My Variable Name |
-| Sentence | My variable name |
-| Alternating | mY vArIaBlE nAmE |
-| Toggle | mY vARIABLE nAME |
-| Random | MY vaRiabLe nAME |
-| PseudoRandom | mY VaRiAblE nAMe |
+| | `convert_case` | `convert_case_extras` | `ccase` |
+| --- | --- | --- | --- |
+| Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case-extras) | [github](https://github.com/rutrum/ccase) |
+| Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/convert_case_extras) | [crates.io](https://crates.io/crates/ccase) |
+| Documentation | [docs.rs](https://docs.rs/convert_case) | [docs.rs](https://docs.rs/convert_case_extras) | |
 
 ## Change Log
+
+### 0.10.0: More clean up to prepare for 1.0.0
+
+Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  That library will have a lower threshold on what is included (i.e. more features), and will also serve as a demonstration of what's capable with the `convert_case` API.
+
+Removed:
+* `Case::Toggle` and `Pattern::Toggle`
+* `Case::Alternating` and `Pattern::Alternating`
+* `Case::Random` and `Pattern::Random`
+* `Case::PseudoRandom` and `Pattern::PseudoRandom`
+* `random` feature is removed.  The library no longer has any features.
+* `Case::deterministic_cases` is removed
+* `Case::random_cases` is removed
+
+Other breaking changes:
+* `Boundary::Custom` has lost the `arg` parameter and `Boundary::Custom.condition` is more simply `fn(&[&str]) -> bool`.
+  * `arg` was originally used for building boundaries from delimiters with the `Boundary::from_delim` function, which is also removed because
+  * `delim_boundary!` macro has replaced `Boundary::from_delim` functionality, without the need of the `arg` parameters
+* `Casing::with_boundaries` is now `Casing::set_boundaries` and `Casing::without_boundaries` is now `Casing::remove_boundaries` to align with `Converter`
 
 ### 0.9.0: Back to enums, but keep the customization
 

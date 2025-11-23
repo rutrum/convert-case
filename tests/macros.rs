@@ -1,4 +1,5 @@
 use convert_case::ccase;
+use convert_case::{delim_boundary, split};
 
 #[test]
 fn ccase_snake() {
@@ -30,10 +31,18 @@ fn ccase_from_snake_to_pascal() {
     assert_eq!("My-varName-var", ccase!(snake -> pascal, "my-var_name-var"));
 }
 
-#[cfg(feature = "random")]
 #[test]
-fn ccase_random() {
-    assert!((0..10)
-        .map(|_| "my-var-name" != ccase!(random, "my_Var_Name"))
-        .fold(false, |acc, x| acc || x))
+fn delim_boundary_dot() {
+    let boundary = delim_boundary!(".");
+    let s = "lower.Upper.Upper";
+    let v = split(&s, &[boundary]);
+    assert_eq!(vec!["lower", "Upper", "Upper"], v)
+}
+
+#[test]
+fn delim_boundary_double_colon() {
+    let boundary = delim_boundary!("::");
+    let s = "lower::lowerUpper::Upper";
+    let v = split(&s, &[boundary]);
+    assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
 }
