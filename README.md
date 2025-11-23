@@ -65,14 +65,14 @@ Some cases and utilies that didn't feel appropriate in this library are made ava
 ## Links
 
 | | `convert_case` | `convert_case_extras` | `ccase` |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | Repository | [github](https://github.com/rutrum/convert-case) | [github](https://github.com/rutrum/convert-case-extras) | [github](https://github.com/rutrum/ccase) |
 | Crate | [crates.io](https://crates.io/crates/convert_case) | [crates.io](https://crates.io/crates/convert_case_extras) | [crates.io](https://crates.io/crates/ccase) |
 | Documentation | [docs.rs](https://docs.rs/convert_case) | [docs.rs](https://docs.rs/convert_case_extras) | |
 
 ## Change Log
 
-### 0.10.0: Final clean up to prepare for 1.0.0
+### 0.10.0: More clean up to prepare for 1.0.0
 
 Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  In the future that library will have a lower threshold on what is included, and will also serve as a demonstration of what's capable with the `convert_case` API.
 
