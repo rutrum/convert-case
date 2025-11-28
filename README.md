@@ -72,6 +72,13 @@ Some cases and utilies that didn't feel appropriate in this library are made ava
 
 ## Change Log
 
+### 1.0.0: Finally, a stable release!
+
+The API has finally reached what I consider to be the right combination of easy to use and flexible to modify.
+
+Breaking changes:
+* `delim_boundary` macro is now just `delim`
+
 ### 0.10.0: More clean up to prepare for 1.0.0
 
 Since the library is so extensible with its new API, there is no longer a need for some niche or fun transformations to be made available in this library.  Some of the features that are removed are now in a new library `convert_case_extras`.  That library will have a lower threshold on what is included (i.e. more features), and will also serve as a demonstration of what's capable with the `convert_case` API.

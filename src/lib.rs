@@ -177,7 +177,7 @@
 //! identifier of typical cases.
 //!
 //! Custom boundary conditions can also be created.  Commonly, you might split based on some
-//! character or list of characters.  The [`delim_boundary`] macro builds
+//! character or list of characters.  The [`delim`] macro builds
 //! a boundary that splits on the presence of a string, and then removes the string
 //! while producing the list of words.
 //!
@@ -192,10 +192,10 @@
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
 //! exactly those three fields.  You could create your own case like so.
 //! ```
-//! use convert_case::{Case, Casing, delim_boundary, Pattern};
+//! use convert_case::{Case, Casing, delim, Pattern};
 //!
 //! let dot_case = Case::Custom {
-//!     boundaries: &[delim_boundary!(".")],
+//!     boundaries: &[delim!(".")],
 //!     pattern: Pattern::Lowercase,
 //!     delim: ".",
 //! };
@@ -225,10 +225,10 @@
 //! delimited module path in rust into a series of file directories.
 //!
 //! ```
-//! use convert_case::{Case, Converter, delim_boundary};
+//! use convert_case::{Case, Converter, delim};
 //!
 //! let modules_into_path = Converter::new()
-//!     .set_boundaries(&[delim_boundary!("::")])
+//!     .set_boundaries(&[delim!("::")])
 //!     .set_delim("/");
 //!
 //! assert_eq!(
@@ -475,6 +475,7 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
 /// The variant of `case` from a token.
 ///
 /// The token associated with each variant is the variant written in snake case.
+/// To do conversion with a macro, see [`ccase`].
 #[macro_export]
 macro_rules! case {
     (snake) => {
@@ -532,7 +533,7 @@ macro_rules! case {
 
 /// Convert an identifier into a case.
 ///
-/// The macro can be used as follows.
+/// You can convert a string by writing the case name as a token.
 /// ```
 /// use convert_case::ccase;
 ///

@@ -23,7 +23,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
 /// of default boundaries based on the boundaries present in a string.
 ///
-/// You can also create custom delimiter boundaries using the [`delim_boundary`](crate::delim_boundary)
+// You can also create custom delimiter boundaries using the [`delim`](crate::delim)
 /// macro or directly instantiate `Boundary` for complex boundary conditions.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
@@ -427,10 +427,13 @@ where
 }
 
 /// Create a new boundary based on a delimiter.
+///
+/// This is shorthand for creating a boundary that splits on a specific string, and
+/// omits that string from the list of words.  For more information, see [`Boundary`].
 /// ```
-/// # use convert_case::{Case, Converter, delim_boundary};
+/// # use convert_case::{Case, Converter, delim};
 /// let conv = Converter::new()
-///     .set_boundaries(&[delim_boundary!("::")])
+///     .set_boundaries(&[delim!("::")])
 ///     .to_case(Case::Camel);
 ///
 /// assert_eq!(
@@ -439,7 +442,7 @@ where
 /// )
 /// ```
 #[macro_export]
-macro_rules! delim_boundary {
+macro_rules! delim {
     ($delim:expr) => {
         convert_case::Boundary::Custom {
             condition: |s| s.join("").starts_with($delim),

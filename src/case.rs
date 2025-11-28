@@ -42,9 +42,9 @@ pub enum Case<'b> {
     /// This flexibility can create cases not present as another variant of the
     /// Case enum.  For instance, you could create a "dot case" like so.
     /// ```
-    /// use convert_case::{Case, Casing, delim_boundary, Pattern};
+    /// use convert_case::{Case, Casing, delim, Pattern};
     /// let dot_case = Case::Custom {
-    ///     boundaries: &[delim_boundary!(".")],
+    ///     boundaries: &[delim!(".")],
     ///     pattern: Pattern::Lowercase,
     ///     delim: ".",
     /// };
