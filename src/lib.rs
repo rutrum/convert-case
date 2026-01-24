@@ -600,8 +600,8 @@ mod test {
 
         for (case_a, str_a) in &examples {
             for (case_b, str_b) in &examples {
-                assert_eq!(*str_a, str_b.to_case(*case_a));
-                assert_eq!(*str_a, str_b.from_case(*case_b).to_case(*case_a));
+                assert_eq!(str_b.to_case(*case_a), *str_a);
+                assert_eq!(str_b.from_case(*case_b).to_case(*case_a), *str_a);
             }
         }
     }
@@ -618,32 +618,32 @@ mod test {
         ];
 
         for example in examples {
-            assert_eq!("super_mario_64_game", example.to_case(Case::Snake));
+            assert_eq!(example.to_case(Case::Snake), "super_mario_64_game");
         }
     }
 
     #[test]
     fn multiline_strings() {
-        assert_eq!("One\ntwo\nthree", "one\ntwo\nthree".to_case(Case::Title));
+        assert_eq!("one\ntwo\nthree".to_case(Case::Title), "One\ntwo\nthree");
     }
 
     #[test]
     fn camel_case_acroynms() {
         assert_eq!(
-            "xml_http_request",
-            "XMLHttpRequest".from_case(Case::Camel).to_case(Case::Snake)
+            "XMLHttpRequest".from_case(Case::Camel).to_case(Case::Snake),
+            "xml_http_request"
         );
         assert_eq!(
-            "xml_http_request",
             "XMLHttpRequest"
                 .from_case(Case::UpperCamel)
-                .to_case(Case::Snake)
+                .to_case(Case::Snake),
+            "xml_http_request"
         );
         assert_eq!(
-            "xml_http_request",
             "XMLHttpRequest"
                 .from_case(Case::Pascal)
-                .to_case(Case::Snake)
+                .to_case(Case::Snake),
+            "xml_http_request"
         );
     }
 
@@ -689,16 +689,16 @@ mod test {
     #[test]
     fn early_word_boundaries() {
         assert_eq!(
-            "a_bagel",
-            "aBagel".from_case(Case::Camel).to_case(Case::Snake)
+            "aBagel".from_case(Case::Camel).to_case(Case::Snake),
+            "a_bagel"
         );
     }
 
     #[test]
     fn late_word_boundaries() {
         assert_eq!(
-            "team_a",
-            "teamA".from_case(Case::Camel).to_case(Case::Snake)
+            "teamA".from_case(Case::Camel).to_case(Case::Snake),
+            "team_a"
         );
     }
 
@@ -715,10 +715,10 @@ mod test {
     #[test]
     fn default_all_boundaries() {
         assert_eq!(
-            "abc_abc_abc_abc_abc_abc",
-            "ABC-abc_abcAbc ABCAbc".to_case(Case::Snake)
+            "ABC-abc_abcAbc ABCAbc".to_case(Case::Snake),
+            "abc_abc_abc_abc_abc_abc"
         );
-        assert_eq!("8_a_8_a_8", "8a8A8".to_case(Case::Snake));
+        assert_eq!("8a8A8".to_case(Case::Snake), "8_a_8_a_8");
     }
 
     mod is_case {
@@ -810,21 +810,21 @@ mod test {
     #[test]
     fn remove_boundaries() {
         assert_eq!(
-            "m02_s05_binary_trees.pdf",
             "M02S05BinaryTrees.pdf"
                 .from_case(Case::Pascal)
                 .remove_boundaries(&[Boundary::UpperDigit])
-                .to_case(Case::Snake)
+                .to_case(Case::Snake),
+            "m02_s05_binary_trees.pdf"
         );
     }
 
     #[test]
     fn with_boundaries() {
         assert_eq!(
-            "my-dumb-file-name",
             "my_dumbFileName"
                 .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
-                .to_case(Case::Kebab)
+                .to_case(Case::Kebab),
+            "my-dumb-file-name"
         );
     }
 

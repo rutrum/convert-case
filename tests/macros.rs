@@ -2,47 +2,30 @@ use convert_case::ccase;
 use convert_case::{separator, split};
 
 #[test]
-fn ccase_snake() {
-    assert_eq!("my_var_name", ccase!(snake, "my_Var_Name"));
+fn ccase_to_case() {
+    assert_eq!(ccase!(snake, "my_Var_Name"), "my_var_name");
+    assert_eq!(ccase!(constant, "my_Var_Name"), "MY_VAR_NAME");
+    assert_eq!(ccase!(kebab, "my_Var_Name"), "my-var-name");
+    assert_eq!(ccase!(kebab, String::from("my_Var_Name")), "my-var-name");
 }
 
 #[test]
-fn ccase_constant() {
-    assert_eq!("MY_VAR_NAME", ccase!(constant, "my_Var_Name"));
+fn ccase_from_to_case() {
+    assert_eq!(ccase!(kebab -> camel, "myVar-name_var"), "myvarName_var");
+    assert_eq!(ccase!(snake -> pascal, "my-var_name-var"), "My-varName-var");
 }
 
 #[test]
-fn ccase_kebab() {
-    assert_eq!("my-var-name", ccase!(kebab, "my_Var_Name"));
-}
+fn separator_custom_delimiters() {
+    let dot = separator!(".");
+    assert_eq!(
+        split(&"lower.Upper.Upper", &[dot]),
+        vec!["lower", "Upper", "Upper"]
+    );
 
-#[test]
-fn ccase_kebab_string() {
-    assert_eq!("my-var-name", ccase!(kebab, String::from("my_Var_Name")));
-}
-
-#[test]
-fn ccase_from_kebab_to_camel() {
-    assert_eq!("myvarName_var", ccase!(kebab -> camel, "myVar-name_var"));
-}
-
-#[test]
-fn ccase_from_snake_to_pascal() {
-    assert_eq!("My-varName-var", ccase!(snake -> pascal, "my-var_name-var"));
-}
-
-#[test]
-fn separator_dot() {
-    let boundary = separator!(".");
-    let s = "lower.Upper.Upper";
-    let v = split(&s, &[boundary]);
-    assert_eq!(vec!["lower", "Upper", "Upper"], v)
-}
-
-#[test]
-fn separator_double_colon() {
-    let boundary = separator!("::");
-    let s = "lower::lowerUpper::Upper";
-    let v = split(&s, &[boundary]);
-    assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
+    let double_colon = separator!("::");
+    assert_eq!(
+        split(&"lower::lowerUpper::Upper", &[double_colon]),
+        vec!["lower", "lowerUpper", "Upper"]
+    );
 }

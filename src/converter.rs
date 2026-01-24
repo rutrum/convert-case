@@ -259,13 +259,13 @@ mod test {
         let conv = Converter::new()
             .to_case(Case::Snake)
             .set_pattern(Pattern::Sentence);
-        assert_eq!("Bjarne_case", conv.convert("bjarne case"));
+        assert_eq!(conv.convert("bjarne case"), "Bjarne_case");
     }
 
     #[test]
     fn custom_delim() {
         let conv = Converter::new().set_delimiter("..");
-        assert_eq!("oh..My", conv.convert("ohMy"));
+        assert_eq!(conv.convert("ohMy"), "oh..My");
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod test {
             .from_case(Case::Title)
             .to_case(Case::Kebab)
             .set_delimiter("");
-        assert_eq!("justflat", conv.convert("Just Flat"));
+        assert_eq!(conv.convert("Just Flat"), "justflat");
     }
 
     #[test]
@@ -282,8 +282,8 @@ mod test {
         let conv = Converter::new()
             .remove_boundaries(&Boundary::digits())
             .to_case(Case::Snake);
-        assert_eq!("test_08bound", conv.convert("Test 08Bound"));
-        assert_eq!("a8a_a8a", conv.convert("a8aA8A"));
+        assert_eq!(conv.convert("Test 08Bound"), "test_08bound");
+        assert_eq!(conv.convert("a8aA8A"), "a8a_a8a");
     }
 
     #[test]
@@ -291,8 +291,8 @@ mod test {
         let conv = Converter::new()
             .remove_boundary(Boundary::DigitUpper)
             .to_case(Case::Snake);
-        assert_eq!("test_08bound", conv.convert("Test 08Bound"));
-        assert_eq!("a_8_a_a_8a", conv.convert("a8aA8A"));
+        assert_eq!(conv.convert("Test 08Bound"), "test_08bound");
+        assert_eq!(conv.convert("a8aA8A"), "a_8_a_a_8a");
     }
 
     #[test]
@@ -301,7 +301,7 @@ mod test {
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
             .add_boundary(Boundary::LowerUpper);
-        assert_eq!("word-word-word", conv.convert("word_wordWord"));
+        assert_eq!(conv.convert("word_wordWord"), "word-word-word");
     }
 
     #[test]
@@ -310,7 +310,7 @@ mod test {
             .from_case(Case::Snake)
             .to_case(Case::Kebab)
             .add_boundaries(&[Boundary::LowerUpper, Boundary::UpperLower]);
-        assert_eq!("word-word-w-ord", conv.convert("word_wordWord"));
+        assert_eq!(conv.convert("word_wordWord"), "word-word-w-ord");
     }
 
     #[test]
@@ -325,10 +325,10 @@ mod test {
     #[test]
     fn reuse_after_change() {
         let conv = Converter::new().from_case(Case::Snake).to_case(Case::Kebab);
-        assert_eq!("word-wordword", conv.convert("word_wordWord"));
+        assert_eq!(conv.convert("word_wordWord"), "word-wordword");
 
         let conv = conv.add_boundary(Boundary::LowerUpper);
-        assert_eq!("word-word-word", conv.convert("word_wordWord"));
+        assert_eq!(conv.convert("word_wordWord"), "word-word-word");
     }
 
     #[test]
@@ -341,8 +341,8 @@ mod test {
             ])
             .to_case(Case::Snake);
         assert_eq!(
-            "section8_lesson2_http_requests",
-            conv.convert("section8lesson2HTTPRequests")
+            conv.convert("section8lesson2HTTPRequests"),
+            "section8_lesson2_http_requests"
         );
     }
 }

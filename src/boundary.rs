@@ -23,7 +23,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// contains the [`defaults_from`](Boundary::defaults_from) method which will generate a subset
 /// of default boundaries based on the boundaries present in a string.
 ///
-// You can also create custom delimiter boundaries using the [`delim`](crate::delim)
+/// You can also create custom delimiter boundaries using the [`separator`](crate::separator)
 /// macro or directly instantiate `Boundary` for complex boundary conditions.
 /// ```
 /// use convert_case::{Boundary, Case, Casing, Converter};
@@ -453,6 +453,7 @@ macro_rules! separator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     #[test]
     fn boundary_equality() {
@@ -466,29 +467,27 @@ mod tests {
         assert_eq!(a, b)
     }
 
-    #[test]
-    fn hyphen() {
-        let s = "a-b-c";
-        let v = split(&s, &[Boundary::Hyphen]);
-        assert_eq!(v, vec!["a", "b", "c"]);
+    #[rstest]
+    #[case(Boundary::Hyphen, "a-b-c", vec!["a", "b", "c"])]
+    #[case(Boundary::Underscore, "a_b_c", vec!["a", "b", "c"])]
+    #[case(Boundary::Space, "a b c", vec!["a", "b", "c"])]
+    #[case(Boundary::LowerUpper, "lowerUpperUpper", vec!["lower", "Upper", "Upper"])]
+    #[case(Boundary::UpperLower, "ABc", vec!["AB", "c"])]
+    #[case(Boundary::Acronym, "XMLRequest", vec!["XML", "Request"])]
+    #[case(Boundary::LowerDigit, "abc123", vec!["abc", "123"])]
+    #[case(Boundary::UpperDigit, "ABC123", vec!["ABC", "123"])]
+    #[case(Boundary::DigitLower, "123abc", vec!["123", "abc"])]
+    #[case(Boundary::DigitUpper, "123ABC", vec!["123", "ABC"])]
+    fn split_on_boundary(
+        #[case] boundary: Boundary,
+        #[case] input: &str,
+        #[case] expected: Vec<&str>,
+    ) {
+        assert_eq!(split(&input, &[boundary]), expected);
     }
 
     #[test]
-    fn underscore() {
-        let s = "a_b_c";
-        let v = split(&s, &[Boundary::Underscore]);
-        assert_eq!(v, vec!["a", "b", "c"]);
-    }
-
-    #[test]
-    fn space() {
-        let s = "a b c";
-        let v = split(&s, &[Boundary::Space]);
-        assert_eq!(v, vec!["a", "b", "c"]);
-    }
-
-    #[test]
-    fn delimiters() {
+    fn split_on_multiple_delimiters() {
         let s = "aaa-bbb_ccc ddd ddd-eee";
         let v = split(
             &s,
@@ -498,46 +497,25 @@ mod tests {
     }
 
     #[test]
-    fn lower_upper() {
-        let s = "lowerUpperUpper";
-        let v = split(&s, &[Boundary::LowerUpper]);
-        assert_eq!(v, vec!["lower", "Upper", "Upper"]);
-    }
-
-    #[test]
-    fn acronym() {
-        let s = "XMLRequest";
-        let v = split(&s, &[Boundary::Acronym]);
-        assert_eq!(v, vec!["XML", "Request"]);
-    }
-
-    // TODO: add tests for other boundaries
-
-    #[test]
     fn boundaries_found_in_string() {
-        // upper lower is not longer a default
-        assert_eq!(Vec::<Boundary>::new(), Boundary::defaults_from(".Aaaa"));
+        // upper lower is no longer a default
+        assert_eq!(Boundary::defaults_from(".Aaaa"), Vec::<Boundary>::new());
         assert_eq!(
-            vec![Boundary::LowerUpper, Boundary::LowerDigit],
-            Boundary::defaults_from("a8.Aa.aA")
+            Boundary::defaults_from("a8.Aa.aA"),
+            vec![Boundary::LowerUpper, Boundary::LowerDigit]
         );
         assert_eq!(
-            Boundary::digits().to_vec(),
-            Boundary::defaults_from("b1B1b")
+            Boundary::defaults_from("b1B1b"),
+            Boundary::digits().to_vec()
         );
         assert_eq!(
+            Boundary::defaults_from("AAa -_"),
             vec![
                 Boundary::Underscore,
                 Boundary::Hyphen,
                 Boundary::Space,
                 Boundary::Acronym,
-            ],
-            Boundary::defaults_from("AAa -_")
+            ]
         );
-    }
-
-    #[test]
-    fn boundary_consts_same() {
-        assert_eq!(Boundary::Space, Boundary::Space);
     }
 }
