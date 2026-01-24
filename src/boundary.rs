@@ -112,9 +112,7 @@ pub enum Boundary {
     /// and is **not** included in the [defaults](Boundary::defaults).
     /// ```
     /// # use convert_case::Boundary;
-    /// assert!(
-    ///     Boundary::defaults_from("Aa").len() == 0
-    /// );
+    /// assert!(Boundary::defaults_from("Aa").is_empty());
     UpperLower,
 
     /// Splits where a lowercase letter is followed by an uppercase letter.
@@ -426,14 +424,14 @@ where
     words.into_iter().collect()
 }
 
-/// Create a new boundary based on a delimiter.
+/// Create a new boundary based on a string.
 ///
 /// This is shorthand for creating a boundary that splits on a specific string, and
 /// omits that string from the list of words.  For more information, see [`Boundary`].
 /// ```
-/// # use convert_case::{Case, Converter, delim};
+/// # use convert_case::{Case, Converter, separator};
 /// let conv = Converter::new()
-///     .set_boundaries(&[delim!("::")])
+///     .set_boundaries(&[separator!("::")])
 ///     .to_case(Case::Camel);
 ///
 /// assert_eq!(
@@ -442,7 +440,7 @@ where
 /// )
 /// ```
 #[macro_export]
-macro_rules! delim {
+macro_rules! separator {
     ($delim:expr) => {
         convert_case::Boundary::Custom {
             condition: |s| s.join("").starts_with($delim),

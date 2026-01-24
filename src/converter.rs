@@ -9,9 +9,9 @@ use alloc::vec::Vec;
 /// The parameters for performing a case conversion.
 ///
 /// A `Converter` stores three fields needed for case conversion.
-/// 1) `boundaries`: how a string is segmented into _words_.
+/// 1) `boundaries`: how a string is split into _words_.
 /// 2) `pattern`: how words are mutated, or how each character's case will change.
-/// 3) `delim` or delimeter: how the mutated words are joined into the final string.
+/// 3) `delimiter`: how the mutated words are joined into the final string.
 ///
 /// Then calling [`convert`](Converter::convert) on a `Converter` will apply a case conversion
 /// defined by those fields.  The `Converter` struct is what is used underneath those functions
@@ -31,21 +31,21 @@ use alloc::vec::Vec;
 ///     "dialoguebox_border_shadow",
 /// );
 ///
-/// // Convert using similar functions on Converter
+/// // Convert using similar methods on Converter
 /// let conv = Converter::new()
 ///     .from_case(Case::Kebab)
 ///     .to_case(Case::Snake);
 /// assert_eq!(conv.convert(s), "dialoguebox_border_shadow");
 ///
-/// // Convert by setting each field explicitly.
+/// // Convert by setting each field explicitly
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::Hyphen])
 ///     .set_pattern(Pattern::Lowercase)
-///     .set_delim("_");
+///     .set_delimiter("_");
 /// assert_eq!(conv.convert(s), "dialoguebox_border_shadow");
 /// ```
 ///
-/// Or you can use `Converter` when you are trying to make a unique case
+/// Or you can use `Converter` when you are performing a transformation
 /// not provided as a variant of `Case`.
 ///
 /// ```
@@ -53,20 +53,18 @@ use alloc::vec::Vec;
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
 ///     .set_pattern(Pattern::Camel)
-///     .set_delim(".");
+///     .set_delimiter(".");
 /// assert_eq!(dot_camel.convert("CollisionShape2D"), "collision.Shape.2d");
 /// ```
 pub struct Converter {
-    /// How a string is segmented into words.
+    /// How a string is split into words.
     pub boundaries: Vec<Boundary>,
 
-    /// How each word is mutated before joining.  In the case that there is no pattern, none of the
-    /// words will be mutated before joining and will maintain whatever case they were in the
-    /// original string.
+    /// How each word is mutated before joining.
     pub pattern: Pattern,
 
     /// The string used to join mutated words together.
-    pub delim: String,
+    pub delimiter: String,
 }
 
 impl Default for Converter {
@@ -74,14 +72,14 @@ impl Default for Converter {
         Converter {
             boundaries: Boundary::defaults().to_vec(),
             pattern: Pattern::Noop,
-            delim: String::new(),
+            delimiter: String::new(),
         }
     }
 }
 
 impl Converter {
     /// Creates a new `Converter` with default fields.  This is the same as `Default::default()`.
-    /// The `Converter` will use `Boundary::defaults()` for boundaries, no pattern, and an empty
+    /// The `Converter` will use [`Boundary::defaults()`] for boundaries, no pattern, and an empty
     /// string as a delimeter.
     /// ```
     /// # use convert_case::Converter;
@@ -106,7 +104,7 @@ impl Converter {
         // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = boundary::split(&s, &self.boundaries);
         let words = words.to_vec();
-        self.pattern.mutate(&words).join(&self.delim)
+        self.pattern.mutate(&words).join(&self.delimiter)
     }
 
     /// Set the pattern and delimiter to those associated with the given case.
@@ -114,11 +112,11 @@ impl Converter {
     /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Pascal);
-    /// assert_eq!("VariableName", conv.convert("variable name"))
+    /// assert_eq!(conv.convert("variable name"), "VariableName")
     /// ```
     pub fn to_case(mut self, case: Case) -> Self {
         self.pattern = case.pattern();
-        self.delim = case.delim().to_string();
+        self.delimiter = case.delimiter().to_string();
         self
     }
 
@@ -129,7 +127,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .from_case(Case::Snake)
     ///     .to_case(Case::Title);
-    /// assert_eq!("Dot Productvalue", conv.convert("dot_productValue"))
+    /// assert_eq!(conv.convert("dot_productValue"), "Dot Productvalue")
     /// ```
     pub fn from_case(mut self, case: Case) -> Self {
         self.boundaries = case.boundaries().to_vec();
@@ -142,7 +140,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .set_boundaries(&[Boundary::Underscore, Boundary::LowerUpper])
     ///     .to_case(Case::Lower);
-    /// assert_eq!("panic attack dream theater", conv.convert("panicAttack_dreamTheater"))
+    /// assert_eq!(conv.convert("firstName_lastName"), "first name last name");
     /// ```
     pub fn set_boundaries(mut self, bs: &[Boundary]) -> Self {
         self.boundaries = bs.to_vec();
@@ -170,7 +168,7 @@ impl Converter {
     ///     .from_case(Case::Kebab)
     ///     .to_case(Case::Title)
     ///     .add_boundaries(&[Boundary::Underscore, Boundary::LowerUpper]);
-    /// assert_eq!("2020 10 First Day", conv.convert("2020-10_firstDay"));
+    /// assert_eq!(conv.convert("2020-10_firstDay"), "2020 10 First Day");
     /// ```
     pub fn add_boundaries(mut self, bs: &[Boundary]) -> Self {
         self.boundaries.extend(bs);
@@ -183,7 +181,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .remove_boundary(Boundary::Acronym)
     ///     .to_case(Case::Kebab);
-    /// assert_eq!("httprequest-parser", conv.convert("HTTPRequest_parser"));
+    /// assert_eq!(conv.convert("HTTPRequest_parser"), "httprequest-parser");
     /// ```
     pub fn remove_boundary(mut self, b: Boundary) -> Self {
         self.boundaries.retain(|&x| x != b);
@@ -196,7 +194,7 @@ impl Converter {
     /// let conv = Converter::new()
     ///     .remove_boundaries(&Boundary::digits())
     ///     .to_case(Case::Snake);
-    /// assert_eq!("c04_s03_path_finding.pdf", conv.convert("C04 S03 Path Finding.pdf"));
+    /// assert_eq!(conv.convert("C04 S03 Path Finding.pdf"), "c04_s03_path_finding.pdf");
     /// ```
     pub fn remove_boundaries(mut self, bs: &[Boundary]) -> Self {
         for b in bs {
@@ -210,14 +208,14 @@ impl Converter {
     /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()
     ///     .to_case(Case::Snake)
-    ///     .set_delim(".");
-    /// assert_eq!("lower.with.dots", conv.convert("LowerWithDots"));
+    ///     .set_delimiter(".");
+    /// assert_eq!(conv.convert("LowerWithDots"), "lower.with.dots");
     /// ```
-    pub fn set_delim<T>(mut self, d: T) -> Self
+    pub fn set_delimiter<T>(mut self, d: T) -> Self
     where
         T: ToString,
     {
-        self.delim = d.to_string();
+        self.delimiter = d.to_string();
         self
     }
 
@@ -225,9 +223,9 @@ impl Converter {
     /// ```
     /// # use convert_case::{Case, Converter, Pattern};
     /// let conv = Converter::new()
-    ///     .set_delim("_")
+    ///     .set_delimiter("_")
     ///     .set_pattern(Pattern::Sentence);
-    /// assert_eq!("Bjarne_case", conv.convert("BJARNE CASE"));
+    /// assert_eq!(conv.convert("BJARNE CASE"), "Bjarne_case");
     /// ```
     pub fn set_pattern(mut self, p: Pattern) -> Self {
         self.pattern = p;
@@ -250,7 +248,7 @@ mod test {
     #[test]
     fn snake_converter_from_scratch() {
         let conv = Converter::new()
-            .set_delim("_")
+            .set_delimiter("_")
             .set_pattern(Pattern::Lowercase);
         let s = String::from("my var name");
         assert_eq!(s.to_case(Case::Snake), conv.convert(s));
@@ -266,7 +264,7 @@ mod test {
 
     #[test]
     fn custom_delim() {
-        let conv = Converter::new().set_delim("..");
+        let conv = Converter::new().set_delimiter("..");
         assert_eq!("oh..My", conv.convert("ohMy"));
     }
 
@@ -275,7 +273,7 @@ mod test {
         let conv = Converter::new()
             .from_case(Case::Title)
             .to_case(Case::Kebab)
-            .set_delim("");
+            .set_delimiter("");
         assert_eq!("justflat", conv.convert("Just Flat"));
     }
 

@@ -1,4 +1,5 @@
 test *FILTER:
+    cargo fmt
     cargo build
     cargo test -q {{FILTER}}
 

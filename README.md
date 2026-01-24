@@ -76,8 +76,12 @@ Some cases and utilies that didn't feel appropriate in this library are made ava
 
 The API has finally reached what I consider to be the right combination of easy to use and flexible to modify.
 
+There will be a major version 2 down the line that adds support for ascii strings.
+
 Breaking changes:
-* `delim_boundary` macro is now just `delim`
+* `delim_boundary` macro is now `separator`
+* `Converter.delim` is renamed to `Converter.delimiter` and `Converter::set_delim` to `Converter::set_delimiter`
+* `Case::Custom.delim` is renamed to `Case::Custom.delimiter` and `Case::delim` to `Case::delimiter`
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 

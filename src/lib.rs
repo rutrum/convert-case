@@ -177,7 +177,7 @@
 //! identifier of typical cases.
 //!
 //! Custom boundary conditions can also be created.  Commonly, you might split based on some
-//! character or list of characters.  The [`delim`] macro builds
+//! character or list of characters.  The [`separator`] macro builds
 //! a boundary that splits on the presence of a string, and then removes the string
 //! while producing the list of words.
 //!
@@ -192,12 +192,12 @@
 //! intersperse between words before concatenation. [`Case::Custom`] is a struct enum variant with
 //! exactly those three fields.  You could create your own case like so.
 //! ```
-//! use convert_case::{Case, Casing, delim, Pattern};
+//! use convert_case::{Case, Casing, separator, Pattern};
 //!
 //! let dot_case = Case::Custom {
-//!     boundaries: &[delim!(".")],
+//!     boundaries: &[separator!(".")],
 //!     pattern: Pattern::Lowercase,
-//!     delim: ".",
+//!     delimiter: ".",
 //! };
 //!
 //! assert_eq!("AnimalFactoryFactory".to_case(dot_case), "animal.factory.factory");
@@ -225,11 +225,11 @@
 //! delimited module path in rust into a series of file directories.
 //!
 //! ```
-//! use convert_case::{Case, Converter, delim};
+//! use convert_case::{Case, Converter, separator};
 //!
 //! let modules_into_path = Converter::new()
-//!     .set_boundaries(&[delim!("::")])
-//!     .set_delim("/");
+//!     .set_boundaries(&[separator!("::")])
+//!     .set_delimiter("/");
 //!
 //! assert_eq!(
 //!     modules_into_path.convert("std::os::unix"),
@@ -282,8 +282,8 @@ pub trait Casing<T: AsRef<str>> {
     /// use convert_case::{Case, Casing};
     ///
     /// assert_eq!(
+    ///     "Tetronimo piece border".to_case(Case::Kebab),
     ///     "tetronimo-piece-border",
-    ///     "Tetronimo piece border".to_case(Case::Kebab)
     /// );
     /// ```
     fn to_case(&self, case: Case) -> String;
@@ -293,10 +293,10 @@ pub trait Casing<T: AsRef<str>> {
     /// use convert_case::{Case, Casing};
     ///
     /// assert_eq!(
-    ///     "2020-08-10_dannie_birthday",
     ///     "2020-08-10 Dannie Birthday"
     ///         .from_case(Case::Title)
-    ///         .to_case(Case::Snake)
+    ///         .to_case(Case::Snake),
+    ///     "2020-08-10_dannie_birthday",
     /// );
     /// ```
     #[allow(clippy::wrong_self_convention)]
@@ -307,10 +307,10 @@ pub trait Casing<T: AsRef<str>> {
     /// use convert_case::{Boundary, Case, Casing};
     ///
     /// assert_eq!(
-    ///     "e1_m1_hangar",
     ///     "E1M1 Hangar"
     ///         .set_boundaries(&[Boundary::DigitUpper, Boundary::Space])
-    ///         .to_case(Case::Snake)
+    ///         .to_case(Case::Snake),
+    ///     "e1_m1_hangar",
     /// );
     /// ```
     fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
@@ -380,10 +380,11 @@ impl<T: AsRef<str>> Casing<T> for T {
 /// `Casing`.  For a more fine grained approach to case conversion, consider using the [`Converter`]
 /// struct.
 /// ```
-/// use convert_case::{Case, Casing};
-///
-/// let title = "ninety-nine_problems".from_case(Case::Snake).to_case(Case::Title);
-/// assert_eq!("Ninety-nine Problems", title);
+/// # use convert_case::{Case, Casing};
+/// assert_eq!(
+///     "By-Tor And The Snow Dog".from_case(Case::Title).to_case(Case::Snake),
+///     "by-tor_and_the_snow_dog",
+/// );
 /// ```
 pub struct StateConverter<'a, T: AsRef<str>> {
     s: &'a T,
@@ -404,12 +405,13 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     /// likely not useful, but provided anyway.
     /// ```
     /// use convert_case::{Case, Casing};
-    ///
-    /// let name = "Chuck Schuldiner"
-    ///     .from_case(Case::Snake) // from Casing trait
-    ///     .from_case(Case::Title) // from StateConverter, overwrites previous
-    ///     .to_case(Case::Kebab);
-    /// assert_eq!("chuck-schuldiner", name);
+    /// assert_eq!(
+    ///     "Alan Turing"
+    ///         .from_case(Case::Snake) // from Casing trait
+    ///         .from_case(Case::Title) // from StateConverter, overwrites previous
+    ///         .to_case(Case::Kebab),
+    ///     "alan-turing"
+    /// );
     /// ```
     pub fn from_case(self, case: Case) -> Self {
         Self {
@@ -423,12 +425,13 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     /// provided anyway.
     /// ```
     /// use convert_case::{Boundary, Case, Casing};
-    ///
-    /// let song = "theHumbling river-puscifer"
-    ///     .from_case(Case::Kebab) // from Casing trait
-    ///     .set_boundaries(&[Boundary::Space, Boundary::LowerUpper]) // overwrites `from_case`
-    ///     .to_case(Case::Pascal);
-    /// assert_eq!("TheHumblingRiver-puscifer", song);  // doesn't split on hyphen `-`
+    /// assert_eq!(
+    ///     "Vector5d Transformation"
+    ///         .from_case(Case::Title) // from Casing trait
+    ///         .set_boundaries(&[Boundary::Space, Boundary::LowerDigit]) // overwrites `from_case`
+    ///         .to_case(Case::Kebab),
+    ///     "vector-5d-transformation"
+    /// );
     /// ```
     pub fn set_boundaries(self, bs: &[Boundary]) -> Self {
         Self {
@@ -442,13 +445,12 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     /// some.
     /// ```
     /// use convert_case::{Boundary, Case, Casing};
-    ///
     /// assert_eq!(
-    ///     "2d_transformation",
     ///     "2dTransformation"
     ///         .from_case(Case::Camel)
     ///         .remove_boundaries(&Boundary::digits())
-    ///         .to_case(Case::Snake)
+    ///         .to_case(Case::Snake),
+    ///     "2d_transformation"
     /// );
     /// ```
     pub fn remove_boundaries(self, bs: &[Boundary]) -> Self {
@@ -461,10 +463,9 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
     /// Consumes the `StateConverter` and returns the converted string.
     /// ```
     /// use convert_case::{Boundary, Case, Casing};
-    ///
     /// assert_eq!(
+    ///     "Ice-Cream Social".from_case(Case::Title).to_case(Case::Lower),
     ///     "ice-cream social",
-    ///     "Ice-Cream Social".from_case(Case::Title).to_case(Case::Lower)
     /// );
     /// ```
     pub fn to_case(self, case: Case) -> String {
@@ -599,7 +600,8 @@ mod test {
 
         for (case_a, str_a) in &examples {
             for (case_b, str_b) in &examples {
-                assert_eq!(*str_a, str_b.from_case(*case_b).to_case(*case_a))
+                assert_eq!(*str_a, str_b.to_case(*case_a));
+                assert_eq!(*str_a, str_b.from_case(*case_b).to_case(*case_a));
             }
         }
     }
@@ -646,59 +648,42 @@ mod test {
     }
 
     #[test]
-    fn leading_tailing_delimeters() {
-        assert_eq!(
-            "_leading_underscore",
-            "_leading_underscore"
-                .from_case(Case::Snake)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "tailing_underscore_",
-            "tailing_underscore_"
-                .from_case(Case::Snake)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "_leading_hyphen",
-            "-leading-hyphen"
-                .from_case(Case::Kebab)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "tailing_hyphen_",
-            "tailing-hyphen-"
-                .from_case(Case::Kebab)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "tailing_hyphens_____",
-            "tailing-hyphens-----"
-                .from_case(Case::Kebab)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "tailingHyphens",
-            "tailing-hyphens-----"
-                .from_case(Case::Kebab)
-                .to_case(Case::Camel)
-        );
-    }
+    fn leading_tailing_double_delimeters() {
+        let words = ["first", "second"];
+        let delimited_cases = &[
+            Case::Snake,
+            Case::Kebab,
+            Case::Lower,
+            Case::Custom {
+                boundaries: &[Boundary::Custom {
+                    condition: |s| *s.get(0).unwrap() == ".",
+                    start: 0,
+                    len: 1,
+                }],
+                pattern: Pattern::Lowercase,
+                delimiter: ".",
+            },
+        ];
 
-    #[test]
-    fn double_delimeters() {
-        assert_eq!(
-            "many___underscores",
-            "many___underscores"
-                .from_case(Case::Snake)
-                .to_case(Case::Snake)
-        );
-        assert_eq!(
-            "many---underscores",
-            "many---underscores"
-                .from_case(Case::Kebab)
-                .to_case(Case::Kebab)
-        );
+        for &case in delimited_cases {
+            let delim = case.delimiter();
+            let double = format!("{delim}{delim}");
+
+            let identifiers = [
+                format!("{delim}{}", words.join(delim)),
+                format!("{}{delim}", words.join(delim)),
+                format!("{delim}{}{delim}", words.join(delim)),
+                format!("{}", words.join(&double)),
+                format!("{delim}{}", words.join(&double)),
+                format!("{}{delim}", words.join(&double)),
+                format!("{delim}{}{delim}", words.join(&double)),
+            ];
+
+            for identifier in identifiers {
+                assert_eq!(identifier.to_case(case), identifier);
+                assert_eq!(identifier.from_case(case).to_case(case), identifier);
+            }
+        }
     }
 
     #[test]
@@ -843,17 +828,6 @@ mod test {
         );
     }
 
-    #[test]
-    fn multiple_from_case() {
-        assert_eq!(
-            "longtime_nosee",
-            "LongTime NoSee"
-                .from_case(Case::Camel)
-                .from_case(Case::Title)
-                .to_case(Case::Snake),
-        )
-    }
-
     use std::collections::HashSet;
     use std::iter::FromIterator;
 
@@ -886,18 +860,21 @@ mod test {
         }
     }
 
+    // From issue https://github.com/rutrum/convert-case/issues/4
     // From issue https://github.com/rutrum/convert-case/issues/8
     #[test]
-    fn accent_mark() {
-        let s = "música moderna".to_string();
-        assert_eq!("MúsicaModerna", s.to_case(Case::Pascal));
-    }
-
-    // From issue https://github.com/rutrum/convert-case/issues/4
-    #[test]
-    fn russian() {
-        let s = "ПЕРСПЕКТИВА24".to_string();
-        let _n = s.to_case(Case::Title);
+    fn unicode_words() {
+        let strings = &["ПЕРСПЕКТИВА24", "música moderna"];
+        for s in strings {
+            for &case in Case::all_cases() {
+                assert!(!s.to_case(case).is_empty());
+            }
+            for &from in Case::all_cases() {
+                for &to in Case::all_cases() {
+                    assert!(!s.from_case(from).to_case(to).is_empty());
+                }
+            }
+        }
     }
 
     // idea for asserting the associated boundaries are correct
@@ -917,7 +894,7 @@ mod test {
                 }
                 assert_eq!(
                     case.pattern().mutate(&split(
-                        &case.pattern().mutate(words).join(case.delim()),
+                        &case.pattern().mutate(words).join(case.delimiter()),
                         case.boundaries()
                     )),
                     case.pattern().mutate(words),

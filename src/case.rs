@@ -42,11 +42,11 @@ pub enum Case<'b> {
     /// This flexibility can create cases not present as another variant of the
     /// Case enum.  For instance, you could create a "dot case" like so.
     /// ```
-    /// use convert_case::{Case, Casing, delim, Pattern};
+    /// use convert_case::{Case, Casing, separator, Pattern};
     /// let dot_case = Case::Custom {
-    ///     boundaries: &[delim!(".")],
+    ///     boundaries: &[separator!(".")],
     ///     pattern: Pattern::Lowercase,
-    ///     delim: ".",
+    ///     delimiter: ".",
     /// };
     ///
     /// assert_eq!(
@@ -61,7 +61,7 @@ pub enum Case<'b> {
     Custom {
         boundaries: &'b [Boundary],
         pattern: Pattern,
-        delim: &'static str,
+        delimiter: &'static str,
     },
 
     /// Snake case strings are delimited by underscores `_` and are all lowercase.
@@ -322,14 +322,16 @@ impl Case<'_> {
     /// | Kebab, Cobol, UpperKebab, Train | Hyphen `"-"` |
     /// | Upper, Lower, Title, Sentence | Space `" "` |
     /// | Flat, UpperFlat, Pascal, UpperCamel, Camel | Empty string `""` |
-    pub const fn delim(&self) -> &'static str {
+    pub const fn delimiter(&self) -> &'static str {
         use Case::*;
         match self {
             Snake | Constant | UpperSnake | Ada => "_",
             Kebab | Cobol | UpperKebab | Train => "-",
             Upper | Lower | Title | Sentence => " ",
             Flat | UpperFlat | Pascal | UpperCamel | Camel => "",
-            Custom { delim, .. } => delim,
+            Custom {
+                delimiter: delim, ..
+            } => delim,
         }
     }
 
@@ -394,7 +396,7 @@ impl Case<'_> {
     /// );
     /// ```
     pub fn join(self, words: &[String]) -> String {
-        words.join(self.delim())
+        words.join(self.delimiter())
     }
 
     /// Array of all non-custom case enum variants.  Does not include aliases.

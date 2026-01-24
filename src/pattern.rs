@@ -79,7 +79,7 @@ fn capital_word(word: &str) -> String {
 ///
 /// let dunder_converter = Converter::new()
 ///     .set_pattern(Pattern::Custom(snake_dunder))
-///     .set_delim("_");
+///     .set_delimiter("_");
 ///
 /// assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
 /// assert_eq!(dunder_converter.convert("ITER"), "__iter__");

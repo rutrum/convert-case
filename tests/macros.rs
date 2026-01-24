@@ -1,5 +1,5 @@
 use convert_case::ccase;
-use convert_case::{delim, split};
+use convert_case::{separator, split};
 
 #[test]
 fn ccase_snake() {
@@ -32,16 +32,16 @@ fn ccase_from_snake_to_pascal() {
 }
 
 #[test]
-fn delim_dot() {
-    let boundary = delim!(".");
+fn separator_dot() {
+    let boundary = separator!(".");
     let s = "lower.Upper.Upper";
     let v = split(&s, &[boundary]);
     assert_eq!(vec!["lower", "Upper", "Upper"], v)
 }
 
 #[test]
-fn delim_double_colon() {
-    let boundary = delim!("::");
+fn separator_double_colon() {
+    let boundary = separator!("::");
     let s = "lower::lowerUpper::Upper";
     let v = split(&s, &[boundary]);
     assert_eq!(vec!["lower", "lowerUpper", "Upper"], v)
