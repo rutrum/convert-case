@@ -80,7 +80,7 @@ impl Default for Converter {
 impl Converter {
     /// Creates a new `Converter` with default fields.  This is the same as `Default::default()`.
     /// The `Converter` will use [`Boundary::defaults()`] for boundaries, no pattern, and an empty
-    /// string as a delimeter.
+    /// string as a delimiter.
     /// ```
     /// # use convert_case::Converter;
     /// let conv = Converter::new();
@@ -203,7 +203,7 @@ impl Converter {
         self
     }
 
-    /// Sets the delimeter.
+    /// Sets the delimiter.
     /// ```
     /// # use convert_case::{Case, Converter};
     /// let conv = Converter::new()

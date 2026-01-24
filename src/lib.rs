@@ -276,7 +276,7 @@ pub use pattern::Pattern;
 /// methods on `Casing`.
 pub trait Casing<T: AsRef<str>> {
     /// Convert the string into the given case.  It will reference `self` and create a new
-    /// `String` with the same pattern and delimeter as `case`.  It will split on boundaries
+    /// `String` with the same pattern and delimiter as `case`.  It will split on boundaries
     /// defined at [`Boundary::defaults()`].
     /// ```
     /// use convert_case::{Case, Casing};
@@ -648,7 +648,7 @@ mod test {
     }
 
     #[test]
-    fn leading_tailing_double_delimeters() {
+    fn leading_tailing_double_delimiters() {
         let words = ["first", "second"];
         let delimited_cases = &[
             Case::Snake,
