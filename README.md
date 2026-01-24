@@ -82,6 +82,7 @@ Breaking changes:
 * `delim_boundary` macro is now `separator`
 * `Converter.delim` is renamed to `Converter.delimiter` and `Converter::set_delim` to `Converter::set_delimiter`
 * `Case::Custom.delim` is renamed to `Case::Custom.delimiter` and `Case::delim` to `Case::delimiter`
+* Removed `Casing::is_case`.  Similar functionality is now implemented in `convert-case-extras`.
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 

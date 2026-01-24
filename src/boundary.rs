@@ -39,7 +39,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// let conv = Converter::new()
 ///     .set_boundaries(&Boundary::defaults_from("aA "))
 ///     .to_case(Case::Title);
-/// assert_eq!("7empest By Tool", conv.convert("7empest byTool"));
+/// assert_eq!(conv.convert("myVariable Name"), "My Variable Name");
 /// ```
 ///
 /// ## Example
