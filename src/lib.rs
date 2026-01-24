@@ -329,18 +329,6 @@ pub trait Casing<T: AsRef<str>> {
     /// ```
     fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
-    /// Determines if `self` is of the given case.  This is done simply by applying
-    /// the conversion and seeing if the result is the same.
-    /// ```
-    /// use convert_case::{Case, Casing};
-    ///
-    /// assert!( "kebab-case-string".is_case(Case::Kebab));
-    /// assert!( "Train-Case-String".is_case(Case::Train));
-    ///
-    /// assert!(!"kebab-case-string".is_case(Case::Snake));
-    /// assert!(!"kebab-case-string".is_case(Case::Train));
-    /// ```
-    fn is_case(&self, case: Case) -> bool;
 }
 
 impl<T: AsRef<str>> Casing<T> for T {
@@ -358,19 +346,6 @@ impl<T: AsRef<str>> Casing<T> for T {
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
         StateConverter::new(self).from_case(case)
-    }
-
-    fn is_case(&self, case: Case) -> bool {
-        self.as_ref() == self.to_case(case).as_str()
-        /*
-        let digitless = self
-            .as_ref()
-            .chars()
-            .filter(|x| !x.is_ascii_digit())
-            .collect::<String>();
-
-        digitless == digitless.to_case(case)
-        */
     }
 }
 
@@ -571,15 +546,6 @@ mod test {
     use super::*;
 
     use alloc::vec;
-    use alloc::vec::Vec;
-
-    fn possible_cases(s: &str) -> Vec<Case> {
-        Case::all_cases()
-            .iter()
-            .filter(|&case| s.from_case(*case).to_case(*case) == s)
-            .map(|c| *c)
-            .collect()
-    }
 
     #[test]
     fn lossless_against_lossless() {
@@ -721,92 +687,6 @@ mod test {
         assert_eq!("8a8A8".to_case(Case::Snake), "8_a_8_a_8");
     }
 
-    mod is_case {
-        use super::*;
-
-        #[test]
-        fn snake() {
-            assert!("im_snake_case".is_case(Case::Snake));
-            assert!(!"im_NOTsnake_case".is_case(Case::Snake));
-        }
-
-        #[test]
-        fn kebab() {
-            assert!("im-kebab-case".is_case(Case::Kebab));
-            assert!(!"im_not_kebab".is_case(Case::Kebab));
-        }
-
-        #[test]
-        fn lowercase_word() {
-            for lower_case in [
-                Case::Snake,
-                Case::Kebab,
-                Case::Flat,
-                Case::Lower,
-                Case::Camel,
-            ] {
-                assert!("lowercase".is_case(lower_case));
-            }
-        }
-
-        #[test]
-        fn uppercase_word() {
-            for upper_case in [Case::Constant, Case::Cobol, Case::UpperFlat, Case::Upper] {
-                assert!("UPPERCASE".is_case(upper_case));
-            }
-        }
-
-        #[test]
-        fn capital_word() {
-            for capital_case in [
-                Case::Ada,
-                Case::Train,
-                Case::Pascal,
-                Case::Title,
-                Case::Sentence,
-            ] {
-                assert!("Capitalcase".is_case(capital_case));
-            }
-        }
-
-        #[test]
-        fn underscores_not_kebab() {
-            assert!(!"kebab-case".is_case(Case::Snake));
-        }
-
-        #[test]
-        fn multiple_delimiters() {
-            assert!(!"kebab-snake_case".is_case(Case::Snake));
-            assert!(!"kebab-snake_case".is_case(Case::Kebab));
-            assert!(!"kebab-snake_case".is_case(Case::Lower));
-        }
-
-        /*
-        #[test]
-        fn digits_ignored() {
-            assert!("UPPER_CASE_WITH_DIGIT1".is_case(Case::Constant));
-
-            assert!("transformation_2d".is_case(Case::Snake));
-
-            assert!("Transformation2d".is_case(Case::Pascal));
-            assert!("Transformation2D".is_case(Case::Pascal));
-
-            assert!("transformation2D".is_case(Case::Camel));
-
-            assert!(!"5isntPascal".is_case(Case::Pascal))
-        }
-        */
-
-        #[test]
-        fn not_a_case() {
-            for c in Case::all_cases() {
-                assert!(!"hyphen-and_underscore".is_case(*c));
-                assert!(!"Sentence-with-hyphens".is_case(*c));
-                assert!(!"Sentence_with_underscores".is_case(*c));
-            }
-        }
-    }
-
     #[test]
     fn remove_boundaries() {
         assert_eq!(
@@ -826,38 +706,6 @@ mod test {
                 .to_case(Case::Kebab),
             "my-dumb-file-name"
         );
-    }
-
-    use std::collections::HashSet;
-    use std::iter::FromIterator;
-
-    #[test]
-    fn detect_many_cases() {
-        let lower_cases_vec = possible_cases(&"asef");
-        let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
-        let mut actual = HashSet::new();
-        actual.insert(Case::Lower);
-        actual.insert(Case::Camel);
-        actual.insert(Case::Snake);
-        actual.insert(Case::Kebab);
-        actual.insert(Case::Flat);
-        assert_eq!(lower_cases_set, actual);
-
-        let lower_cases_vec = possible_cases(&"asefCase");
-        let lower_cases_set = HashSet::from_iter(lower_cases_vec.into_iter());
-        let mut actual = HashSet::new();
-        actual.insert(Case::Camel);
-        assert_eq!(lower_cases_set, actual);
-    }
-
-    #[test]
-    fn detect_each_case() {
-        let s = "My String Identifier".to_string();
-        for &case in Case::all_cases() {
-            let new_s = s.from_case(case).to_case(case);
-            let possible = possible_cases(&new_s);
-            assert!(possible.iter().any(|c| c == &case));
-        }
     }
 
     // From issue https://github.com/rutrum/convert-case/issues/4
