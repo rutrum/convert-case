@@ -130,7 +130,7 @@
 //!
 //! ### Delimiters
 //! Leading, trailing, and duplicate delimiters create empty words.
-//! This propogates and the converted string will share the behavior.  **This can cause
+//! This propagates and the converted string will share the behavior.  **This can cause
 //! unintuitive behavior for patterns that transform words based on index.**
 //! ```
 //! # use convert_case::ccase;
@@ -250,7 +250,7 @@
 //!
 //! ## Rust library `convert_case_extras`
 //!
-//! Some extra utilties for convert_case that don't need to be in the main library.
+//! Some extra utilities for convert_case that don't need to be in the main library.
 //! You can read more here: [`convert_case_extras`](https://docs.rs/convert_case_extras).
 //!
 //! ## stringcase.org
@@ -642,7 +642,7 @@ mod test {
     }
 
     #[test]
-    fn camel_case_acroynms() {
+    fn camel_case_acronyms() {
         assert_eq!(
             "XMLHttpRequest".from_case(Case::Camel).to_case(Case::Snake),
             "xml_http_request"

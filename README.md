@@ -1,10 +1,7 @@
-# Convert Case
+# `convert-case`
 
-Converts to and from various cases.
+Rust library for converting between string cases.
 
-## Rust Library `convert_case`
-
-Convert case is written in Rust and is ready to be used inline with your rust code as a library.
 ```{rust}
 use convert_case::ccase;
 
@@ -21,7 +18,8 @@ assert_eq!(
     "2020-04-16 Family Photo",
 );
 ```
-You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
+
+`convert-case` is highly customizable.  You can read the API documentation on [docs.rs](https://docs.rs/convert_case/) for a list of all features and read lots of examples.
 
 ## Cases
 
@@ -44,6 +42,10 @@ This is list of cases that `convert_case` provides out of the box.  You can alwa
 | Title | `My Variable Name` |
 | Sentence | `My variable name` |
 
+## Additional utilities with `convert_case_extras`
+
+Some cases and utilities that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  This crate is a demonstration of what can be built on top of the `convert_case` API.
+
 ## Command Line Utility `ccase`
 
 The [command line utility `ccase`](https://github.com/rutrum/ccase) was made to expose the tools of the `convert_case` library to the command line.
@@ -58,10 +60,6 @@ $ ccase -t camel "convert to camel"
 convertToCamel
 ```
 
-## Additional utilities with `convert_case_extras`
-
-Some cases and utilies that didn't feel appropriate in this library are made available in a distinct crate called [`convert_case_extras`](https://github.com/rutrum/convert-case-extras).  This crate is a demonstration of what can be built on top of the `convert_case` API.
-
 ## Links
 
 | | `convert_case` | `convert_case_extras` | `ccase` |
@@ -72,32 +70,32 @@ Some cases and utilies that didn't feel appropriate in this library are made ava
 
 ## Change Log
 
-### 1.0.0: Finally, a stable release!
+### 0.11.0: Multiple Patterns
 
-The API has finally reached what I consider to be the right combination of easy to use and flexible to modify.
-
-There will be a major version 2 down the line that adds support for ascii strings.
+The headline change permits trailing, leading, and duplicate delimiters to persist (default) or be removed.  Instead of applying a single pattern, `Converter` supports multiple patterns and will apply them in order.  This comes with another pattern `Pattern::RemoveEmpty` that drops empty words.
 
 New features:
 * `Converter` now supports multiple patterns via `Converter.patterns: Vec<Pattern>`. Patterns are applied in sequence, allowing for composition.
 * `Pattern::RemoveEmpty` filters out empty words. This is useful when splitting produces empty words from leading, trailing, or duplicate delimiters (e.g., `"--a--b"` split on hyphens).
-* New pattern methods on `Converter` just like boundaries: `set_patterns`, `add_pattern`, `add_patterns`, `remove_pattern`, `remove_patterns`.
-* `Casing::remove_empty()` adds `Pattern::RemoveEmpty` to the `patterns` vector.
+* `Casing::remove_empty()` is a convenience method that adds `Pattern::RemoveEmpty` to the `patterns` vector.
 ```rust
-// Filter empty words from leading delimiters
 "--leading-delims".remove_empty().to_case(Case::Camel)
-// → "leadingDelims"
+// "leadingDelims"
 ```
 
 Breaking changes:
 * `delim_boundary` macro is now `separator`
-* `Converter.delim` is renamed to `Converter.delimiter` and `Converter::set_delim` to `Converter::set_delimiter`
-* `Case::Custom.delim` is renamed to `Case::Custom.delimiter` and `Case::delim` to `Case::delimiter`
 * Removed `Casing::is_case`.  Similar functionality is now implemented in `convert-case-extras`.
+* Instances of `delim` have been renamed to `delimiter`:
+    * `Converter.delim` -> `Converter.delimiter` 
+    * `Converter::set_delim` -> `Converter::set_delimiter`
+    * `Case::Custom.delim` -> `Case::Custom.delimiter` 
+    * `Case::delim` -> `Case::delimiter`
 * `Converter.pattern` is now `Converter.patterns` with type `Vec<Pattern>`
-* `Pattern::Noop` removed. An empty patterns vector represents no mutation.
-* `Boundary::Custom` and `Pattern::Custom` variants are no longer comparable. They always return `false` for equality checks because function pointers cannot be reliably compared. This means `remove_boundary` and `remove_pattern` will not work for custom variants.
-* `Boundary` and `Pattern` now have manual `Hash` implementations. All `Custom` variants hash to the same value (their discriminant only).
+    * New pattern methods on `Converter` just like boundaries: `set_patterns`, `add_pattern`, `add_patterns`, `remove_pattern`, `remove_patterns`.
+    * `Pattern::Noop` removed. An empty patterns vector represents no mutation.
+* `Boundary::Custom` and `Pattern::Custom` variants are no longer comparable. They always return `false` for equality checks because function pointers cannot be reliably compared. This has been true for all of rust, but the compiler warning is relatively new to the author.  This means `remove_boundary` and `remove_pattern` will not work for custom variants.
+    * Further, all `Custom` variants now hash to the same value.
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 
@@ -183,12 +181,12 @@ Other changes:
 
 ### 0.7.0: Custom Boundaries
 
-Boundary is no longer an enum.  It now is a struct, and each enum variant cooresponds to an associated constant.  For upgrading this just means changing `Boundary::LowerUpper` to just `Boundary::LOWER_UPPER`.
+Boundary is no longer an enum.  It now is a struct, and each enum variant corresponds to an associated constant.  For upgrading this just means changing `Boundary::LowerUpper` to just `Boundary::LOWER_UPPER`.
 
 The benefit of this is that you can make your boundary conditions now, by instantiating the `Boundary` struct, or using `Boundary::from_delim()`.  Now you can split on newlines, periods, double-colons, emojis, or a more complex case like a symbol followed by a digit.  You also define which characters, if any, are removed during segmentation, and where the split happens.
 
 Changes from this feature:
-* Previous `Boundary::PascalName` enum variants now much refered to as `Boundary::CONSTANT_NAME` constants.
+* Previous `Boundary::PascalName` enum variants now much referred to as `Boundary::CONSTANT_NAME` constants.
 * All functions that returned groups of boundaries (such as `Boundary::defaults()`, `Boundary::digit_letter()`, etc) now are const and return fixed-sized arrays `[Boundary; N]`, not `Vec<Boundary>`.
 * `Boundary::all()` was removed, since there's no longer a sense of "all" boundaries, since you can create your own.
 * `Boundary::list_from()` has been renamed to `Boundary::defaults_from()` and no longer outputs `Boundary::UPPER_LOWER`, since this function now only checks default boundaries.

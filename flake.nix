@@ -29,6 +29,7 @@
           watchexec
           rustup
           rust-analyzer
+          typos
         ];
         shellHook = ''just --list'';
       };
