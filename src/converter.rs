@@ -4,13 +4,14 @@ use crate::pattern::Pattern;
 use crate::Case;
 
 use alloc::string::{String, ToString};
+use alloc::vec;
 use alloc::vec::Vec;
 
 /// The parameters for performing a case conversion.
 ///
 /// A `Converter` stores three fields needed for case conversion.
 /// 1) `boundaries`: how a string is split into _words_.
-/// 2) `pattern`: how words are mutated, or how each character's case will change.
+/// 2) `patterns`: how words are mutated, or how each character's case will change.
 /// 3) `delimiter`: how the mutated words are joined into the final string.
 ///
 /// Then calling [`convert`](Converter::convert) on a `Converter` will apply a case conversion
@@ -40,7 +41,7 @@ use alloc::vec::Vec;
 /// // Convert by setting each field explicitly
 /// let conv = Converter::new()
 ///     .set_boundaries(&[Boundary::Hyphen])
-///     .set_pattern(Pattern::Lowercase)
+///     .set_patterns(&[Pattern::Lowercase])
 ///     .set_delimiter("_");
 /// assert_eq!(conv.convert(s), "dialoguebox_border_shadow");
 /// ```
@@ -52,7 +53,7 @@ use alloc::vec::Vec;
 /// # use convert_case::{Boundary, Case, Casing, Converter, Pattern};
 /// let dot_camel = Converter::new()
 ///     .set_boundaries(&[Boundary::LowerUpper, Boundary::LowerDigit])
-///     .set_pattern(Pattern::Camel)
+///     .set_patterns(&[Pattern::Camel])
 ///     .set_delimiter(".");
 /// assert_eq!(dot_camel.convert("CollisionShape2D"), "collision.Shape.2d");
 /// ```
@@ -61,7 +62,7 @@ pub struct Converter {
     pub boundaries: Vec<Boundary>,
 
     /// How each word is mutated before joining.
-    pub pattern: Pattern,
+    pub patterns: Vec<Pattern>,
 
     /// The string used to join mutated words together.
     pub delimiter: String,
@@ -71,7 +72,7 @@ impl Default for Converter {
     fn default() -> Self {
         Converter {
             boundaries: Boundary::defaults().to_vec(),
-            pattern: Pattern::Noop,
+            patterns: Vec::new(),
             delimiter: String::new(),
         }
     }
@@ -79,7 +80,7 @@ impl Default for Converter {
 
 impl Converter {
     /// Creates a new `Converter` with default fields.  This is the same as `Default::default()`.
-    /// The `Converter` will use [`Boundary::defaults()`] for boundaries, no pattern, and an empty
+    /// The `Converter` will use [`Boundary::defaults()`] for boundaries, no patterns, and an empty
     /// string as a delimiter.
     /// ```
     /// # use convert_case::Converter;
@@ -101,10 +102,22 @@ impl Converter {
     where
         T: AsRef<str>,
     {
-        // TODO: if I change AsRef -> Borrow or ToString, fix here
         let words = boundary::split(&s, &self.boundaries);
-        let words = words.to_vec();
-        self.pattern.mutate(&words).join(&self.delimiter)
+        if self.patterns.is_empty() {
+            // No patterns = no-op, words pass through unchanged
+            words
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(&self.delimiter)
+        } else {
+            // Apply patterns in sequence
+            let mut result = self.patterns[0].mutate(&words);
+            for pattern in &self.patterns[1..] {
+                result = pattern.mutate(&result);
+            }
+            result.join(&self.delimiter)
+        }
     }
 
     /// Set the pattern and delimiter to those associated with the given case.
@@ -115,7 +128,7 @@ impl Converter {
     /// assert_eq!(conv.convert("variable name"), "VariableName")
     /// ```
     pub fn to_case(mut self, case: Case) -> Self {
-        self.pattern = case.pattern();
+        self.patterns.push(case.pattern());
         self.delimiter = case.delimiter().to_string();
         self
     }
@@ -203,6 +216,89 @@ impl Converter {
         self
     }
 
+    /// Sets a single pattern, replacing any existing patterns.
+    /// ```
+    /// # use convert_case::{Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .set_delimiter("_")
+    ///     .set_pattern(Pattern::Sentence);
+    /// assert_eq!(conv.convert("BJARNE CASE"), "Bjarne_case");
+    /// ```
+    pub fn set_pattern(mut self, p: Pattern) -> Self {
+        self.patterns = vec![p];
+        self
+    }
+
+    /// Sets the patterns to those provided, replacing any existing patterns.
+    /// An empty slice means no mutation (words pass through unchanged).
+    /// ```
+    /// # use convert_case::{Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .set_delimiter("_")
+    ///     .set_patterns(&[Pattern::Sentence]);
+    /// assert_eq!(conv.convert("BJARNE CASE"), "Bjarne_case");
+    /// ```
+    pub fn set_patterns(mut self, ps: &[Pattern]) -> Self {
+        self.patterns = ps.to_vec();
+        self
+    }
+
+    /// Adds a pattern to the end of the pattern list.
+    /// Patterns are applied in order, so this pattern will be applied last.
+    /// ```
+    /// # use convert_case::{Case, Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .from_case(Case::Kebab)
+    ///     .add_pattern(Pattern::RemoveEmpty)
+    ///     .add_pattern(Pattern::Camel);
+    /// assert_eq!(conv.convert("--leading-delims"), "leadingDelims");
+    /// ```
+    pub fn add_pattern(mut self, p: Pattern) -> Self {
+        self.patterns.push(p);
+        self
+    }
+
+    /// Adds multiple patterns to the end of the pattern list.
+    /// ```
+    /// # use convert_case::{Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .add_patterns(&[Pattern::RemoveEmpty, Pattern::Lowercase]);
+    /// ```
+    pub fn add_patterns(mut self, ps: &[Pattern]) -> Self {
+        self.patterns.extend(ps);
+        self
+    }
+
+    /// Removes a pattern from the list if it exists.
+    /// Note: This compares patterns by equality, which may not work for Custom patterns.
+    /// ```
+    /// # use convert_case::{Boundary, Case, Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .set_boundaries(&[Boundary::Space])
+    ///     .to_case(Case::Snake)
+    ///     .remove_pattern(Pattern::Lowercase);
+    /// assert_eq!(conv.convert("HeLLo WoRLD"), "HeLLo_WoRLD");
+    /// ```
+    pub fn remove_pattern(mut self, p: Pattern) -> Self {
+        self.patterns.retain(|&x| x != p);
+        self
+    }
+
+    /// Removes all specified patterns from the list.
+    /// ```
+    /// # use convert_case::{Converter, Pattern};
+    /// let conv = Converter::new()
+    ///     .set_patterns(&[Pattern::RemoveEmpty, Pattern::Lowercase, Pattern::Capital])
+    ///     .remove_patterns(&[Pattern::Lowercase, Pattern::Capital]);
+    /// // Only RemoveEmpty remains
+    /// ```
+    pub fn remove_patterns(mut self, ps: &[Pattern]) -> Self {
+        for p in ps {
+            self.patterns.retain(|&x| x != *p);
+        }
+        self
+    }
+
     /// Sets the delimiter.
     /// ```
     /// # use convert_case::{Case, Converter};
@@ -216,19 +312,6 @@ impl Converter {
         T: ToString,
     {
         self.delimiter = d.to_string();
-        self
-    }
-
-    /// Sets the pattern.
-    /// ```
-    /// # use convert_case::{Case, Converter, Pattern};
-    /// let conv = Converter::new()
-    ///     .set_delimiter("_")
-    ///     .set_pattern(Pattern::Sentence);
-    /// assert_eq!(conv.convert("BJARNE CASE"), "Bjarne_case");
-    /// ```
-    pub fn set_pattern(mut self, p: Pattern) -> Self {
-        self.pattern = p;
         self
     }
 }
@@ -249,7 +332,7 @@ mod test {
     fn snake_converter_from_scratch() {
         let conv = Converter::new()
             .set_delimiter("_")
-            .set_pattern(Pattern::Lowercase);
+            .set_patterns(&[Pattern::Lowercase]);
         let s = String::from("my var name");
         assert_eq!(s.to_case(Case::Snake), conv.convert(s));
     }
@@ -258,7 +341,7 @@ mod test {
     fn custom_pattern() {
         let conv = Converter::new()
             .to_case(Case::Snake)
-            .set_pattern(Pattern::Sentence);
+            .set_patterns(&[Pattern::Sentence]);
         assert_eq!(conv.convert("bjarne case"), "Bjarne_case");
     }
 

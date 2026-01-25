@@ -141,6 +141,15 @@
 //! // not what you might expect!
 //! assert_eq!(ccase!(camel, "_empty__first_word"), "EmptyFirstWord");
 //! ```
+//! To remove empty words before joining, you can call `remove_empty` from the
+//! `Casing` trait before finishing the conversion.
+//! ```
+//! # use convert_case::{Casing, Case};
+//! assert_eq!(
+//!     "_empty__first_word".remove_empty().to_case(Case::Camel),
+//!     "emptyFirstWord"
+//! )
+//! ```
 //!
 //! # Customizing Behavior
 //!
@@ -157,7 +166,7 @@
 //!     | boundaries      | delimiter
 //!     V                 |
 //!   Words ----------> Words'
-//!           pattern
+//!           patterns
 //! ```
 //!
 //! ## Patterns
@@ -329,6 +338,21 @@ pub trait Casing<T: AsRef<str>> {
     /// ```
     fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
 
+    /// Creates a `StateConverter` with the `RemoveEmpty` pattern prepended.
+    /// This filters out empty words before conversion, useful when splitting
+    /// produces empty words from leading, trailing, and duplicate delimiters.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    ///
+    /// assert_eq!(
+    ///     "--leading-delims"
+    ///         .from_case(Case::Kebab)
+    ///         .remove_empty()
+    ///         .to_case(Case::Camel),
+    ///     "leadingDelims",
+    /// );
+    /// ```
+    fn remove_empty(&self) -> StateConverter<T>;
 }
 
 impl<T: AsRef<str>> Casing<T> for T {
@@ -346,6 +370,10 @@ impl<T: AsRef<str>> Casing<T> for T {
 
     fn from_case(&self, case: Case) -> StateConverter<T> {
         StateConverter::new(self).from_case(case)
+    }
+
+    fn remove_empty(&self) -> StateConverter<T> {
+        StateConverter::new(self).remove_empty()
     }
 }
 
@@ -432,6 +460,26 @@ impl<'a, T: AsRef<str>> StateConverter<'a, T> {
         Self {
             s: self.s,
             conv: self.conv.remove_boundaries(bs),
+        }
+    }
+
+    /// Prepends the `RemoveEmpty` pattern to filter out empty words before conversion.
+    /// This is useful when splitting produces empty words from leading, trailing, and
+    /// duplicate delimiters.
+    /// ```
+    /// use convert_case::{Case, Casing};
+    /// assert_eq!(
+    ///     "_leading_underscore"
+    ///         .from_case(Case::Snake)
+    ///         .remove_empty()
+    ///         .to_case(Case::Camel),
+    ///     "leadingUnderscore"
+    /// );
+    /// ```
+    pub fn remove_empty(self) -> Self {
+        Self {
+            s: self.s,
+            conv: self.conv.add_pattern(pattern::Pattern::RemoveEmpty),
         }
     }
 

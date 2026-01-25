@@ -78,11 +78,24 @@ The API has finally reached what I consider to be the right combination of easy 
 
 There will be a major version 2 down the line that adds support for ascii strings.
 
+New features:
+* `Converter` now supports multiple patterns via `Converter.patterns: Vec<Pattern>`. Patterns are applied in sequence, allowing for composition.
+* `Pattern::RemoveEmpty` filters out empty words. This is useful when splitting produces empty words from leading, trailing, or duplicate delimiters (e.g., `"--a--b"` split on hyphens).
+* New pattern methods on `Converter` just like boundaries: `set_patterns`, `add_pattern`, `add_patterns`, `remove_pattern`, `remove_patterns`.
+* `Casing::remove_empty()` adds `Pattern::RemoveEmpty` to the `patterns` vector.
+```rust
+// Filter empty words from leading delimiters
+"--leading-delims".remove_empty().to_case(Case::Camel)
+// → "leadingDelims"
+```
+
 Breaking changes:
 * `delim_boundary` macro is now `separator`
 * `Converter.delim` is renamed to `Converter.delimiter` and `Converter::set_delim` to `Converter::set_delimiter`
 * `Case::Custom.delim` is renamed to `Case::Custom.delimiter` and `Case::delim` to `Case::delimiter`
 * Removed `Casing::is_case`.  Similar functionality is now implemented in `convert-case-extras`.
+* `Converter.pattern` is now `Converter.patterns` with type `Vec<Pattern>`
+* `Pattern::Noop` removed. An empty patterns vector represents no mutation.
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 

@@ -46,7 +46,7 @@ fn capital_word(word: &str) -> String {
 /// }
 ///
 /// let acronym_converter = Converter::new()
-///     .set_pattern(Pattern::Custom(pascal_upper_acronyms));
+///     .set_patterns(&[Pattern::Custom(pascal_upper_acronyms)]);
 ///
 /// assert_eq!(acronym_converter.convert("io_stream"), "IOStream");
 /// assert_eq!(acronym_converter.convert("xml request"), "XMLRequest");
@@ -78,7 +78,7 @@ fn capital_word(word: &str) -> String {
 /// }
 ///
 /// let dunder_converter = Converter::new()
-///     .set_pattern(Pattern::Custom(snake_dunder))
+///     .set_patterns(&[Pattern::Custom(snake_dunder)])
 ///     .set_delimiter("_");
 ///
 /// assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
@@ -86,16 +86,6 @@ fn capital_word(word: &str) -> String {
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Pattern {
-    /// The no-op pattern performs no mutations.
-    /// ```
-    /// # use convert_case::Pattern;
-    /// assert_eq!(
-    ///     Pattern::Noop.mutate(&["Case", "CONVERSION", "library"]),
-    ///     vec!["Case", "CONVERSION", "library"],
-    /// );
-    /// ```
-    Noop,
-
     /// Makes all words lowercase.
     /// ```
     /// # use convert_case::Pattern;
@@ -149,6 +139,17 @@ pub enum Pattern {
     /// ```
     Sentence,
 
+    /// Filters out empty words from the list.
+    /// Useful when splitting produces empty words from leading/trailing/duplicate delimiters.
+    /// ```
+    /// # use convert_case::Pattern;
+    /// assert_eq!(
+    ///     Pattern::RemoveEmpty.mutate(&["", "first", "", "second", ""]),
+    ///     vec!["first", "second"],
+    /// );
+    /// ```
+    RemoveEmpty,
+
     /// Define custom behavior to transform a set of words.
     ///
     /// See the [`Pattern`] documentation for examples.
@@ -157,35 +158,51 @@ pub enum Pattern {
 
 impl Pattern {
     /// Applies the pattern transformation to a list of words.
-    pub fn mutate(&self, words: &[&str]) -> Vec<String> {
+    pub fn mutate<S: AsRef<str>>(&self, words: &[S]) -> Vec<String> {
         use Pattern::*;
         match self {
-            Custom(transformation) => (transformation)(words),
-            Noop => words.iter().map(|word| word.to_string()).collect(),
-            Lowercase => words.iter().map(|word| lowercase_word(word)).collect(),
-            Uppercase => words.iter().map(|word| uppercase_word(word)).collect(),
-            Capital => words.iter().map(|word| capital_word(word)).collect(),
+            Custom(transformation) => {
+                let borrowed: Vec<&str> = words.iter().map(|s| s.as_ref()).collect();
+                (transformation)(&borrowed)
+            }
+            Lowercase => words
+                .iter()
+                .map(|word| lowercase_word(word.as_ref()))
+                .collect(),
+            Uppercase => words
+                .iter()
+                .map(|word| uppercase_word(word.as_ref()))
+                .collect(),
+            Capital => words
+                .iter()
+                .map(|word| capital_word(word.as_ref()))
+                .collect(),
             Camel => words
                 .iter()
                 .enumerate()
-                .map(|(i, &word)| {
+                .map(|(i, word)| {
                     if i == 0 {
-                        lowercase_word(word)
+                        lowercase_word(word.as_ref())
                     } else {
-                        capital_word(word)
+                        capital_word(word.as_ref())
                     }
                 })
                 .collect(),
             Sentence => words
                 .iter()
                 .enumerate()
-                .map(|(i, &word)| {
+                .map(|(i, word)| {
                     if i == 0 {
-                        capital_word(word)
+                        capital_word(word.as_ref())
                     } else {
-                        lowercase_word(word)
+                        lowercase_word(word.as_ref())
                     }
                 })
+                .collect(),
+            RemoveEmpty => words
+                .iter()
+                .filter(|word| !word.as_ref().is_empty())
+                .map(|word| word.as_ref().to_string())
                 .collect(),
         }
     }
@@ -206,22 +223,24 @@ mod test {
     }
 
     #[test]
-    fn filtering_with_custom() {
-        // TODO: find a way to make this cleaner, then add in docs
-        let filter_camel_pattern = Pattern::Custom(|words| {
-            Pattern::Camel.mutate(
-                &words
-                    .into_iter()
-                    .filter(|word| word.len() > 0)
-                    .map(|word| *word)
-                    .collect::<Vec<&str>>(),
-            )
-        });
-
+    fn filtering_with_remove_empty() {
         let conv = Converter::new()
             .from_case(Case::Kebab)
-            .set_pattern(filter_camel_pattern);
+            .set_patterns(&[Pattern::RemoveEmpty, Pattern::Camel]);
 
         assert_eq!(conv.convert("--leading-delims"), "leadingDelims");
+    }
+
+    #[test]
+    fn remove_empty_pattern() {
+        assert_eq!(
+            Pattern::RemoveEmpty.mutate(&["", "first", "", "second", ""]),
+            vec!["first", "second"]
+        );
+        assert_eq!(Pattern::RemoveEmpty.mutate(&["only"]), vec!["only"]);
+        assert_eq!(
+            Pattern::RemoveEmpty.mutate(&["", "", ""]),
+            Vec::<String>::new()
+        );
     }
 }
