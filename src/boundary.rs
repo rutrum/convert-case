@@ -65,7 +65,7 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
 /// )
 /// ```
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Boundary {
     Custom {
         /// A function that determines if this boundary is present at the start
@@ -229,6 +229,11 @@ impl Boundary {
         }
     }
 
+    /// Returns true if this boundary consumes no graphemes when splitting.
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
+
     /// The index of the character to split at.
     pub fn start(self) -> usize {
         use Boundary::*;
@@ -365,6 +370,38 @@ impl Boundary {
     }
 }
 
+impl PartialEq for Boundary {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Hyphen, Self::Hyphen) => true,
+            (Self::Underscore, Self::Underscore) => true,
+            (Self::Space, Self::Space) => true,
+            (Self::UpperLower, Self::UpperLower) => true,
+            (Self::LowerUpper, Self::LowerUpper) => true,
+            (Self::DigitUpper, Self::DigitUpper) => true,
+            (Self::UpperDigit, Self::UpperDigit) => true,
+            (Self::DigitLower, Self::DigitLower) => true,
+            (Self::LowerDigit, Self::LowerDigit) => true,
+            (Self::Acronym, Self::Acronym) => true,
+            // Custom boundaries are never equal because they contain function pointers,
+            // which cannot be reliably compared.
+            (Self::Custom { .. }, Self::Custom { .. }) => false,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Boundary {}
+
+impl core::hash::Hash for Boundary {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        // Hash only the discriminant. Custom variants can't be meaningfully
+        // compared or hashed by their function pointer, so all Custom variants
+        // hash to the same value (their discriminant).
+        core::mem::discriminant(self).hash(state);
+    }
+}
+
 /// Split an identifier into a list of words using the list of boundaries.
 ///
 /// This is used internally for splitting an identifier before mutating by
@@ -456,7 +493,8 @@ mod tests {
     use rstest::rstest;
 
     #[test]
-    fn boundary_equality() {
+    fn custom_boundary_inequality() {
+        // Custom boundaries are never equal because they contain function pointers
         let a = Boundary::Custom {
             condition: |_| true,
             start: 0,
@@ -464,7 +502,14 @@ mod tests {
         };
         let b = a;
 
-        assert_eq!(a, b)
+        assert_ne!(a, b)
+    }
+
+    #[test]
+    fn default_boundary_equality() {
+        assert_eq!(Boundary::Hyphen, Boundary::Hyphen);
+        assert_eq!(Boundary::Space, Boundary::Space);
+        assert_ne!(Boundary::Hyphen, Boundary::Space);
     }
 
     #[rstest]

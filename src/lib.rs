@@ -309,7 +309,7 @@ pub trait Casing<T: AsRef<str>> {
     /// );
     /// ```
     #[allow(clippy::wrong_self_convention)]
-    fn from_case(&self, case: Case) -> StateConverter<T>;
+    fn from_case(&self, case: Case) -> StateConverter<'_, T>;
 
     /// Creates a `StateConverter` struct initialized with the boundaries provided.
     /// ```
@@ -322,7 +322,7 @@ pub trait Casing<T: AsRef<str>> {
     ///     "e1_m1_hangar",
     /// );
     /// ```
-    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<'_, T>;
 
     /// Creates a `StateConverter` struct initialized without the boundaries
     /// provided.
@@ -336,7 +336,7 @@ pub trait Casing<T: AsRef<str>> {
     ///         .to_case(Case::Snake)
     /// );
     /// ```
-    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T>;
+    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<'_, T>;
 
     /// Creates a `StateConverter` with the `RemoveEmpty` pattern prepended.
     /// This filters out empty words before conversion, useful when splitting
@@ -352,7 +352,7 @@ pub trait Casing<T: AsRef<str>> {
     ///     "leadingDelims",
     /// );
     /// ```
-    fn remove_empty(&self) -> StateConverter<T>;
+    fn remove_empty(&self) -> StateConverter<'_, T>;
 }
 
 impl<T: AsRef<str>> Casing<T> for T {
@@ -360,19 +360,19 @@ impl<T: AsRef<str>> Casing<T> for T {
         StateConverter::new(self).to_case(case)
     }
 
-    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+    fn set_boundaries(&self, bs: &[Boundary]) -> StateConverter<'_, T> {
         StateConverter::new(self).set_boundaries(bs)
     }
 
-    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<T> {
+    fn remove_boundaries(&self, bs: &[Boundary]) -> StateConverter<'_, T> {
         StateConverter::new(self).remove_boundaries(bs)
     }
 
-    fn from_case(&self, case: Case) -> StateConverter<T> {
+    fn from_case(&self, case: Case) -> StateConverter<'_, T> {
         StateConverter::new(self).from_case(case)
     }
 
-    fn remove_empty(&self) -> StateConverter<T> {
+    fn remove_empty(&self) -> StateConverter<'_, T> {
         StateConverter::new(self).remove_empty()
     }
 }

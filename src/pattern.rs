@@ -84,7 +84,7 @@ fn capital_word(word: &str) -> String {
 /// assert_eq!(dunder_converter.convert("getAttr"), "__get_attr__");
 /// assert_eq!(dunder_converter.convert("ITER"), "__iter__");
 /// ```
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone)]
 pub enum Pattern {
     /// Makes all words lowercase.
     /// ```
@@ -205,6 +205,33 @@ impl Pattern {
                 .map(|word| word.as_ref().to_string())
                 .collect(),
         }
+    }
+}
+
+impl PartialEq for Pattern {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Lowercase, Self::Lowercase) => true,
+            (Self::Uppercase, Self::Uppercase) => true,
+            (Self::Capital, Self::Capital) => true,
+            (Self::Camel, Self::Camel) => true,
+            (Self::Sentence, Self::Sentence) => true,
+            (Self::RemoveEmpty, Self::RemoveEmpty) => true,
+            // Custom patterns are never equal because they contain function pointers,
+            // which cannot be reliably compared.
+            (Self::Custom(_), Self::Custom(_)) => false,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Pattern {}
+
+impl core::hash::Hash for Pattern {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        // Hash the discriminant for all variants
+        core::mem::discriminant(self).hash(state);
+        // Custom variants only hash the discriminant since they can't be meaningfully compared
     }
 }
 

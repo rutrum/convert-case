@@ -96,6 +96,8 @@ Breaking changes:
 * Removed `Casing::is_case`.  Similar functionality is now implemented in `convert-case-extras`.
 * `Converter.pattern` is now `Converter.patterns` with type `Vec<Pattern>`
 * `Pattern::Noop` removed. An empty patterns vector represents no mutation.
+* `Boundary::Custom` and `Pattern::Custom` variants are no longer comparable. They always return `false` for equality checks because function pointers cannot be reliably compared. This means `remove_boundary` and `remove_pattern` will not work for custom variants.
+* `Boundary` and `Pattern` now have manual `Hash` implementations. All `Custom` variants hash to the same value (their discriminant only).
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 

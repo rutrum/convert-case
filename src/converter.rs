@@ -189,6 +189,10 @@ impl Converter {
     }
 
     /// Removes a boundary from the list of boundaries if it exists.
+    ///
+    /// Note: [`Boundary::Custom`] variants are never considered equal due to
+    /// function pointer comparison limitations, so they cannot be removed using this method.
+    /// Recall that the default boundaries include no custom enumerations.
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
@@ -202,6 +206,10 @@ impl Converter {
     }
 
     /// Removes all the provided boundaries from the list of boundaries if it exists.
+    ///
+    /// Note: [`Boundary::Custom`] variants are never considered equal due to
+    /// function pointer comparison limitations, so they cannot be removed using this method.
+    /// Recall that the default boundaries include no custom enumerations.
     /// ```
     /// # use convert_case::{Boundary, Case, Converter};
     /// let conv = Converter::new()
@@ -270,7 +278,9 @@ impl Converter {
     }
 
     /// Removes a pattern from the list if it exists.
-    /// Note: This compares patterns by equality, which may not work for Custom patterns.
+    ///
+    /// Note: [`Pattern::Custom`] variants are never considered equal due to
+    /// function pointer comparison limitations, so they cannot be removed using this method.
     /// ```
     /// # use convert_case::{Boundary, Case, Converter, Pattern};
     /// let conv = Converter::new()
@@ -285,6 +295,9 @@ impl Converter {
     }
 
     /// Removes all specified patterns from the list.
+    ///
+    /// Note: [`Pattern::Custom`] variants are never considered equal due to
+    /// function pointer comparison limitations, so they cannot be removed using this method.
     /// ```
     /// # use convert_case::{Converter, Pattern};
     /// let conv = Converter::new()
