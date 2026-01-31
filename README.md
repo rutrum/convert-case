@@ -72,7 +72,7 @@ convertToCamel
 
 ### 0.11.0: Multiple Patterns
 
-The headline change permits trailing, leading, and duplicate delimiters to persist (default) or be removed.  Instead of applying a single pattern, `Converter` supports multiple patterns and will apply them in order.  This comes with another pattern `Pattern::RemoveEmpty` that drops empty words.
+The headline change permits trailing, leading, and duplicate delimiters to persist (default) or be removed.  Instead of applying a single pattern, `Converter` supports multiple patterns and will apply them in order.  This comes with another pattern `Pattern::RemoveEmpty` that drops empty words.   This allows for opting into what was default behavior in 0.8.0 and before.
 
 New features:
 * `Converter` now supports multiple patterns via `Converter.patterns: Vec<Pattern>`. Patterns are applied in sequence, allowing for composition.
@@ -94,8 +94,14 @@ Breaking changes:
 * `Converter.pattern` is now `Converter.patterns` with type `Vec<Pattern>`
     * New pattern methods on `Converter` just like boundaries: `set_patterns`, `add_pattern`, `add_patterns`, `remove_pattern`, `remove_patterns`.
     * `Pattern::Noop` removed. An empty patterns vector represents no mutation.
-* `Boundary::Custom` and `Pattern::Custom` variants are no longer comparable. They always return `false` for equality checks because function pointers cannot be reliably compared. This has been true for all of rust, but the compiler warning is relatively new to the author.  This means `remove_boundary` and `remove_pattern` will not work for custom variants.
-    * Further, all `Custom` variants now hash to the same value.
+* `Boundary::Custom` and `Pattern::Custom` variants are no longer comparable. 
+  * Implementations of `PartialEq`, `Eq`, and `Hash` are no longer derived on `Boundary` and `Pattern`, and have been manually implemented.
+  * Custom variants always return `false` for equality checks because function pointers cannot be reliably compared. This has been true for all of rust, but the compiler warning is relatively new to the author.  This means `remove_boundary` and `remove_pattern` will not work for custom variants.
+  * Further, all `Custom` variants now hash to the same value.
+    
+Other changes:
+* Much improved documentation: fixed typos, better examples.
+* More comprehensive testing using `rstest`.
 
 ### 0.10.0: More clean up to prepare for 1.0.0
 

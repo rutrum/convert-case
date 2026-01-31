@@ -103,21 +103,13 @@ impl Converter {
         T: AsRef<str>,
     {
         let words = boundary::split(&s, &self.boundaries);
-        if self.patterns.is_empty() {
-            // No patterns = no-op, words pass through unchanged
-            words
-                .iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>()
-                .join(&self.delimiter)
-        } else {
-            // Apply patterns in sequence
-            let mut result = self.patterns[0].mutate(&words);
-            for pattern in &self.patterns[1..] {
-                result = pattern.mutate(&result);
-            }
-            result.join(&self.delimiter)
+
+        let mut result: Vec<String> = words.into_iter().map(|s| s.to_string()).collect();
+        for pattern in &self.patterns {
+            result = pattern.mutate(&result);
         }
+
+        result.join(&self.delimiter)
     }
 
     /// Set the pattern and delimiter to those associated with the given case.
