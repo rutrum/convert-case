@@ -452,7 +452,6 @@ where
                 // todo clean this up a bit
                 words.push(&s[last_boundary_end..boundary_byte_start]);
                 last_boundary_end = boundary_byte_end;
-                break;
             }
         }
     }
