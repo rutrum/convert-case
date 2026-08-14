@@ -245,7 +245,7 @@ mod test {
     #[test]
     fn mutate_empty_strings() {
         for word_pattern in [lowercase_word, uppercase_word, capital_word] {
-            assert_eq!(String::new(), word_pattern(&String::new()))
+            assert_eq!(String::new(), word_pattern(""))
         }
     }
 

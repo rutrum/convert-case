@@ -33,7 +33,7 @@ fn str_type() {
 #[test]
 fn string_ref_type() {
     let s: String = String::from("rust_programming-language");
-    assert_eq!((&s).to_case(Case::Pascal), "RustProgrammingLanguage");
+    assert_eq!(s.to_case(Case::Pascal), "RustProgrammingLanguage");
     assert_eq!(
         s.from_case(Case::Kebab).to_case(Case::Pascal),
         "Rust_programmingLanguage"

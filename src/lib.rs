@@ -670,7 +670,7 @@ mod test {
             Case::Lower,
             Case::Custom {
                 boundaries: &[Boundary::Custom {
-                    condition: |s| *s.get(0).unwrap() == ".",
+                    condition: |s| s.first() == Some(&"."),
                     start: 0,
                     len: 1,
                 }],
@@ -687,7 +687,7 @@ mod test {
                 format!("{delim}{}", words.join(delim)),
                 format!("{}{delim}", words.join(delim)),
                 format!("{delim}{}{delim}", words.join(delim)),
-                format!("{}", words.join(&double)),
+                words.join(&double).to_string(),
                 format!("{delim}{}", words.join(&double)),
                 format!("{}{delim}", words.join(&double)),
                 format!("{delim}{}{delim}", words.join(&double)),
@@ -719,8 +719,8 @@ mod test {
     #[test]
     fn empty_string() {
         for (case_a, case_b) in Case::all_cases()
-            .into_iter()
-            .zip(Case::all_cases().into_iter())
+            .iter()
+            .zip(Case::all_cases())
         {
             assert_eq!("", "".from_case(*case_a).to_case(*case_b));
         }

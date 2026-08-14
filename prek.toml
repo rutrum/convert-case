@@ -1,0 +1,13 @@
+[[repos]]
+repo = "local"
+hooks = [
+  {
+    id = "cargo-clippy",
+    name = "cargo clippy",
+    language = "system",
+    entry = "cargo clippy",
+    args = ["--all-targets", "--", "-D", "warnings"],
+    types = ["rust"],
+    pass_filenames = false,
+  },
+]
