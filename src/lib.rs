@@ -718,10 +718,7 @@ mod test {
 
     #[test]
     fn empty_string() {
-        for (case_a, case_b) in Case::all_cases()
-            .iter()
-            .zip(Case::all_cases())
-        {
+        for (case_a, case_b) in Case::all_cases().iter().zip(Case::all_cases()) {
             assert_eq!("", "".from_case(*case_a).to_case(*case_b));
         }
     }

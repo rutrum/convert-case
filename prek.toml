@@ -2,6 +2,15 @@
 repo = "local"
 hooks = [
   {
+    id = "cargo-fmt",
+    name = "cargo fmt",
+    language = "system",
+    entry = "cargo fmt",
+    args = ["--check", "--"],
+    types = ["rust"],
+    pass_filenames = true,
+  },
+  {
     id = "cargo-clippy",
     name = "cargo clippy",
     language = "system",
