@@ -325,6 +325,7 @@ impl Converter {
 mod test {
     use super::*;
     use crate::Casing;
+    use alloc::string::ToString;
 
     #[test]
     fn snake_converter_from_case() {

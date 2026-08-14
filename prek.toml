@@ -19,4 +19,13 @@ hooks = [
     types = ["rust"],
     pass_filenames = false,
   },
+  {
+    id = "cargo-check",
+    name = "cargo check",
+    language = "system",
+    entry = "cargo check",
+    args = ["--all-targets"],
+    types = ["rust"],
+    pass_filenames = false,
+  },
 ]

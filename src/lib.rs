@@ -265,7 +265,7 @@
 //! `convert_case` was originally developed for the purposes of a command line utility
 //! for converting the case of strings and filenames.  You can check out
 //! [`ccase` on Github](https://github.com/rutrum/ccase).
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 extern crate alloc;
 
 use alloc::string::String;
@@ -593,6 +593,8 @@ macro_rules! ccase {
 mod test {
     use super::*;
 
+    use alloc::format;
+    use alloc::string::ToString;
     use alloc::vec;
 
     #[test]

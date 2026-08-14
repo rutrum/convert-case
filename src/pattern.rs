@@ -239,6 +239,7 @@ impl core::hash::Hash for Pattern {
 mod test {
     use crate::Case;
     use crate::Converter;
+    use alloc::vec;
 
     use super::*;
 
