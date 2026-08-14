@@ -2,15 +2,96 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use alloc::vec::Vec;
 
+/// Per-grapheme classification flags used to accelerate built-in boundary checks.
+/// Each grapheme is classified once; then all 9 built-in boundaries check
+/// these flags instead of calling `grapheme_is_uppercase` etc. every time.
+const UPPER: u8 = 0b00_0001;
+const LOWER: u8 = 0b00_0010;
+const DIGIT: u8 = 0b00_0100;
+const UNDER: u8 = 0b00_1000;
+const HYPH: u8 = 0b01_0000;
+const SPACE: u8 = 0b10_0000;
+
+#[derive(Clone, Copy, Default)]
+struct GraphemeFlags(u8);
+
+impl GraphemeFlags {
+    fn classify(grapheme: &str) -> Self {
+        if let [b] = grapheme.as_bytes() {
+            let mut f = 0u8;
+            if b.is_ascii_uppercase() {
+                f |= UPPER;
+            }
+            if b.is_ascii_lowercase() {
+                f |= LOWER;
+            }
+            if b.is_ascii_digit() {
+                f |= DIGIT;
+            }
+            if *b == b'_' {
+                f |= UNDER;
+            }
+            if *b == b'-' {
+                f |= HYPH;
+            }
+            if *b == b' ' {
+                f |= SPACE;
+            }
+            Self(f)
+        } else {
+            // Multi-byte unicode grapheme: classify by the first codepoint.
+            let mut f = 0u8;
+            if let Some(ch) = grapheme.chars().next() {
+                if ch.is_uppercase() {
+                    f |= UPPER;
+                }
+                if ch.is_lowercase() {
+                    f |= LOWER;
+                }
+                // Digits in non-ASCII scripts still count as letters for boundary
+                // purposes, not digits — we only split on ASCII digits.
+            }
+            Self(f)
+        }
+    }
+
+    fn is_upper(self) -> bool {
+        self.0 & UPPER != 0
+    }
+    fn is_lower(self) -> bool {
+        self.0 & LOWER != 0
+    }
+    fn is_digit(self) -> bool {
+        self.0 & DIGIT != 0
+    }
+    fn is_under(self) -> bool {
+        self.0 & UNDER != 0
+    }
+    fn is_hyph(self) -> bool {
+        self.0 & HYPH != 0
+    }
+    fn is_space(self) -> bool {
+        self.0 & SPACE != 0
+    }
+}
+
 fn grapheme_is_digit(c: &&str) -> bool {
     c.chars().all(|c| c.is_ascii_digit())
 }
 
 fn grapheme_is_uppercase(c: &&str) -> bool {
+    // Fast path for single-byte (ASCII) graphemes — O(1), no allocation.
+    if let [b] = c.as_bytes() {
+        return b.is_ascii_uppercase();
+    }
     c.to_uppercase() != c.to_lowercase() && *c == c.to_uppercase()
 }
 
 fn grapheme_is_lowercase(c: &&str) -> bool {
+    // Fast path for single-byte (ASCII) graphemes — O(1), no allocation.
+    if let [b] = c.as_bytes() {
+        return b.is_ascii_lowercase();
+    }
     c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
 }
 
@@ -427,21 +508,84 @@ where
     let mut last_boundary_end = 0;
 
     let (indices, graphemes): (Vec<_>, Vec<_>) = s.grapheme_indices(true).unzip();
-    let grapheme_length = indices[graphemes.len() - 1] + graphemes[graphemes.len() - 1].len();
+    let grapheme_length =
+        indices.last().copied().unwrap_or(0) + graphemes.last().map(|g| g.len()).unwrap_or(0);
 
-    // TODO:
-    // swapping the order of these would be faster
-    // end the loop sooner if any boundary condition is met
-    // could also hit a bitvector and do the splitting at the end?  May or may not be faster
-    for i in 0..graphemes.len() {
+    // Fast path: when every boundary is a single-character delimiter
+    // (underscore, hyphen, space) the check is a direct &str comparison
+    // — cheaper than building a classification array.
+    let all_simple_delimiters = boundaries
+        .iter()
+        .all(|b| matches!(b, Boundary::Underscore | Boundary::Hyphen | Boundary::Space));
+
+    if all_simple_delimiters {
+        for (i, grapheme) in graphemes.iter().enumerate() {
+            for boundary in boundaries {
+                let matched = match boundary {
+                    Boundary::Underscore => *grapheme == "_",
+                    Boundary::Hyphen => *grapheme == "-",
+                    Boundary::Space => *grapheme == " ",
+                    _ => unreachable!(),
+                };
+
+                if matched {
+                    let boundary_byte_start: usize = *indices
+                        .get(i + boundary.start())
+                        .unwrap_or(&grapheme_length);
+                    let boundary_byte_end: usize = *indices
+                        .get(i + boundary.start() + boundary.len())
+                        .unwrap_or(&grapheme_length);
+                    words.push(&s[last_boundary_end..boundary_byte_start]);
+                    last_boundary_end = boundary_byte_end;
+                    break;
+                }
+            }
+        }
+        words.push(&s[last_boundary_end..]);
+        return words.into_iter().collect();
+    }
+
+    // General path: precompute grapheme flags once, then check all
+    // boundaries (built-in and custom) against the cache.
+    let flags: Vec<GraphemeFlags> = graphemes
+        .iter()
+        .map(|g| GraphemeFlags::classify(g))
+        .collect();
+
+    for (i, _grapheme) in graphemes.iter().enumerate() {
         for boundary in boundaries {
-            //let byte_index = indices[i];
+            let matched = match boundary {
+                Boundary::Underscore => flags[i].is_under(),
+                Boundary::Hyphen => flags[i].is_hyph(),
+                Boundary::Space => flags[i].is_space(),
+                Boundary::LowerUpper => {
+                    i + 1 < graphemes.len() && flags[i].is_lower() && flags[i + 1].is_upper()
+                }
+                Boundary::UpperLower => {
+                    i + 1 < graphemes.len() && flags[i].is_upper() && flags[i + 1].is_lower()
+                }
+                Boundary::LowerDigit => {
+                    i + 1 < graphemes.len() && flags[i].is_lower() && flags[i + 1].is_digit()
+                }
+                Boundary::UpperDigit => {
+                    i + 1 < graphemes.len() && flags[i].is_upper() && flags[i + 1].is_digit()
+                }
+                Boundary::DigitLower => {
+                    i + 1 < graphemes.len() && flags[i].is_digit() && flags[i + 1].is_lower()
+                }
+                Boundary::DigitUpper => {
+                    i + 1 < graphemes.len() && flags[i].is_digit() && flags[i + 1].is_upper()
+                }
+                Boundary::Acronym => {
+                    i + 2 < graphemes.len()
+                        && flags[i].is_upper()
+                        && flags[i + 1].is_upper()
+                        && flags[i + 2].is_lower()
+                }
+                Boundary::Custom { condition, .. } => condition(&graphemes[i..]),
+            };
 
-            if boundary.matches(&graphemes[i..]) {
-                // What if we find a condition at the end of the array?
-                // Maybe we can stop early based on length
-                // To do this, need to switch the loops
-                // TODO
+            if matched {
                 let boundary_byte_start: usize = *indices
                     .get(i + boundary.start())
                     .unwrap_or(&grapheme_length);
@@ -449,7 +593,6 @@ where
                     .get(i + boundary.start() + boundary.len())
                     .unwrap_or(&grapheme_length);
 
-                // todo clean this up a bit
                 words.push(&s[last_boundary_end..boundary_byte_start]);
                 last_boundary_end = boundary_byte_end;
                 break;
@@ -457,7 +600,6 @@ where
         }
     }
     words.push(&s[last_boundary_end..]);
-    //words.into_iter().filter(|s| !s.is_empty()).collect()
     words.into_iter().collect()
 }
 
