@@ -139,6 +139,26 @@ fn bench_split(c: &mut Criterion) {
         b.iter(|| split(input, &ALL_DEFAULTS))
     });
 
+    // --- Custom boundary: separator!  ---
+    {
+        let separator_dot = &[convert_case::separator!(".")];
+        let separator_dcolon = &[convert_case::separator!("::")];
+        let dot_path = "std::os::unix::path::display";
+        group.bench_with_input("custom_separator_dot", &dot_path, |b, input| {
+            b.iter(|| split(input, separator_dot))
+        });
+        group.bench_with_input("custom_separator_dcolon", &dot_path, |b, input| {
+            b.iter(|| split(input, separator_dcolon))
+        });
+        // Realistic: mixed built-in + custom
+        let mut mixed = ALL_DEFAULTS.to_vec();
+        mixed.push(convert_case::separator!("::"));
+        let module_path = "std::os::unix::file::OpenOptions";
+        group.bench_with_input("custom_mixed_with_defaults", &module_path, |b, input| {
+            b.iter(|| split(input, &mixed))
+        });
+    }
+
     group.finish();
 }
 

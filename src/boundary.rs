@@ -622,7 +622,19 @@ where
 macro_rules! separator {
     ($delim:expr) => {
         convert_case::Boundary::Custom {
-            condition: |s| s.join("").starts_with($delim),
+            condition: |s: &[&str]| {
+                let delim: &str = $delim;
+                // Fast path for a single-grapheme delimiter: direct &str comparison
+                if delim.len() == 1 {
+                    return s.first().map(|g| *g == delim).unwrap_or(false);
+                }
+                // Multi-grapheme: join only the first N graphemes (delimiter byte length)
+                // which is correct for ASCII delimiters — the common case.
+                if s.len() < delim.len() {
+                    return false;
+                }
+                s[..delim.len()].join("") == delim
+            },
             start: 0,
             len: $delim.len(),
         }
