@@ -104,12 +104,17 @@ impl Converter {
     {
         let words = boundary::split(&s, &self.boundaries);
 
-        let mut result: Vec<String> = words.into_iter().map(|s| s.to_string()).collect();
-        for pattern in &self.patterns {
-            result = pattern.mutate(&result);
+        if self.patterns.is_empty() {
+            // No patterns — join the borrowed words directly, no String allocations.
+            words.join(&self.delimiter)
+        } else {
+            // First pattern gets &[&str] directly, skipping an intermediate to_string().
+            let mut result = self.patterns[0].mutate(&words);
+            for pattern in &self.patterns[1..] {
+                result = pattern.mutate(&result);
+            }
+            result.join(&self.delimiter)
         }
-
-        result.join(&self.delimiter)
     }
 
     /// Set the pattern and delimiter to those associated with the given case.

@@ -28,4 +28,12 @@ hooks = [
     types = ["rust"],
     pass_filenames = false,
   },
+  {
+    id = "typos",
+    name = "typos",
+    language = "system",
+    entry = "typos",
+    types = ["text"],
+    pass_filenames = true,
+  },
 ]
