@@ -84,7 +84,9 @@ fn grapheme_is_uppercase(c: &&str) -> bool {
     if let [b] = c.as_bytes() {
         return b.is_ascii_uppercase();
     }
-    c.to_uppercase() != c.to_lowercase() && *c == c.to_uppercase()
+    // Multi-byte grapheme: the first codepoint determines case.
+    // Combining marks have no case, so they can't change the base's classification.
+    c.chars().next().is_some_and(|ch| ch.is_uppercase())
 }
 
 fn grapheme_is_lowercase(c: &&str) -> bool {
@@ -92,7 +94,9 @@ fn grapheme_is_lowercase(c: &&str) -> bool {
     if let [b] = c.as_bytes() {
         return b.is_ascii_lowercase();
     }
-    c.to_uppercase() != c.to_lowercase() && *c == c.to_lowercase()
+    // Multi-byte grapheme: the first codepoint determines case.
+    // Combining marks have no case, so they can't change the base's classification.
+    c.chars().next().is_some_and(|ch| ch.is_lowercase())
 }
 
 /// Conditions for splitting an identifier into words.
@@ -507,46 +511,41 @@ where
     let mut words = Vec::new();
     let mut last_boundary_end = 0;
 
-    let (indices, graphemes): (Vec<_>, Vec<_>) = s.grapheme_indices(true).unzip();
-    let grapheme_length =
-        indices.last().copied().unwrap_or(0) + graphemes.last().map(|g| g.len()).unwrap_or(0);
-
-    // Fast path: when every boundary is a single-character delimiter
-    // (underscore, hyphen, space) the check is a direct &str comparison
-    // — cheaper than building a classification array.
+    // Fast path: when every boundary is a single-byte delimiter
+    // (underscore, hyphen, space) iterate bytes directly.
+    // These are all ASCII single bytes that never appear inside a multi-byte
+    // UTF-8 sequence, so byte-level iteration is correct and avoids allocating
+    // grapheme/indices Vecs.
     let all_simple_delimiters = boundaries
         .iter()
         .all(|b| matches!(b, Boundary::Underscore | Boundary::Hyphen | Boundary::Space));
 
     if all_simple_delimiters {
-        for (i, grapheme) in graphemes.iter().enumerate() {
-            for boundary in boundaries {
-                let matched = match boundary {
-                    Boundary::Underscore => *grapheme == "_",
-                    Boundary::Hyphen => *grapheme == "-",
-                    Boundary::Space => *grapheme == " ",
-                    _ => unreachable!(),
-                };
+        for (i, byte) in s.bytes().enumerate() {
+            let matched = match byte {
+                b'_' => boundaries.contains(&Boundary::Underscore),
+                b'-' => boundaries.contains(&Boundary::Hyphen),
+                b' ' => boundaries.contains(&Boundary::Space),
+                _ => false,
+            };
 
-                if matched {
-                    let boundary_byte_start: usize = *indices
-                        .get(i + boundary.start())
-                        .unwrap_or(&grapheme_length);
-                    let boundary_byte_end: usize = *indices
-                        .get(i + boundary.start() + boundary.len())
-                        .unwrap_or(&grapheme_length);
-                    words.push(&s[last_boundary_end..boundary_byte_start]);
-                    last_boundary_end = boundary_byte_end;
-                    break;
-                }
+            if matched {
+                words.push(&s[last_boundary_end..i]);
+                last_boundary_end = i + 1;
             }
         }
         words.push(&s[last_boundary_end..]);
-        return words.into_iter().collect();
+        return words;
     }
 
-    // General path: precompute grapheme flags once, then check all
-    // boundaries (built-in and custom) against the cache.
+    // General path: need grapheme clusters for case transitions, acronyms,
+    // custom boundaries, etc.
+    let (indices, graphemes): (Vec<_>, Vec<_>) = s.grapheme_indices(true).unzip();
+    let grapheme_length =
+        indices.last().copied().unwrap_or(0) + graphemes.last().map(|g| g.len()).unwrap_or(0);
+
+    // Precompute grapheme flags once, then check all boundaries (built-in and
+    // custom) against the cache.
     let flags: Vec<GraphemeFlags> = graphemes
         .iter()
         .map(|g| GraphemeFlags::classify(g))
@@ -600,7 +599,7 @@ where
         }
     }
     words.push(&s[last_boundary_end..]);
-    words.into_iter().collect()
+    words
 }
 
 /// Create a new boundary based on a string.
