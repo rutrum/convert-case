@@ -70,6 +70,25 @@ convertToCamel
 
 ## Change Log
 
+### 0.12.0: Optimizations
+
+This release improves speed and efficiency.  A couple techniques were used:
+
+* Character case checks first check ascii before doing the more expensive grapheme checks (which do heap allocation).
+* Delimiter only splits get a dedicated path in the `split` method.
+* The case of characters is computed upfront in a bitmask before checking individual boundary conditions in `split`.  Built-in boundaries get a custom implementation built on top of this bitmask.
+
+| Benchmark | Before | After | Improvement |
+| --- | --- | --- | --- |
+| `snake_short` (`"hello_world"`) | 412 ns | 361 ns | −12% |
+| `lower_upper` (`"lowerUpperUpper"`) | 1,631 ns | 506 ns | −69% |
+| `acronym` (`"XMLRequest"`) | 1,108 ns | 441 ns | −60% |
+| `camel_set` (`"getTotalLength3D"`) | 3,844 ns | 714 ns | −81% |
+| `defaults_mixed` (9 boundaries) | 8,083 ns | 1,621 ns | −80% |
+| `defaults_long_snake` (265 chars) | 52,281 ns | 4,653 ns | −91% |
+| `unicode_cyrillic` (`"ПЕРСПЕКТИВА24"`) | 8,334 ns | 781 ns | −91% |
+| Full pipeline `from_to_all` (4 words x 14 x 14) | 1,230 µs | 644 µs | −48% | 
+
 ### 0.11.0: Multiple Patterns
 
 The headline change permits trailing, leading, and duplicate delimiters to persist (default) or be removed.  Instead of applying a single pattern, `Converter` supports multiple patterns and will apply them in order.  This comes with another pattern `Pattern::RemoveEmpty` that drops empty words.   This allows for opting into what was default behavior in 0.8.0 and before.
