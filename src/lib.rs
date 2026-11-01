@@ -275,6 +275,8 @@ mod case;
 mod converter;
 mod pattern;
 
+#[doc(hidden)]
+pub use boundary::separator_grapheme_count;
 pub use boundary::{split, Boundary};
 pub use case::Case;
 pub use converter::Converter;
