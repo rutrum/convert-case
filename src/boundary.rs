@@ -623,21 +623,50 @@ macro_rules! separator {
         convert_case::Boundary::Custom {
             condition: |s: &[&str]| {
                 let delim: &str = $delim;
-                // Fast path for a single-grapheme delimiter: direct &str comparison
+                if delim.is_empty() {
+                    return true;
+                }
+                // Fast path for a single-byte delimiter: direct &str comparison.
+                // A one-byte delimiter is always exactly one grapheme.
                 if delim.len() == 1 {
                     return s.first().map(|g| *g == delim).unwrap_or(false);
                 }
-                // Multi-grapheme: join only the first N graphemes (delimiter byte length)
-                // which is correct for ASCII delimiters — the common case.
-                if s.len() < delim.len() {
-                    return false;
+                // A delimiter of N bytes spans at most N graphemes. Walk the
+                // graphemes, matching bytes as we go, and stop once we have
+                // covered the delimiter byte length. This never allocates and
+                // treats the delimiter by its graphemes, not by its bytes: a
+                // multi-byte delimiter such as "→" is a single grapheme, while
+                // "::" is two.
+                let mut consumed = 0;
+                for g in s.iter() {
+                    let g: &str = *g;
+                    let rest = &delim[consumed..];
+                    // rest may end mid-character of g, so use get instead of
+                    // slicing before comparing.
+                    match rest.get(..g.len()) {
+                        Some(prefix) if prefix == g => {}
+                        _ => return false,
+                    }
+                    consumed += g.len();
+                    if consumed == delim.len() {
+                        return true;
+                    }
                 }
-                s[..delim.len()].join("") == delim
+                false
             },
             start: 0,
-            len: $delim.len(),
+            // len counts the graphemes consumed when splitting; a multi-byte
+            // delimiter like "→" removes a single grapheme.
+            len: $crate::separator_grapheme_count($delim),
         }
     };
+}
+
+/// Counts the grapheme clusters of s. Used by the separator macro to set the
+/// number of graphemes a delimiter consumes. Not part of the stable API.
+#[doc(hidden)]
+pub fn separator_grapheme_count(s: &str) -> usize {
+    s.graphemes(true).count()
 }
 
 #[cfg(test)]

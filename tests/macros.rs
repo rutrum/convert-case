@@ -29,3 +29,19 @@ fn separator_custom_delimiters() {
         vec!["lower", "lowerUpper", "Upper"]
     );
 }
+
+#[test]
+fn separator_non_ascii_delimiters() {
+    // A multi-byte delimiter can be a single grapheme (an arrow is 3 bytes,
+    // 1 grapheme) or span several graphemes (two arrows: 6 bytes, 2
+    // graphemes). separator! must not confuse the delimiter byte length with
+    // its grapheme count.
+    let arrow = separator!("→");
+    assert_eq!(split(&"lower→Upper", &[arrow]), vec!["lower", "Upper"]);
+
+    let kanji_dot = separator!("。");
+    assert_eq!(split(&"東。京", &[kanji_dot]), vec!["東", "京"]);
+
+    let arrows = separator!("→→");
+    assert_eq!(split(&"lower→→Upper", &[arrows]), vec!["lower", "Upper"]);
+}
